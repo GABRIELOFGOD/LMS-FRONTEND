@@ -9,6 +9,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useCreateCourse } from "@/hooks/create-course";
 
 const formSchema = z.object({
   title: z.string().min(1, {
@@ -17,6 +19,9 @@ const formSchema = z.object({
 });
 
 const CreatePage = () => {
+  const { submitCourse } = useCreateCourse();
+  const router = useRouter();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -26,7 +31,16 @@ const CreatePage = () => {
 
   const { isSubmitting, isValid } = form.formState;
 
-  const onSubmit = async (value: z.infer<typeof formSchema>) => {}
+  const onSubmit = async (value: z.infer<typeof formSchema>) => {
+    try {
+      const response = await submitCourse(value.title);
+      router.push(`/teacher/courses/${response.id}`);
+      toast.success("Courses created successfully!");
+    } catch (error: any) {
+      toast.error("Somrthing went wrong");
+      console.log("[POSTING ERROR]", error);
+    }
+  }
 
   return (
     <div className="max-w-5xl mx-auto flex md:items-center md:justify-center h-full p-6">

@@ -1,48 +1,45 @@
-import { useState } from 'react';
 
-interface Course {
-  title: string;
-}
+import axios from "axios";
+import { BASEURL } from '@/lib/utils';
+import { Course } from "@/types/course";
 
 export const useCreateCourse = () => {
-  const [course, setCourse] = useState<Course>({
-    title: '',
-  });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const submitCourse = async () => {
-    setIsSubmitting(true);
-    setError(null);
-
+  const submitCourse = async (title: string) => {
     try {
-      // Replace with your API call logic
-      const response = await fetch('/api/courses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(course),
+      const response = await axios.post(`${BASEURL}/courses`, {
+        title
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to create course');
-      }
-
-      const data = await response.json();
-      console.log('Course created successfully:', data);
+      return response.data;
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
+      throw err;
     }
   };
 
-  return {
-    course,
-    isSubmitting,
-    error,
-    submitCourse,
-  };
+  const getSingleCourse = async (id: string) => {
+    try {
+      const course = await axios.get(`${BASEURL}/courses/${id}`);
+      return course.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  const updateCourseTitle = async ({
+    id, value
+  }: {
+    id: string,
+    value: string
+  }) => {
+    try {
+      const response = await axios.patch(`${BASEURL}/courses/${id}`, {
+        title: value
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  return { submitCourse, getSingleCourse, updateCourseTitle };
 };
