@@ -8,6 +8,7 @@ import { LayoutDashboard } from "lucide-react";
 import { useEffect, useState } from "react"
 import { toast } from "sonner";
 import TitleForm from "./_components/TitleForm";
+import DescriptionForm from "./_components/DescriptionForm";
 
 const CourseIdPage = ({
   params
@@ -64,6 +65,12 @@ const CourseIdPage = ({
             <TitleForm
               initialData={{
                 title: course?.title!
+              }}
+              courseId={course?.id.toString()!}
+            />
+            <DescriptionForm
+              initialData={{
+                description: course?.description!
               }}
               courseId={course?.id.toString()!}
             />

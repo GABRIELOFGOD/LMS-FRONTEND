@@ -41,5 +41,19 @@ export const useCreateCourse = () => {
     }
   }
 
-  return { submitCourse, getSingleCourse, updateCourseTitle };
+  const updateCourseDescription = async ({ id, value }: {
+    id: string;
+    value: string;
+  }) => {
+    try {
+      const response = await axios.put(`${BASEURL}/courses/${id}`, {
+        Description: value
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  return { submitCourse, getSingleCourse, updateCourseTitle, updateCourseDescription };
 };
