@@ -2,12 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useCreateCourse } from "@/hooks/create-course";
 import { cn } from "@/lib/utils";
+import { Course } from "@/types/course";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader, Pencil } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -32,11 +32,10 @@ const DescriptionForm = ({
 }: DescriptionFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData
+    defaultValues: initialData,
   });
-  const router = useRouter();
 
-  const { updateCourseTitle } = useCreateCourse();
+  const { updateCourseDescription } = useCreateCourse();
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -44,7 +43,7 @@ const DescriptionForm = ({
 
   useEffect(() => {
     if (isEditing) {
-      form.reset(initialData); // Reset form values when editing is toggled
+      form.reset(initialData);
     }
   }, [isEditing, initialData, form]);
 
@@ -52,14 +51,14 @@ const DescriptionForm = ({
 
   const onSubmit = async (value: z.infer<typeof formSchema>) => {
     try {
-      const response = await updateCourseTitle({
+      const response = await updateCourseDescription({
         id: courseId,
         value: value.description
       });
 
       if (response.message) toast.success(response.message);
-      toggleEdit()
-      router.refresh();
+      initialData.description = value.description;
+      toggleEdit();
     } catch (error: any) {
       console.log(error);
       if (error.message) {
@@ -83,7 +82,7 @@ const DescriptionForm = ({
             <p>Cancel</p>
           ): (
             <>
-              <Pencil className="h-4 w-4 mr-2" />
+              <Pencil className="h-4 w-4 mr-1" />
               Edit description
             </>
           )}
@@ -91,7 +90,7 @@ const DescriptionForm = ({
       </div>
       {!isEditing && (
         <p className={cn(
-          "text-sm mt-2",
+          "text-sm mt-2 ",
           !initialData.description && "text-slate-500 italic"
         )}>
           {initialData.description || "No description"}
@@ -109,7 +108,7 @@ const DescriptionForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <textarea
+                    <Textarea
                       className="p-3 border-border focus::border-2 rounded-md focus::shadow-md"
                       disabled={isSubmitting}
                       placeholder="e.g This course is about..."

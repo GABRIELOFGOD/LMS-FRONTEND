@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useCreateCourse } from "@/hooks/create-course";
+import { Loader } from "lucide-react";
 
 const formSchema = z.object({
   title: z.string().min(1, {
@@ -87,7 +88,7 @@ const CreatePage = () => {
                 type="submit"
                 disabled={!isValid || isSubmitting}
               >
-                Continue
+                {isSubmitting ? <div className="flex gap-2"><Loader className="my-auto" /> <p className="my-auto">Creating course</p></div> : "Continue"}
               </Button>
             </div>
           </form>

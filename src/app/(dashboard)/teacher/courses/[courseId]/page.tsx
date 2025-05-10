@@ -9,6 +9,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner";
 import TitleForm from "./_components/TitleForm";
 import DescriptionForm from "./_components/DescriptionForm";
+import ImageForm from "./_components/ImageForm";
 
 const CourseIdPage = ({
   params
@@ -22,7 +23,6 @@ const CourseIdPage = ({
     const gettingCourse = async () => {
       try {
         const course = await getSingleCourse(params.courseId);
-        console.log("Courses JOY", course);
         setCourse(course);
       } catch (error: any) {
         toast.error(error.message || "An error occur");
@@ -71,6 +71,12 @@ const CourseIdPage = ({
             <DescriptionForm
               initialData={{
                 description: course?.description!
+              }}
+              courseId={course?.id.toString()!}
+            />
+            <ImageForm
+              initialData={{
+                imageUrl: course?.imageUrl!
               }}
               courseId={course?.id.toString()!}
             />

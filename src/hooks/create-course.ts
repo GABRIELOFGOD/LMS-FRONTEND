@@ -1,7 +1,6 @@
 
 import axios from "axios";
 import { BASEURL } from '@/lib/utils';
-import { Course } from "@/types/course";
 
 export const useCreateCourse = () => {
 
@@ -21,7 +20,11 @@ export const useCreateCourse = () => {
       const course = await axios.get(`${BASEURL}/courses/${id}`);
       return course.data;
     } catch (error) {
-      throw error;
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        window.location.href = '/teacher/courses';
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -47,7 +50,7 @@ export const useCreateCourse = () => {
   }) => {
     try {
       const response = await axios.put(`${BASEURL}/courses/${id}`, {
-        Description: value
+        description: value
       });
       return response.data;
     } catch (error) {
@@ -55,5 +58,27 @@ export const useCreateCourse = () => {
     }
   }
 
-  return { submitCourse, getSingleCourse, updateCourseTitle, updateCourseDescription };
+  const updateCourseImage = async ({ id, value }: {
+    id: string;
+    value: File;
+  }) => {
+
+    const formData = new FormData();
+    formData.append('file', value);
+
+    console.log('FormData:', formData);
+    
+    try {
+      const response = await axios.put(`${BASEURL}/courses/upload/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  return { submitCourse, getSingleCourse, updateCourseTitle, updateCourseDescription, updateCourseImage };
 };

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { useCreateCourse } from "@/hooks/create-course";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader, Pencil } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -33,7 +32,6 @@ const TitleForm = ({
     resolver: zodResolver(formSchema),
     defaultValues: initialData
   });
-  const router = useRouter();
 
   const { updateCourseTitle } = useCreateCourse();
 
@@ -43,7 +41,7 @@ const TitleForm = ({
 
   useEffect(() => {
     if (isEditing) {
-      form.reset(initialData); // Reset form values when editing is toggled
+      form.reset(initialData);
     }
   }, [isEditing, initialData, form]);
 
@@ -57,8 +55,8 @@ const TitleForm = ({
       });
 
       if (response.message) toast.success(response.message);
-      toggleEdit()
-      router.refresh();
+      initialData.title = value.title;
+      toggleEdit();
     } catch (error: any) {
       console.log(error);
       if (error.message) {
@@ -82,7 +80,7 @@ const TitleForm = ({
             <p>Cancel</p>
           ): (
             <>
-              <Pencil className="h-4 w-4 mr-2" />
+              <Pencil className="h-4 w-4 mr-1" />
               Edit title
             </>
           )}
