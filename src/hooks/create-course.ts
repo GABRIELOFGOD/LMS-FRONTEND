@@ -80,5 +80,34 @@ export const useCreateCourse = () => {
     }
   }
 
-  return { submitCourse, getSingleCourse, updateCourseTitle, updateCourseDescription, updateCourseImage };
+  const updateCoursePrice = async ({ id, value }: {
+    id: string;
+    value: number;
+  }) => {
+    try {
+      const response = await axios.put(`${BASEURL}/courses/${id}`, {
+        price: value
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  const addCategory = async ({ id, value }: {
+    id: string;
+    value: string;
+  }) => {
+    console.log("Category ID:", value);
+    try {
+      const response = await axios.put(`${BASEURL}/courses/add-category/${id}`, {
+        category: value
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  return { submitCourse, getSingleCourse, updateCourseTitle, updateCourseDescription, updateCourseImage, addCategory, updateCoursePrice };
 };
