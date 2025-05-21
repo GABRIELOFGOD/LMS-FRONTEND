@@ -19,13 +19,13 @@ const Rating = ({
   return (
     <div className="flex items-center gap-1">
       {Array.from({ length: fullStars }, (_, i) => (
-        <Star size={10} key={`full-${i}`} className="text-primary w-5 h-5" fill="currentColor" />
+        <Star size={15} key={`full-${i}`} className="text-secondary" fill="currentColor" />
       ))}
       {hasHalfStar && (
-        <StarHalf size={10} className="text-primary w-5 h-5" />
+        <StarHalf size={15} className="text-secondary" />
       )}
       {Array.from({ length: emptyStars }, (_, i) => (
-        <Star size={10} key={`empty-${i}`} className="text-gray-300 w-5 h-5" />
+        <Star size={15} key={`empty-${i}`} className="text-gray-300" />
       ))}
     </div>
   );

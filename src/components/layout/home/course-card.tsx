@@ -2,6 +2,7 @@ import { courses } from "@/data/courses";
 import Image from "next/image";
 import ImageUsed from "@/assets/hero-fc.png";
 import Rating from "@/components/ui/rating";
+import { Button } from "@/components/ui/button";
 
 const CourseCard = ({ course }: {
   course: typeof courses[0];
@@ -23,12 +24,23 @@ const CourseCard = ({ course }: {
         <p className="text-foreground/80 text-sm truncate">
           {course.description}
         </p>
-      </div>
-      <div className="mt-2 flex justify-between">
-        <Rating
-          rate={course.rating.vote}
-          total={course.rating.total}
-        />
+        <div className="mt-2 flex justify-between">
+          <div>
+            <p className="text-xs text-foreground/60 italic">Rating: ({course.rating.vote}/{course.rating.total})</p>
+            <Rating
+              rate={course.rating.vote}
+              total={course.rating.total}
+            />
+          </div>
+          <div className="rounded bg-secondary text-white text-xs italic h-fit w-fit px-4 py-1 my-auto font-semibold">Free</div>
+        </div>
+        <div className="mt-5 w-full">
+          <Button
+            className="w-full"
+          >
+            Checkout
+          </Button>
+        </div>
       </div>
     </div>
   )

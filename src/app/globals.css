@@ -2,6 +2,9 @@
 
 @plugin "tailwindcss-animate";
 
+/* app/globals.css */
+@import 'keen-slider/keen-slider.min.css';
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

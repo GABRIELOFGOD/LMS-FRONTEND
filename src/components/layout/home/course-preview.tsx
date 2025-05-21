@@ -18,7 +18,7 @@ const CoursePreview = () => {
         {/* <p className="text-foreground/60 text-lg mt-3">Information is life, learn everything about information and fact-checking here.</p> */}
         <p className="text-foreground/60 text-lg mt-3">From critical skills to technical topics, Udemy supports your professional development.</p>
         <div className="mt-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 px-2">
             {slicedCourses.map((course) => (
               <Link
                 key={course.id}
