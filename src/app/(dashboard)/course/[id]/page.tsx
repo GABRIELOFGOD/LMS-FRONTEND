@@ -1,14 +1,15 @@
 import CourseView from "@/components/layout/courses/course-view";
 
-const SingleCoursePreview = ({params}: {params: {id: string}}) => {
-  
+const SingleCoursePreview = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params;
+
   return (
     <div>
       <div className="container px-3 py-10 mx-auto">
-        <CourseView id={params.id} />
+        {id && <CourseView id={id} />}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default SingleCoursePreview;

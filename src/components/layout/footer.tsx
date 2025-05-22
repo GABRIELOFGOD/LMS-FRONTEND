@@ -53,7 +53,7 @@ const Footer = () => {
           ))}
         </div>
       </div>
-      <div className='mb-10 text-foreground/60'>
+      <div className='pb-10 text-foreground/60'>
         <p className="text-center">
           &copy; {new Date().getFullYear()} Fact-check Africa. All Rights Reserved
         </p>
