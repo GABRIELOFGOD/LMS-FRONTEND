@@ -1,0 +1,101 @@
+[
+  {
+    "id": "d9fdfb54-3b0e-4f8f-b33c-ff6ef8fef123",
+    "title": "TypeScript for Beginners",
+    "description": "Master TypeScript fundamentals and apply them in real-world JavaScript projects.",
+    "overview": "This beginner-friendly course introduces TypeScript syntax, types, and its integration with JavaScript. Ideal for developers transitioning from JS.",
+    "image": "https://example.com/courses/typescript-beginners.jpg",
+    "syllabus": [
+      { "title": "Introduction", "description": "Why TypeScript? Setting up your environment." },
+      { "title": "Module 1: Basic Types", "description": "Learn about string, number, boolean, array, and tuples." },
+      { "title": "Module 2: Functions and Interfaces", "description": "Create reusable and typed functions with interfaces." },
+      { "title": "Module 3: Classes & Objects", "description": "Apply object-oriented principles in TypeScript." },
+      { "title": "Module 4: Type Inference and Advanced Types", "description": "Understand type inference, unions, intersections, and type aliases." }
+    ],
+    "instructor": {
+      "name": "Sarah Lin",
+      "role": "Senior Software Engineer",
+      "description": "Sarah is a full-stack developer specializing in modern JavaScript and TypeScript with over 8 years of experience.",
+      "image": "https://example.com/images/sarah-lin.jpg"
+    }
+  },
+  {
+    "id": "ae23f78c-b3f2-4f1b-9b49-6d101a3c3e88",
+    "title": "Advanced TypeScript Patterns",
+    "description": "Deep dive into generics, decorators, and advanced typing strategies.",
+    "overview": "This course is for developers familiar with TypeScript looking to explore advanced features and patterns in enterprise-grade apps.",
+    "image": "https://example.com/courses/advanced-typescript.jpg",
+    "syllabus": [
+      { "title": "Introduction", "description": "Scope of advanced TypeScript and review of foundational concepts." },
+      { "title": "Module 1: Generics in Practice", "description": "Implement generic functions and classes effectively." },
+      { "title": "Module 2: Utility Types", "description": "Use built-in utility types to reduce boilerplate code." },
+      { "title": "Module 3: Custom Decorators", "description": "Create and apply decorators in TypeScript projects." },
+      { "title": "Module 4: Design Patterns", "description": "Leverage patterns like Factory, Singleton, and Observer." }
+    ],
+    "instructor": {
+      "name": "Daniel Kross",
+      "role": "Lead Frontend Architect",
+      "description": "Daniel designs scalable front-end systems with a strong emphasis on maintainability and type safety.",
+      "image": "https://example.com/images/daniel-kross.jpg"
+    }
+  },
+  {
+    "id": "9b43cbbf-3ae1-4e1d-9e1e-5f917ed2d3ff",
+    "title": "TypeScript with React",
+    "description": "Build scalable React applications using TypeScript for strong typing and developer safety.",
+    "overview": "A practical course combining TypeScript with modern React, covering props, state, hooks, and component patterns.",
+    "image": "https://example.com/courses/typescript-react.jpg",
+    "syllabus": [
+      { "title": "Introduction", "description": "Why TypeScript with React? Project setup and tools." },
+      { "title": "Module 1: Typing Props and State", "description": "Use interfaces and types with components." },
+      { "title": "Module 2: Hooks with TypeScript", "description": "Implement typed useState, useEffect, and custom hooks." },
+      { "title": "Module 3: Context & Reducers", "description": "Manage global state with Context API and useReducer." },
+      { "title": "Module 4: Patterns & Testing", "description": "Best practices for scalable React+TS codebases." }
+    ],
+    "instructor": {
+      "name": "Maya Chen",
+      "role": "React Developer & Educator",
+      "description": "Maya teaches modern React development with a focus on TypeScript and clean code practices.",
+      "image": "https://example.com/images/maya-chen.jpg"
+    }
+  },
+  {
+    "id": "b49056b8-0fc3-4c85-a13d-cfd8c3ad5d34",
+    "title": "Node.js with TypeScript",
+    "description": "Create robust backend APIs using Node.js and TypeScript.",
+    "overview": "This course walks you through building Express.js APIs with TypeScript, including validation, middlewares, and testing.",
+    "image": "https://example.com/courses/node-typescript.jpg",
+    "syllabus": [
+      { "title": "Introduction", "description": "Setting up Node.js with TypeScript." },
+      { "title": "Module 1: Express with TS", "description": "Typing routes, requests, and responses." },
+      { "title": "Module 2: Middlewares", "description": "Implement and type middleware functions." },
+      { "title": "Module 3: Validation & Errors", "description": "Use Zod or Yup for input validation." },
+      { "title": "Module 4: Testing APIs", "description": "Unit and integration testing using Jest." }
+    ],
+    "instructor": {
+      "name": "Luis Ortega",
+      "role": "Backend Engineer",
+      "description": "Luis builds fast and scalable APIs and is passionate about developer tooling and testing."
+    }
+  },
+  {
+    "id": "ec234579-b2a6-4baf-83f2-7f1eaad23345",
+    "title": "TypeScript in Monorepos",
+    "description": "Manage TypeScript projects at scale using Nx, Turborepo, and modern tooling.",
+    "overview": "Understand how to structure large-scale applications with TypeScript in a monorepo setup.",
+    "image": "https://example.com/courses/typescript-monorepos.jpg",
+    "syllabus": [
+      { "title": "Introduction", "description": "What are monorepos? Advantages & challenges." },
+      { "title": "Module 1: Setting Up with Nx", "description": "Create a workspace and structure applications." },
+      { "title": "Module 2: Type Sharing", "description": "Use libraries to share types across projects." },
+      { "title": "Module 3: Build & Lint Pipelines", "description": "Maintain consistency and enforce standards." },
+      { "title": "Module 4: CI/CD Integration", "description": "Deploy and test using GitHub Actions." }
+    ],
+    "instructor": {
+      "name": "Amara Smith",
+      "role": "DevOps & TypeScript Specialist",
+      "description": "Amara focuses on TypeScript infrastructure and developer experience in large organizations.",
+      "image": "https://example.com/images/amara-smith.jpg"
+    }
+  }
+]

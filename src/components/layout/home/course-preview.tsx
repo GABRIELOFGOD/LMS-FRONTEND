@@ -1,14 +1,22 @@
 "use client";
-import { courses } from "@/data/courses";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import CourseCard from "./course-card";
+import { Course } from "@/types/course";
+import { useCourse } from "@/hooks/useCourse";
 
 const CoursePreview = () => {
-  const [slicedCourses, setSlicedCourses] = useState<typeof courses>([]);
+  const [slicedCourses, setSlicedCourses] = useState<Course[]>([]);
+
+  const { getCourses } = useCourse();
+
+  const gettingCourse = async () => {
+    const courses = await getCourses();
+    setSlicedCourses(courses.slice(0, 4));
+  }
 
   useEffect(() => {
-    setSlicedCourses(courses.slice(0, 3))
+    gettingCourse();
   }, []);
   
   return (

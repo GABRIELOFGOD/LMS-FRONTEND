@@ -1,11 +1,11 @@
-import { courses } from "@/data/courses";
 import Image from "next/image";
 import ImageUsed from "@/assets/hero-fc.png";
 import Rating from "@/components/ui/rating";
 import { Button } from "@/components/ui/button";
+import { Course } from "@/types/course";
 
 const CourseCard = ({ course }: {
-  course: typeof courses[0];
+  course: Course;
 }) => {
   return (
     <div className="rounded border-border border bg-muted overflow-hidden">
@@ -25,20 +25,20 @@ const CourseCard = ({ course }: {
           {course.description}
         </p>
         <div className="mt-2 flex justify-between">
-          <div>
+          {/* <div>
             <p className="text-xs text-foreground/60 italic">Rating: ({course.rating.vote}/{course.rating.total})</p>
             <Rating
               rate={course.rating.vote}
               total={course.rating.total}
             />
-          </div>
+          </div> */}
           <div className="rounded bg-secondary text-white text-xs italic h-fit w-fit px-4 py-1 my-auto font-semibold">Free</div>
         </div>
         <div className="mt-5 w-full">
           <Button
             className="w-full"
           >
-            Checkout
+            Add to Wish-list
           </Button>
         </div>
       </div>
