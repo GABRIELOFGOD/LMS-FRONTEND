@@ -10,7 +10,10 @@ const LearnerHome = () => {
 
         <div className="mt-3 flex gap-5 flex-col">
           <p className="font-bold text-lg">Your Progress</p>
-          <LearnerProgress />
+          <LearnerProgress
+            progress={33}
+            label="Overall Progress"
+          />
         </div>
 
         <div>
