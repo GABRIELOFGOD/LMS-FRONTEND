@@ -9,8 +9,10 @@ const LearnerLayout = ({
 }) => {
   return (
     <div className="h-screen flex">
-      <LearnerSidebar />
-      <div className="px-3 h-full overflow-auto">
+      <div className="hidden md:flex">
+        <LearnerSidebar />
+      </div>
+      <div className="px-3 md:px-5 h-full overflow-auto w-full">
         <LearnerHeader />
         {children}
       </div>

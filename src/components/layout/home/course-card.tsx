@@ -21,7 +21,7 @@ const CourseCard = ({ course }: {
         <p className="font-extrabold text-xl truncate line-clamp-2">
           {course.title}
         </p>
-        <p className="text-foreground/80 text-sm truncate">
+        <p className="text-foreground/80 text-sm line-clamp-2 my-2">
           {course.description}
         </p>
         <div className="mt-2 flex justify-between">

@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Instructor from "@/assets/hero-fc.png";
-import { Bell, Home, User2, Videotape } from "lucide-react";
+import { Bell, Home, LogOut, User2, Videotape } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 const LearnerSidebar = () => {
   const currentPath = usePathname();
@@ -38,7 +39,7 @@ const LearnerSidebar = () => {
   ]
   
   return (
-    <div className="bg-accent text-accent-foreground h-full w-72 absolute md:relative pt-10 pl-10 flex flex-col gap-10">
+    <div className="md:bg-accent bg-background text-accent-foreground h-full w-72 absolute md:relative md:l-0 transition-all duration-300 md:pt-10 md:pl-10 flex flex-col gap-10">
       <div className="flex gap-3">
         <div className="h-10 w-10 bg-border rounded-full overflow-hidden relative my-auto">
           <Image
@@ -73,6 +74,14 @@ const LearnerSidebar = () => {
           ))
         }
       </div>
+
+      <Button
+        className="mt-auto flex gap-3 mb-10 bg-transparent hover:bg-destructive/50"
+        variant={"outline"}
+      >
+        <LogOut className="my-auto" />
+        Logout
+      </Button>
 
     </div>
   )
