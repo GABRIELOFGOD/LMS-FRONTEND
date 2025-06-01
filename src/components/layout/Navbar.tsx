@@ -1,8 +1,20 @@
-import Link from "next/link"
-import Logo from "../ui/Logo"
-import { Button } from "../ui/button"
+"use client";
+
+import Link from "next/link";
+import Logo from "../ui/Logo";
+import { Button } from "../ui/button";
+import { useGlobalContext } from "@/context/GlobalContext";
+import { useEffect, useState } from "react";
+
+type MenuItem = {
+  id: number;
+  label: string;
+  path: string;
+}
 
 const Navbar = () => {
+  const { user } = useGlobalContext();
+  const [menu, setMenu] = useState<MenuItem[]>([]);
 
   const menuItems = [
     {
@@ -31,6 +43,14 @@ const Navbar = () => {
       path: "/login"
     }
   ]
+
+  useEffect(() => {
+    if (user) {
+      setMenu(menuItems.slice(0, 4));
+    } else {
+      setMenu(menuItems);
+    }
+  }, [user]);
   
   return (
     <div className="shadow-sm bg-background">
@@ -38,7 +58,7 @@ const Navbar = () => {
         <Logo />
         <div className="flex gap-10">
           <div className="flex gap-5 my-auto">
-            {menuItems.map((item) => (
+            {menu.map((item) => (
               <Link
                 key={item.id}
                 href={item.path}
