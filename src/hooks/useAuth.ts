@@ -55,7 +55,7 @@ export const useAuth = () => {
       console.log("Error: ", error);
       localStorage.removeItem("token");
       setIsLoggedIn(false);
-      location.assign("/login");
+      // location.assign("/login");
     }
   }
 

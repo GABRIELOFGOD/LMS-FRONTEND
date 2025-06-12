@@ -16,12 +16,12 @@ const Crumb = ({
   current, previous
 }: {
   current: CrumbProps;
-  previous: CrumbProps[]
+  previous?: CrumbProps[]
 }) => {
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {previous.map((crumb) => (
+        {previous?.map((crumb) => (
           <div className="flex items-center gap-2" key={crumb.link}>
             <BreadcrumbItem>
               <BreadcrumbLink href={crumb.link}>{crumb.title}</BreadcrumbLink>
