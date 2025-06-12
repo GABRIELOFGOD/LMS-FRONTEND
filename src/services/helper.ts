@@ -12,3 +12,9 @@ export function removeFileExtension(fileName: string): string {
   const lastDotIndex = fileName.lastIndexOf(".");
   return lastDotIndex !== -1 ? fileName.substring(0, lastDotIndex) : fileName;
 }
+
+export const yearJoined = (date: string) => {
+  const dateObj = new Date(date);
+  const year = dateObj.getFullYear();
+  return year;
+}

@@ -1,13 +1,20 @@
 "use client";
 
 import { User } from "@/types/user";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, Dispatch, SetStateAction } from "react";
 
-const GlobalContext = createContext({
+type GlobalContextType = {
+  isLoggedIn: boolean;
+  setIsLoggedIn: Dispatch<SetStateAction<boolean>>;
+  user: User | null;
+  setUser: Dispatch<SetStateAction<User | null>>;
+}
+
+const GlobalContext = createContext<GlobalContextType>({
   isLoggedIn: false,
-  setIsLoggedIn: (isLoggedIn: boolean) => {},
-  user: null as (User | null),
-  setUser: (user: User | null) => {},
+  setIsLoggedIn: () => {},
+  user: null,
+  setUser: () => {},
 });
 
 export const GlobalContextProvider = ({ children }: { children: React.ReactNode }) => {
@@ -22,4 +29,3 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 export const useGlobalContext = () => {
   return useContext(GlobalContext);
 };
-

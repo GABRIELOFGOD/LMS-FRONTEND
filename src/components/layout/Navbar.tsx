@@ -4,17 +4,10 @@ import Link from "next/link";
 import Logo from "../ui/Logo";
 import { Button } from "../ui/button";
 import { useGlobalContext } from "@/context/GlobalContext";
-import { useEffect, useState } from "react";
-
-type MenuItem = {
-  id: number;
-  label: string;
-  path: string;
-}
+import { UserIcon } from "lucide-react";
 
 const Navbar = () => {
   const { user } = useGlobalContext();
-  const [menu, setMenu] = useState<MenuItem[]>([]);
 
   const menuItems = [
     {
@@ -37,20 +30,12 @@ const Navbar = () => {
       label: "contact",
       path: "/contact"
     },
-    {
-      id: 5,
-      label: "Login",
-      path: "/login"
-    }
+    // {
+    //   id: 5,
+    //   label: "Login",
+    //   path: "/login"
+    // }
   ]
-
-  useEffect(() => {
-    if (user) {
-      setMenu(menuItems.slice(0, 4));
-    } else {
-      setMenu(menuItems);
-    }
-  }, [user]);
   
   return (
     <div className="shadow-sm bg-background">
@@ -58,7 +43,7 @@ const Navbar = () => {
         <Logo />
         <div className="flex gap-10">
           <div className="flex gap-5 my-auto">
-            {menu.map((item) => (
+            {menuItems.map((item) => (
               <Link
                 key={item.id}
                 href={item.path}
@@ -67,10 +52,29 @@ const Navbar = () => {
                 {item.label}
               </Link>
             ))}
+            {!user && (
+              <Link href={"/login"} className="capitalize text-sm font-semibold">
+                Login
+              </Link>
+            )}
           </div>
-          <Button>
-            <Link href={"/register"}>Get Started</Link>
-          </Button>
+          {!user ?
+          (
+            <Button>
+              <Link href={"/register"}>Get Started</Link>
+            </Button>
+          ) :
+          (
+            <Button
+              className="w-8 h-8 rounded-full flex justify-center items-center my-auto"
+              variant={"ghost"}
+            >
+              <Link href={"/learner/profile"}>
+                <UserIcon className="text-muted-foreground" size={20} />
+              </Link>
+            </Button>
+              
+          )}
         </div>
       </div>
     </div>

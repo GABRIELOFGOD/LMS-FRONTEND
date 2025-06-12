@@ -1,11 +1,12 @@
+// authProvider.tsx
 "use client";
 
 import { GlobalContextProvider, useGlobalContext } from "@/context/GlobalContext";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
-import { User, UserRole } from "@/types/user";
 import { useRouter } from "next/navigation";
+
 const WaitingForProfile = () => {
   return (
     <div className="flex items-center justify-center h-screen gap-3">
@@ -15,19 +16,21 @@ const WaitingForProfile = () => {
   )
 }
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+// Separate the auth logic from the provider wrapper
+const AuthLogic = ({ children }: { children: React.ReactNode }) => {
   const [hasDecided, setHasDecided] = useState(false);
   const { getProfile } = useAuth();
-
+  const { setUser } = useGlobalContext(); // Now this will work
   const router = useRouter();
 
   const gettingProfile = async () => {
     try {
       const data = await getProfile();
-      console.log("Data: ", data);
+      setUser(data);
       setHasDecided(true);
     } catch (error) {
       console.log(error);
+      setHasDecided(true); // Set to true even on error to prevent infinite loading
     }
   }
 
@@ -41,9 +44,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
   
+  return hasDecided ? <>{children}</> : <WaitingForProfile />;
+};
+
+// Main AuthProvider that wraps everything
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <GlobalContextProvider>
-      {hasDecided ? children : <WaitingForProfile />}
+      <AuthLogic>
+        {children}
+      </AuthLogic>
     </GlobalContextProvider>
   );
 };

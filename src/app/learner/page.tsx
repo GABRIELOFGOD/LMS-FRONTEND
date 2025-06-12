@@ -1,12 +1,16 @@
+"use client";
+
 import LearnerProgress from "@/components/layout/learner/progress";
 import RecommendedCourses from "@/components/layout/learner/recommended-courses";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const LearnerHome = () => {
+  const { user } = useGlobalContext();
 
   return (
     <div>
       <div className="flex flex-col gap-5">
-        <p className="font-bold text-2xl md:text-[32px]">Welcome back, Sarah</p>
+        <p className="font-bold text-2xl md:text-[32px]">Welcome back, {user?.fname}</p>
 
         <div className="mt-3 flex gap-5 flex-col">
           <p className="font-bold text-lg">Your Progress</p>
