@@ -1,3 +1,4 @@
+import CoursesTable from "@/components/layout/admin/courses/courses-table";
 import { Button } from "@/components/ui/button";
 
 const DashboardCourses = () => {
@@ -11,6 +12,7 @@ const DashboardCourses = () => {
           Create Course
         </Button>
       </div>
+      <CoursesTable />
     </div>
   )
 }

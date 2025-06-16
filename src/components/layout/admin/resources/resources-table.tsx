@@ -8,9 +8,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const RecentActivities = () => {
+const ResourcesTable = () => {
   return (
-    <div>
+    <div className="md:flex-[5] flex-1">
       <Table>
         <TableCaption>A list of your recent invoices.</TableCaption>
         <TableHeader>
@@ -45,4 +45,4 @@ const RecentActivities = () => {
     </div>
   )
 }
-export default RecentActivities;
+export default ResourcesTable;

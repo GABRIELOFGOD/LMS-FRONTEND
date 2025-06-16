@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import * as React from "react";
 import {
   AudioWaveform,
   BookIcon,
@@ -66,7 +66,7 @@ const data = {
       title: "Resources",
       url: "/dashboard/resources",
       icon: FileAxis3D,
-      isActive: true,
+      // isActive: true,
     },
     {
       title: "Users",

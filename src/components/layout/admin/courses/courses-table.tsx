@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const RecentActivities = () => {
+const CoursesTable = () => {
   return (
     <div>
       <Table>
@@ -45,4 +45,4 @@ const RecentActivities = () => {
     </div>
   )
 }
-export default RecentActivities;
+export default CoursesTable;

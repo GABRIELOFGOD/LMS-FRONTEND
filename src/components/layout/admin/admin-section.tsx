@@ -2,14 +2,16 @@ import { ReactNode } from "react";
 
 const AdminSection = ({
   title,
-  content
+  content,
+  smallTitle = false
 }: {
   title: string;
   content: ReactNode;
+  smallTitle?: boolean;
 }) => {
   return (
     <div className="flex flex-col gap-4">
-      <p className="font-bold text-xl md:text-2xl">{title}</p>
+      <p className={`font-bold text-xl ${smallTitle ? "md:text-lg" : "md:text-2xl"}`}>{title}</p>
       {content}
     </div>
   )
