@@ -49,6 +49,8 @@ export const useAuth = () => {
       if (!response.ok){
         throw new Error(data.message);
       }
+      console.log("[USER] :", data);
+      
       return data;
 
     } catch (error) {
