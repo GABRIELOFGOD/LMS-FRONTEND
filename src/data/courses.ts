@@ -1,6 +1,5 @@
 // import { Course } from "@/types/course";
 
-import { Course } from "@/types/course";
 
 // export const courses = [
 //   {

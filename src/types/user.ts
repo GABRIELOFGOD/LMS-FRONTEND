@@ -10,6 +10,8 @@ export interface User {
   lname: string;
   email: string;
   role: UserRole;
+  address?: string;
+  bio?: string;
   createdAt: string;
   updatedAt: string;
 }

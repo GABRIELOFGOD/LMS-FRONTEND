@@ -31,7 +31,7 @@ export interface Module {
   description: string;
 }
 
-export interface Course {
+export interface CourseOut {
   id: string;
   title: string;
   description: string;
@@ -39,4 +39,16 @@ export interface Course {
   syllabus: Module[];
   instructor: Instructor;
   image?: string;
+}
+
+export interface Course {
+  id: string;
+  publish: boolean;
+  title: string;
+  description?: string;
+  price?: number;
+  imageUrl?: string;
+  isFree?: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

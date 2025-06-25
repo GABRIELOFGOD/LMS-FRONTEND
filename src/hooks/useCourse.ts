@@ -5,10 +5,16 @@ import { toast } from "sonner";
 
 export const useCourse = () => {
 
+  const token = localStorage.getItem("token");
+
   const getCourses = async () => {
     try {
-      const response = await axios.get("/courses.json");
-      return response.data;
+      const response = await fetch(`${BASEURL}/courses`, {
+        headers: {
+          "authorization": `Bearer ${token}`
+        }
+      });
+      return await response.json();
     } catch (error) {
       toast.error("Error fetching courses");
       console.error(error);

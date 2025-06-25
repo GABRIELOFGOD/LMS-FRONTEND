@@ -18,3 +18,8 @@ export const yearJoined = (date: string) => {
   const year = dateObj.getFullYear();
   return year;
 }
+
+
+export function isError(err: unknown): err is Error {
+  return err instanceof Error;
+}
