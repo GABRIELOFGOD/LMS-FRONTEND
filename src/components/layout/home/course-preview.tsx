@@ -8,10 +8,11 @@ import { useCourse } from "@/hooks/useCourse";
 const CoursePreview = () => {
   const [slicedCourses, setSlicedCourses] = useState<Course[]>([]);
 
-  const { getCourses } = useCourse();
+  const { getAvailableCourses } = useCourse();
 
   const gettingCourse = async () => {
-    const courses = await getCourses();
+    const courses = await getAvailableCourses();
+    console.log("[COURSES]: ", courses);
     setSlicedCourses(courses.slice(0, 4));
   }
 

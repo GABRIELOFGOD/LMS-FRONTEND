@@ -20,6 +20,7 @@ import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useCourse } from '@/hooks/useCourse';
+import { useRouter } from 'next/navigation';
 
 // Zod schema for form validation
 const courseSchema = z.object({
@@ -39,6 +40,7 @@ type CourseFormValues = z.infer<typeof courseSchema>;
 
 const CreateCourseForm = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const { createCourse } = useCourse();
 
@@ -55,10 +57,11 @@ const CreateCourseForm = () => {
     
     try {
       await createCourse(data);
-      // form.reset();
+      form.reset();
       
       // You might want to show a success message or redirect
       toast.success('Course created successfully!');
+      router.push("/dashboard/courses");
       
     } catch (error) {
       console.error('Error creating course:', error);

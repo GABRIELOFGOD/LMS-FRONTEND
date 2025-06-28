@@ -30,6 +30,7 @@ const UsersTable = () => {
   const gettingAllUsers = async () => {
     try {
       const gotUsers = await getAllUsers();
+      console.log("[GOTTEN]: ", gotUsers);
       setUsers(gotUsers);
     } catch (error: unknown) {
       if (isError(error)) {
