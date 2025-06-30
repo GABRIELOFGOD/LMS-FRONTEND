@@ -14,7 +14,7 @@ export const useUser = () => {
       });
 
       const res = await req.json();
-      
+      if (!req.ok) throw new Error(res.message);
       return res;
       
     } catch (error) {

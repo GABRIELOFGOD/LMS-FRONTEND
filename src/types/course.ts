@@ -41,6 +41,20 @@ export interface CourseOut {
   image?: string;
 }
 
+export interface Chapter {
+  id: string;
+  isPublished: boolean;
+  name: string;
+  video: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AddChapterResponse {
+  message: string;
+  chapter: Chapter;
+}
+
 export interface Course {
   id: string;
   publish: boolean;
@@ -51,4 +65,5 @@ export interface Course {
   isFree?: boolean;
   createdAt: string;
   updatedAt: string;
+  chapters: Chapter[];
 }

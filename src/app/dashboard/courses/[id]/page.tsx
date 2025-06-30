@@ -1,7 +1,10 @@
 "use client";
 
-import AdminSubHeader from "@/components/layout/admin/admin-subheader";
+import ChapterForm from "@/components/layout/admin/courses/edit-course/chapter-form";
+import DescriptionForm from "@/components/layout/admin/courses/edit-course/description-form";
+import ImageForm from "@/components/layout/admin/courses/edit-course/image-form";
 import TitleForm from "@/components/layout/admin/courses/edit-course/title";
+import { Button } from "@/components/ui/button";
 import { useCourse } from "@/hooks/useCourse";
 import { isError } from "@/services/helper";
 import { Course } from "@/types/course";
@@ -35,21 +38,64 @@ const EditCourseDetails = ({ params }: EditCourseDetailsProps) => {
     }
   }
 
+  const requiredFields = [
+    course?.title,
+    course?.description,
+    course?.imageUrl,
+    course?.chapters.some((cht) => cht.isPublished)
+  ];
+
+  const totalFields = requiredFields.length;
+  const completedField = requiredFields.filter(Boolean).length;
+  const completedText = `(${completedField}/${totalFields})`
+
   useEffect(() => {
     gettingACourse();
   }, [id]);
 
   return (
     <div className="flex flex-col px-3 md:px-5 py-10 gap-5">
-      <AdminSubHeader
+      {/* <AdminSubHeader
         title="Edit course"
-        desc={`1/4 completed`}
-      />
+        desc={`${completedText} completed`}
+      /> */}
+      <div className="w-full flex justify-between">
+        <div>
+          <h1 className="font-bold text-2xl">Edit Course</h1>
+          <p>{completedText} completed</p>
+        </div>
+        <Button
+          disabled={completedField >= totalFields ? false : true}
+        >
+          Publish course
+        </Button>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <TitleForm
           courseId={id}
           title={course ? course.title : ""}
+        />
+
+        <DescriptionForm
+          initialData={{
+            description: course?.description || ""
+          }}
+          courseId={id}
+        />
+
+        <ImageForm
+          initialData={{
+            imageUrl: course?.imageUrl || ""
+          }}
+          courseId={id}
+        />
+
+        <ChapterForm
+          initialData={{
+            chapters: course?.chapters || []
+          }}
+          courseId={id}
         />
       </div>
     </div>

@@ -12,9 +12,8 @@ import {
 import { useUser } from "@/hooks/use-user";
 import { useEffect, useState } from "react";
 import { isError } from "../../../../services/helper";
-import { User } from "@/types/user";
+import { User, UserRole } from "@/types/user";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { TbMoodEmpty } from "react-icons/tb";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -25,7 +24,7 @@ const UsersTable = () => {
   const [users, setUsers] = useState<User[]>([]);
   const router = useRouter();
   
-  const { getAllUsers } = useUser();
+  const { getAllUsers, changeRole } = useUser();
 
   const gettingAllUsers = async () => {
     try {
@@ -39,6 +38,7 @@ const UsersTable = () => {
       } else {
         console.error("Unknown error", error);
       }
+      router.back();
     } finally  {
       setIsLoading(false);
     }
@@ -57,20 +57,20 @@ const UsersTable = () => {
   }
 
   const viewUser = async (id: string) => {
-    // try {
-    //   const res = await changeRole(UserRole.ADMIN, id);
-    //   if (!res.message) throw new Error("Couldn't update user role");
-    //   router.refresh();
-    //   toast.success(res.message);
-    // } catch(error: unknown) {
-    //   if (isError(error)) {
-    //     toast.error(error.message);
-    //     console.error("Login failed", error.message);
-    //   } else {
-    //     console.error("Unknown error", error);
-    //   }
-    // }
-    router.push(`/dashboard/users/${id}`);
+    try {
+      const res = await changeRole(UserRole.ADMIN, id);
+      if (!res.message) throw new Error("Couldn't update user role");
+      router.refresh();
+      toast.success(res.message);
+    } catch(error: unknown) {
+      if (isError(error)) {
+        toast.error(error.message);
+        console.error("Login failed", error.message);
+      } else {
+        console.error("Unknown error", error);
+      }
+    }
+    // router.push(`/dashboard/users/${id}`);
   }
   
   return (
