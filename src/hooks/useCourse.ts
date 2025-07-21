@@ -1,4 +1,5 @@
 import { BASEURL } from "@/lib/utils";
+import { isError } from "@/services/helper";
 import { AddChapterResponse } from "@/types/course";
 import { toast } from "sonner";
 
@@ -9,10 +10,16 @@ export const useCourse = () => {
   const getAvailableCourses = async () => {
     try {
       const response = await fetch(`${BASEURL}/courses/published`);
-      return await response.json();
-    } catch (error) {
-      toast.error("Error fetching courses");
-      console.error(error);
+      const res = await response.json();
+      if (!response.ok) throw new Error(res.message);
+      return res;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        toast.error(error.message);
+        console.error("Login failed", error.message);
+      } else {
+        console.error("Unknown error", error);
+      }
     }
   }
   
@@ -120,11 +127,13 @@ export const useCourse = () => {
       const req = await fetch(`${BASEURL}/courses/${id}/published`, {
         method: "PUT",
         headers: {
-          "autorization": `Bearer ${token}`
+          "authorization": `Bearer ${token}`
         }
       });
 
-      return await req.json();
+      const res = await req.json();
+      if (!req.ok) throw new Error(res.message);
+      return res;
 
     } catch (error) {
       throw error;
@@ -232,8 +241,8 @@ export const useCourse = () => {
       formData.append("video", video);
       
       try {
-        const req = await fetch(`${BASEURL}/chapters/${chapterId}/upload-video`, {
-          method: "POST",
+        const req = await fetch(`${BASEURL}/chapters/${chapterId}/video`, {
+          method: "PUT",
           headers: {
             "authorization": `Bearer ${token}`
           },
@@ -308,29 +317,33 @@ export const useCourse = () => {
       }
     };
 
-    const reorderChapters = async (
-      courseId: string, 
-      chapterIds: string[]
-    ): Promise<{ message: string }> => {
-      const token = localStorage.getItem("token");
-      
-      try {
-        const req = await fetch(`${BASEURL}/chapters/course/${courseId}/reorder`, {
-          method: "PUT",
-          headers: {
-            "authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ chapterIds }),
-        });
+  const reorderChapters = async (
+    courseId: string, 
+    chapterIds: string[]
+  ): Promise<{ message: string }> => {
+    const token = localStorage.getItem("token");
+    
+    try {
+      const req = await fetch(`${BASEURL}/chapters/course/${courseId}/reorder`, {
+        method: "PUT",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ chapterIds }),
+      });
 
-        const res = await req.json();
-        if (!req.ok) throw new Error(res.message);
-        return res;
-      } catch (error) {
-        throw error;
-      }
-    };
+      const res = await req.json();
+      if (!req.ok) throw new Error(res.message);
+      return res;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // const enrollCourse = async (id: string) => {
+  //   trycat
+  // }
   
   return {
     getCourses,

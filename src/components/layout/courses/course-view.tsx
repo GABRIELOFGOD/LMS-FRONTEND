@@ -2,12 +2,11 @@
 import Crumb from "@/components/Crumb";
 import { useCourse } from "@/hooks/useCourse";
 import { Course } from "@/types/course";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
-import Instructor from "@/assets/hero-fc.png";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { enrollCourse } from "@/services/common";
 
 const CourseView = ({id}: {id: string}) => {
   const [course, setCourse] = useState<Course | null>(null);
@@ -49,10 +48,10 @@ const CourseView = ({id}: {id: string}) => {
 
         <div className="flex flex-col gap-2 mt-10">
           <p className="font-bold text-xl">Course Overview</p>
-          <p>{course?.overview}</p>
+          <p>{course?.description}</p>
         </div>
 
-        <div className="flex flex-col gap-2 mt-10">
+        {/* <div className="flex flex-col gap-2 mt-10">
           <p className="font-bold text-lg">Instructor</p>
           <div className="flex gap-5">
             <div className="h-20 w-20 bg-accent rounded-full overflow-hidden relative">
@@ -72,12 +71,12 @@ const CourseView = ({id}: {id: string}) => {
           <div>
             <p>{course?.instructor.description}</p>
           </div>
-        </div>
+        </div> */}
 
         <div className="flex flex-col gap-2 mt-10">
           <p className="font-bold text-xl">Syllabus</p>
           <div className="mt-5 flex flex-col gap-3">
-            {course?.syllabus.map((mod, i) => (
+            {course?.chapters.filter(cht => cht.isPublished).map((mod, i) => (
               <div
                 key={i}
                 className="flex gap-[10px]"
@@ -86,19 +85,21 @@ const CourseView = ({id}: {id: string}) => {
                   <Check />
                 </div>
                 <div className="my-auto">
-                  <p className="font-medium text-[16px]">{mod.title}</p>
-                  <p className="text-foreground/50">{mod.description}</p>
+                  <p className="font-medium text-[16px]">{mod.name}</p>
+                  {/* <p className="text-foreground/50">{mod.description}</p> */}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-10">
-          <Button>
+        {course && (<div className="mt-10">
+          <Button
+            onClick={() => enrollCourse(course.id)}
+          >
             Enroll (Free)
           </Button>
-        </div>
+        </div>)}
       </div>
       
     </div>

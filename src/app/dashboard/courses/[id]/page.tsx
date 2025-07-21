@@ -22,7 +22,7 @@ const EditCourseDetails = ({ params }: EditCourseDetailsProps) => {
   const { id } = use(params);
   const [course, setCourse] = useState<Course | null>(null);
 
-  const { getACourse } = useCourse();
+  const { getACourse, publishCourse } = useCourse();
 
   const gettingACourse = async () => {
     try {
@@ -47,7 +47,18 @@ const EditCourseDetails = ({ params }: EditCourseDetailsProps) => {
 
   const totalFields = requiredFields.length;
   const completedField = requiredFields.filter(Boolean).length;
-  const completedText = `(${completedField}/${totalFields})`
+  const completedText = `(${completedField}/${totalFields})`;
+
+  const togglePublishCourse = async () => {
+    try {
+      const res = await publishCourse(id);
+      toast.success(res.message);
+    } catch (error: unknown) {
+      if (isError(error)) {
+        toast.error(error.message);
+      }
+    }
+  }
 
   useEffect(() => {
     gettingACourse();
@@ -65,7 +76,8 @@ const EditCourseDetails = ({ params }: EditCourseDetailsProps) => {
           <p>{completedText} completed</p>
         </div>
         <Button
-          disabled={completedField >= totalFields ? false : true}
+          onClick={togglePublishCourse}
+          disabled={!course?.publish && completedField >= totalFields ? false : true}
         >
           Publish course
         </Button>

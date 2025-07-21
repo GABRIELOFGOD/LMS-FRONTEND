@@ -194,7 +194,7 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
     publishChapter, 
     unpublishChapter,
     reorderChapters,
-    uploadVideo 
+    uploadVideo
   } = useCourse();
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -319,6 +319,7 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
       }
 
       if (response?.message) toast.success(response.message);
+      location.reload();
     } catch (error: unknown) {
       if (isError(error)) {
         toast.error(error.message);

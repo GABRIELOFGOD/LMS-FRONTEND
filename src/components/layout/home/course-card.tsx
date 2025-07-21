@@ -1,17 +1,19 @@
 import Image from "next/image";
-import ImageUsed from "@/assets/hero-fc.png";
-import Rating from "@/components/ui/rating";
+// import Rating from "@/components/ui/rating";
 import { Button } from "@/components/ui/button";
 import { Course } from "@/types/course";
+import Link from "next/link";
 
 const CourseCard = ({ course }: {
   course: Course;
 }) => {
+  const actualChapters = course.chapters.filter((cht) => cht.isPublished);
+  
   return (
     <div className="rounded border-border border bg-muted overflow-hidden">
       <div className="relative w-full h-[150px] shadow-sm">
         <Image
-          src={ImageUsed}
+          src={course.imageUrl || ""}
           alt="course image"
           fill
           className="object-cover h-full w-full"
@@ -32,13 +34,21 @@ const CourseCard = ({ course }: {
               total={course.rating.total}
             />
           </div> */}
-          <div className="rounded bg-secondary text-white text-xs italic h-fit w-fit px-4 py-1 my-auto font-semibold">Free</div>
+          {/* <div className="rounded bg-secondary text-white text-xs italic h-fit w-fit px-4 py-1 my-auto font-semibold">Free</div> */}
+          <div className="flex justify-between gap-3">
+            <p className="text-xs text-gray-600 font-bold">{actualChapters.length} Chapters</p>
+          </div>
         </div>
         <div className="mt-5 w-full">
           <Button
             className="w-full"
+            // onClick={() => enrollCourse(course.id)}
           >
-            Add to Wish-list
+            <Link
+              href={`/course/${course.id}`}
+            >
+              Enroll
+            </Link>
           </Button>
         </div>
       </div>

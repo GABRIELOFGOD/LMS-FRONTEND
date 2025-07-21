@@ -4,21 +4,38 @@ import { useEffect, useState } from "react";
 import CourseCard from "./course-card";
 import { Course } from "@/types/course";
 import { useCourse } from "@/hooks/useCourse";
+import { Loader } from "lucide-react";
 
 const CoursePreview = () => {
   const [slicedCourses, setSlicedCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState<boolean>(true);
 
   const { getAvailableCourses } = useCourse();
 
   const gettingCourse = async () => {
-    const courses = await getAvailableCourses();
-    console.log("[COURSES]: ", courses);
-    setSlicedCourses(courses.slice(0, 4));
+    try {
+      const courses = await getAvailableCourses();
+      console.log("[COURSES]: ", courses);
+      setSlicedCourses(courses.slice(0, 4));
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingCourses(false);
+    }
   }
 
   useEffect(() => {
     gettingCourse();
   }, []);
+
+  if (loadingCourses) {
+    return (
+      <div className="w-full h-[200px] flex items-center justify-center gap-2">
+        <Loader size={15} className="my-auto animate-spin" />
+        <p className="my-auto text-sm">Loading courses</p>
+      </div>
+    )
+  }
   
   return (
     <div>
@@ -28,9 +45,9 @@ const CoursePreview = () => {
         <p className="text-foreground/60 text-lg mt-3">From critical skills to technical topics, Udemy supports your professional development.</p>
         <div className="mt-10">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 px-2">
-            {slicedCourses.map((course) => (
+            {slicedCourses.map((course, i) => (
               <Link
-                key={course.id}
+                key={i}
                 href={`/course/${course.id}`}
               >
                 <CourseCard
