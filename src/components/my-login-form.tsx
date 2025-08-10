@@ -20,7 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useGlobalContext } from "@/context/GlobalContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { UserRole } from "@/types/user";
 
 const formSchema = z.object({
@@ -32,6 +32,9 @@ const MyLoginForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoggedIn, user } = useGlobalContext();
   const router = useRouter();
+
+  const param = useSearchParams();
+  const nextRoute = param.get("to");
   
   const { login } = useAuth();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,13 +49,6 @@ const MyLoginForm = () => {
     setIsSubmitting(true);
     try {
       await login(data.email, data.password);
-      if (user?.role === UserRole.ADMIN) {
-        router.push("/admin");
-      } else if (user?.role === UserRole.TEACHER) {
-        router.push("/teacher");
-      } else if (user?.role === UserRole.STUDENT) {
-        router.push("/learner");
-      }
     } catch (error) {
       console.error("Login failed:", error);
     } finally {
@@ -60,11 +56,11 @@ const MyLoginForm = () => {
     }
   }
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      router.push("/");
-    }
-  }, [isLoggedIn]);
+  // useEffect(() => {
+  //   if (isLoggedIn) {
+  //     router.push("/");
+  //   }
+  // }, [isLoggedIn]);
   
   return (
     <div>

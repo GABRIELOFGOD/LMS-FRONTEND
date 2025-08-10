@@ -7,7 +7,7 @@ import { toast } from "sonner";
 export const useAuth = () => {
   const { isLoggedIn, setIsLoggedIn } = useGlobalContext();
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, to?: string) => {
     try {
       const response = await fetch(`${BASEURL}/auth/login`, {
         method: "POST",

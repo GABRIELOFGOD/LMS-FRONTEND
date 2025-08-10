@@ -13,7 +13,7 @@ const Hero = () => {
         <div className='flex flex-col gap-3'>
           <div>
             <p className='text-lg font-semibold rounded-full py-1 px-6 bg-border/50 w-fit'>Fact-check <span className='text-secondary'>Africa</span></p>
-            <p className='leading-15 text-3xl md:text-5xl font-extrabold text-white'>Learn to fact-check information and Aid is the stop of <span className='text-secondary'>Rumor spread</span></p>
+            <p className='leading-15 text-3xl md:text-5xl font-extrabold text-white'>Learn to fact-check information and Aid in the stop of <span className='text-secondary'>Rumor spread</span></p>
           </div>
           <p className='text-lg text-white'>Information spread like wild fire, without proper check we can be part of the spread of mis-information, take our free course and learn how to fact-check information before spreading or joining in the spread.</p>
           <div className="flex gap-5 mt-5">
