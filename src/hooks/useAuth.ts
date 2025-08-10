@@ -2,10 +2,12 @@ import { RegistrationFormType } from "@/components/registration-form";
 import { useGlobalContext } from "@/context/GlobalContext";
 import { BASEURL } from "@/lib/utils";
 import { isError } from "@/services/helper";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export const useAuth = () => {
   const { isLoggedIn, setIsLoggedIn } = useGlobalContext();
+  const router = useRouter();
 
   const login = async (email: string, password: string, to?: string) => {
     try {
@@ -28,6 +30,11 @@ export const useAuth = () => {
         setIsLoggedIn(true);
         localStorage.setItem("token", token);
         await getProfile();
+        if (to) {
+          router.push(`${to}`);
+        } else {
+          router.push("/");
+        }
       }
       
     } catch (error) {
