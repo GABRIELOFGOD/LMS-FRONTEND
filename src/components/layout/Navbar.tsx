@@ -3,11 +3,12 @@
 import Link from "next/link";
 import Logo from "../ui/Logo";
 import { Button } from "../ui/button";
-import { useGlobalContext } from "@/context/GlobalContext";
 import { UserIcon } from "lucide-react";
+import { useUser } from "@/context/user-context";
+import ThemeToggle from "../ui/ToggleTheme";
 
 const Navbar = () => {
-  const { user } = useGlobalContext();
+  const { user } = useUser();
 
   const menuItems = [
     {
@@ -41,26 +42,29 @@ const Navbar = () => {
     <div className="shadow-sm bg-background">
       <div className="w-full px-3 py-4 flex justify-between container md:px-0 mx-auto">
         <Logo />
-        <div className="flex gap-10">
+        <div className="flex gap-10 my-auto">
           <div className="flex gap-5 my-auto">
+            <div className="my-auto">
+              <ThemeToggle />
+            </div>
             {menuItems.map((item) => (
               <Link
                 key={item.id}
                 href={item.path}
-                className="capitalize text-sm font-semibold"
+                className="capitalize text-sm my-auto font-semibold"
               >
                 {item.label}
               </Link>
             ))}
             {!user && (
-              <Link href={"/login"} className="capitalize text-sm font-semibold">
+              <Link href={"/login"} className="capitalize text-sm my-auto font-semibold">
                 Login
               </Link>
             )}
           </div>
           {!user ?
           (
-            <Button>
+            <Button className="my-auto">
               <Link href={"/register"}>Get Started</Link>
             </Button>
           ) :

@@ -3,16 +3,16 @@
 import LearnerHeader from "@/components/layout/learner/learner-header";
 import LearnerSidebar from "@/components/layout/learner/learner-sidebar";
 import { ReactNode, useEffect } from "react";
-import { useGlobalContext } from "@/context/GlobalContext";
 import { UserRole } from "@/types/user";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/user-context";
 
 const LearnerLayout = ({
   children
 }: {
   children: ReactNode
 }) => {
-  const { user } = useGlobalContext();
+  const { user } = useUser();
   const router = useRouter();
 
   useEffect(() => {

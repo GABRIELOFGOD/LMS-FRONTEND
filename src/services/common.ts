@@ -1,6 +1,4 @@
 import { BASEURL } from "@/lib/utils";
-import { isError } from "./helper";
-import { toast } from "sonner";
 
 export const enrollCourse = async (courseId: string) => {
   try {
@@ -14,12 +12,7 @@ export const enrollCourse = async (courseId: string) => {
 
     const res = await req.json();
     if (!req.ok) throw new Error(res.message || "Failed to enroll for course");
-  } catch (error: unknown) {
-    if (isError(error)) {
-      toast.error(error.message);
-      console.error("Login failed", error.message);
-    } else {
-      console.error("Unknown error", error);
-    }
+  } catch (error) {
+    throw error;
   }
 }

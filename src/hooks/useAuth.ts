@@ -1,15 +1,11 @@
 import { RegistrationFormType } from "@/components/registration-form";
-import { useGlobalContext } from "@/context/GlobalContext";
 import { BASEURL } from "@/lib/utils";
 import { isError } from "@/services/helper";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export const useAuth = () => {
-  const { isLoggedIn, setIsLoggedIn } = useGlobalContext();
-  const router = useRouter();
 
-  const login = async (email: string, password: string, to?: string) => {
+  const login = async (email: string, password: string) => {
     try {
       const response = await fetch(`${BASEURL}/auth/login`, {
         method: "POST",
@@ -20,55 +16,14 @@ export const useAuth = () => {
       });
 
       const data = await response.json();
-      if (data.error || !data.token) {
-        toast.error(data.message);
-        return;
-      }
+      if (data.error || !data.token) throw new Error(data.message || "Login failed");
       const token = data.token;
-
-      if (token) {
-        setIsLoggedIn(true);
-        localStorage.setItem("token", token);
-        await getProfile();
-        if (to) {
-          router.push(`${to}`);
-        } else {
-          router.push("/");
-        }
-      }
+      localStorage.setItem("token", token);
       
     } catch (error) {
-      console.log(error);
+      throw error;
     }
   };
-
-  const getProfile = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      throw new Error("No token found");
-    }
-    try {
-      const response = await fetch(`${BASEURL}/users/profile`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-      if (!response.ok){
-        throw new Error(data.message);
-      }
-      console.log("[USER] :", data);
-      
-      return data;
-
-    } catch (error) {
-      console.log("Error: ", error);
-      localStorage.removeItem("token");
-      setIsLoggedIn(false);
-      // location.assign("/login");
-    }
-  }
 
   const registerUser = async (userData: Omit<RegistrationFormType, 'confirmPassword'>) => {
     try {
@@ -145,7 +100,7 @@ export const useAuth = () => {
     }
   }
 
-  return { isLoggedIn, setIsLoggedIn, login, getProfile, registerUser, verifyOtp, resendOpt };
+  return { login, registerUser, verifyOtp, resendOpt };
 };
 
 

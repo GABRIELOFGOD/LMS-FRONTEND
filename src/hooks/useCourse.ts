@@ -1,5 +1,4 @@
 import { BASEURL } from "@/lib/utils";
-import { isError } from "@/services/helper";
 import { AddChapterResponse } from "@/types/course";
 import { toast } from "sonner";
 
@@ -11,15 +10,10 @@ export const useCourse = () => {
     try {
       const response = await fetch(`${BASEURL}/courses/published`);
       const res = await response.json();
-      if (!response.ok) throw new Error(res.message);
+      if (!response.ok || res.error) throw new Error(res.message);
       return res;
-    } catch (error: unknown) {
-      if (isError(error)) {
-        toast.error(error.message);
-        console.error("Login failed", error.message);
-      } else {
-        console.error("Unknown error", error);
-      }
+    } catch (error) {
+      throw error;
     }
   }
   
@@ -32,10 +26,11 @@ export const useCourse = () => {
           "authorization": `Bearer ${token}`
         }
       });
-      return await response.json();
+      const res = await response.json();
+      if (!response.ok || res.error) throw new Error(res.message);
+      return res;
     } catch (error) {
-      toast.error("Error fetching courses");
-      console.error(error);
+      throw error;
     }
   };
 

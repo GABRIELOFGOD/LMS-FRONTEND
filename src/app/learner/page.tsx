@@ -2,10 +2,10 @@
 
 import LearnerProgress from "@/components/layout/learner/progress";
 import RecommendedCourses from "@/components/layout/learner/recommended-courses";
-import { useGlobalContext } from "@/context/GlobalContext";
+import { useUser } from "@/context/user-context";
 
 const LearnerHome = () => {
-  const { user } = useGlobalContext();
+  const { user } = useUser();
 
   return (
     <div>
