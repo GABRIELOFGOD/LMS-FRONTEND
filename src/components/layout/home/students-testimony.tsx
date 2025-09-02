@@ -55,13 +55,13 @@ const Testimony = () => {
 
   return (
     <div>
-      <div className="bg-white py-10 md:py-20 px-3 container mx-auto">
+      <div className="not-dark:bg-white py-10 md:py-20 px-3 container mx-auto">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-6 text-center">What Our Students Say</h2>
           <div ref={sliderRef} className="keen-slider">
             {testimonials.map((testimonial, index) => (
               <div key={index} className="keen-slider__slide bg-muted rounded-md p-6 shadow-md">
-                <p className="text-lg italic text-gray-800">"{testimonial.text}"</p>
+                <p className="text-lg italic not-dark:text-gray-800 dark:text-gray-200">"{testimonial.text}"</p>
                 <div className="mt-4">
                   <p className="font-semibold">{testimonial.name}</p>
                   <p className="text-sm text-muted-foreground">{testimonial.role}</p>

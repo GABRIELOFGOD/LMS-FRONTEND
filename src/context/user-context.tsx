@@ -5,30 +5,30 @@ import { User } from "@/types/user";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 interface userContextType {
-  user: User | null
+  user: User | null;
+  isLoaded: boolean;
 }
 
 const UserContext = createContext<userContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isloaded, setIsLoaded] = useState<boolean>(false);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   const getUser = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token not found");
-      const req = await fetch(`${BASEURL}/auth/`, {
+      const req = await fetch(`${BASEURL}/users/profile`, {
         headers: {
           "Content-Type": "application/json",
           "authorization": `Bearer ${token}`
         }
       });
-
       const res = await req.json();
       if (!req.ok) throw new Error(res.error);
       if (res.error) throw new Error(res.error);
-      setUser(res.user as User);
+      setUser(res as User);
 
     } catch (error: unknown) {
       if (error == typeof Error){
@@ -45,7 +45,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   
   return (
-    <UserContext.Provider value={{ user }}>
+    <UserContext.Provider value={{ user, isLoaded }}>
       {children}
     </UserContext.Provider>
   )

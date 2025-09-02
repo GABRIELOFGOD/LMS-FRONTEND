@@ -1,5 +1,6 @@
 "use client";
 
+<<<<<<< HEAD
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -179,6 +180,14 @@ const LearnerHome = () => {
     { id: 2, action: "Started course", title: "React Components", course: "React Mastery", time: "1 day ago" },
     { id: 3, action: "Earned certificate", title: "HTML/CSS Basics", course: "Web Fundamentals", time: "3 days ago" },
   ];
+=======
+import LearnerProgress from "@/components/layout/learner/progress";
+import RecommendedCourses from "@/components/layout/learner/recommended-courses";
+import { useUser } from "@/context/user-context";
+
+const LearnerHome = () => {
+  const { user } = useUser();
+>>>>>>> bf28a986bde82081ccceefebd3b73fec3f075dc9
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">

@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useGlobalContext } from "@/context/GlobalContext";
 import User from "@/assets/hero-fc.png";
 import { yearJoined } from "@/services/helper";
+import { useUser } from "@/context/user-context";
 
 const UserProfile = () => {
-  const { user } = useGlobalContext();
+  const { user } = useUser();
 
   return (
     <div className="flex flex-col gap-5">

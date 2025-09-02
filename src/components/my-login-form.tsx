@@ -19,9 +19,11 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useGlobalContext } from "@/context/GlobalContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserRole } from "@/types/user";
+import { useUser } from "@/context/user-context";
+import { toast } from "sonner";
+import { isError } from "@/services/helper";
 
 const formSchema = z.object({
   email: z.string().min(1, { message: "Email is required" }),
@@ -30,7 +32,7 @@ const formSchema = z.object({
 
 const MyLoginForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isLoggedIn, user } = useGlobalContext();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
 
   const param = useSearchParams();
@@ -49,18 +51,39 @@ const MyLoginForm = () => {
     setIsSubmitting(true);
     try {
       await login(data.email, data.password);
-    } catch (error) {
-      console.error("Login failed:", error);
+      toast.success("Login successful!, Redirecting...");
+      location.assign(nextRoute ? nextRoute : "/");
+    } catch (error: unknown) {
+      if (isError(error)) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
+      console.error("[LOGIN ERROR]:", error);
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  // useEffect(() => {
-  //   if (isLoggedIn) {
-  //     router.push("/");
-  //   }
-  // }, [isLoggedIn]);
+  useEffect(() => {
+    if (isLoaded && user) {
+      if (user.role === UserRole.ADMIN) {
+        router.push("/dashboard");
+      } else if (user.role === UserRole.STUDENT) {
+        if (nextRoute) {
+          router.push(nextRoute);
+        } else {
+          router.push("/learner/dashboard");
+        }
+      } else {
+        if (nextRoute) {
+          router.push(nextRoute);
+        } else {
+          router.push("/");
+        }
+      }
+    }
+  }, [isLoaded, user, nextRoute, router]);
   
   return (
     <div>

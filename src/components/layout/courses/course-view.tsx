@@ -7,15 +7,44 @@ import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { enrollCourse } from "@/services/common";
+import { useUser } from "@/context/user-context";
+import { useRouter } from "next/navigation";
+import { isError } from "./helper";
+import { toast } from "sonner";
 
 const CourseView = ({id}: {id: string}) => {
   const [course, setCourse] = useState<Course | null>(null);
+  const [enrolling, setEnrolling] = useState<boolean>(false);
 
   const { getACourse } = useCourse();
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
 
   const gettingCourse = async () => {
     const course = await getACourse(id);
     setCourse(course);
+  }
+
+  const enrollForCurrentCourse = async () => {
+    if (!course) return;
+    if (!user || !isLoaded) {
+      toast.error("You must be logged in to enroll in a course");
+      router.push(`/login?to=/course/${course.id}`);
+      return;
+    };
+    setEnrolling(true);
+    try {
+      await enrollCourse(course.id);
+    } catch (error: unknown) {
+      if (isError(error)) {
+        toast.error(error.message);
+        console.error("Login failed", error.message);
+      } else {
+        console.error("Unknown error", error);
+      }
+    } finally {
+      setEnrolling(false);
+    }
   }
 
   useEffect(() => {
@@ -95,7 +124,7 @@ const CourseView = ({id}: {id: string}) => {
 
         {course && (<div className="mt-10">
           <Button
-            onClick={() => enrollCourse(course.id)}
+            onClick={enrollForCurrentCourse}
           >
             Enroll (Free)
           </Button>

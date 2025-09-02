@@ -24,7 +24,7 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <div className="bg-muted">
+    <div className="bg-muted/40">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 px-3 py-10 md:py-20">
         {/* Image */}
         <div className=" flex justify-center items-center mx-auto my-auto relative aspect-[4/3] md:aspect-auto">
