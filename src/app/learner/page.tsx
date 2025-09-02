@@ -93,10 +93,10 @@ const LearnerHome = () => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [progressData, setProgressData] = useState([
-    { name: "Web Development Fundamentals", lessons: 25, completedLessons: 21 },
-    { name: "JavaScript Advanced Concepts", lessons: 30, completedLessons: 18 },
-    { name: "React.js Mastery", lessons: 28, completedLessons: 11 },
-    { name: "Node.js Backend Development", lessons: 35, completedLessons: 5 },
+    { name: "Digital Literacy", lessons: 25, completedLessons: 21 },
+    { name: "Digital Communication & Collaboration", lessons: 30, completedLessons: 18 },
+    { name: "Digital Safety & Security", lessons: 28, completedLessons: 11 },
+    { name: "Digital Content Creation", lessons: 35, completedLessons: 5 },
   ]);
 
   const gettingCourse = async () => {

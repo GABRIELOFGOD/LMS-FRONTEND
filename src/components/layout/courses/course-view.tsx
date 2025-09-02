@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { enrollCourse } from "@/services/common";
 import { useUser } from "@/context/user-context";
 import { useRouter } from "next/navigation";
-import { isError } from "./helper";
+import { isError } from "@/services/helper";
 import { toast } from "sonner";
 
 const CourseView = ({id}: {id: string}) => {
