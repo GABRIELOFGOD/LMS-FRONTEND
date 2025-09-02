@@ -20,6 +20,9 @@ export const useAuth = () => {
       const token = data.token;
       localStorage.setItem("token", token);
       
+      // Reload the page to update the global context
+      window.location.reload();
+      
     } catch (error) {
       throw error;
     }
