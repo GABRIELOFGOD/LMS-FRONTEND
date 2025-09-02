@@ -1,63 +1,11 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Users, BookOpen, FileText, Award, TrendingUp } from "lucide-react";
 import Link from "next/link";
-
-// Circular Progress Component
-const CircularProgress = ({ 
-  percentage, 
-  size = 120, 
-  strokeWidth = 8,
-  color = "hsl(var(--primary))"
-}: {
-  percentage: number;
-  size?: number;
-  strokeWidth?: number;
-  color?: string;
-}) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="relative inline-flex items-center justify-center">
-      <svg
-        width={size}
-        height={size}
-        className="transform -rotate-90"
-      >
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="hsl(var(--muted))"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={color}
-          strokeWidth={strokeWidth}
-          fill="transparent"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          className="transition-all duration-300 ease-in-out"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xl font-bold text-foreground">{percentage}%</span>
-      </div>
-    </div>
-  );
-};
 
 export default function DashboardPage() {
   // Mock data - replace with real data from your API
@@ -73,13 +21,6 @@ export default function DashboardPage() {
     { title: "Active Courses", value: "56", icon: BookOpen, trend: "+8%", color: "text-green-600" },
     { title: "Resources", value: "189", icon: FileText, trend: "+23%", color: "text-purple-600" },
     { title: "Certifications", value: "89", icon: Award, trend: "+15%", color: "text-orange-600" },
-  ];
-
-  const skillsProgress = [
-    { name: "Courses Management", progress: 85, lessons: 45, projects: 12 },
-    { name: "User Administration", progress: 92, lessons: 38, projects: 8 },
-    { name: "Resource Creation", progress: 67, lessons: 29, projects: 6 },
-    { name: "Analytics & Reports", progress: 73, lessons: 32, projects: 4 },
   ];
 
   const recentSubmissions = [
@@ -104,18 +45,18 @@ export default function DashboardPage() {
       </div>
 
       {/* User Profile Section */}
-      <Card>
+      <Card className="shadow-sm border-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
+            <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
               <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="text-lg">{user.initials}</AvatarFallback>
+              <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">{user.initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-xl font-semibold">{user.name}</h2>
-              <p className="text-muted-foreground">{user.bio}</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{user.name}</h2>
+              <p className="text-gray-600 dark:text-gray-300 mt-1">{user.bio}</p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-lg">
               <CalendarDays className="h-4 w-4" />
               <span>Joined March 2024</span>
             </div>
@@ -124,16 +65,16 @@ export default function DashboardPage() {
       </Card>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (
-          <Card key={index}>
+          <Card key={index} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <stat.icon className={`h-5 w-5 ${stat.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="text-3xl font-bold">{stat.value}</div>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                 <TrendingUp className="h-3 w-3" />
                 <span className="text-green-600">{stat.trend}</span>
                 <span>from last month</span>
@@ -143,40 +84,50 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Skills Progress Section */}
+        {/* Recent Submissions Section - Expanded */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Skills Progress</CardTitle>
+            <CardTitle>Recent Submissions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {skillsProgress.map((skill, index) => (
-              <div key={index} className="flex items-center gap-6">
-                <div className="flex-shrink-0">
-                  <CircularProgress 
-                    percentage={skill.progress} 
-                    size={80} 
-                    strokeWidth={6}
-                    color={index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`}
-                  />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium">{skill.name}</h3>
-                    <span className="text-sm text-muted-foreground">{skill.progress}% Complete</span>
+          <CardContent>
+            {recentSubmissions.length > 0 ? (
+              <div className="space-y-4">
+                {recentSubmissions.map((submission) => (
+                  <div key={submission.id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
+                    <div className="space-y-1">
+                      <h4 className="font-medium">{submission.title}</h4>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>by {submission.user}</span>
+                        <span>•</span>
+                        <span>{submission.date}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant={
+                          submission.status === "Approved" ? "default" : 
+                          submission.status === "Pending" ? "secondary" : 
+                          "outline"
+                        }
+                      >
+                        {submission.status}
+                      </Badge>
+                      <Button size="sm" variant="ghost">
+                        View
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>📚 {skill.lessons} Lessons</span>
-                    <span>⭐ {skill.projects} Projects</span>
-                  </div>
-                  <div className="flex justify-end">
-                    <Button size="sm" variant="outline">
-                      Resume
-                    </Button>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <p className="text-lg font-medium mb-2">No submissions yet</p>
+                <p className="text-sm">When users submit projects or assignments, they'll appear here.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -214,48 +165,46 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Project Submissions Section */}
+      {/* System Overview Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Submissions</CardTitle>
+          <CardTitle>System Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          {recentSubmissions.length > 0 ? (
-            <div className="space-y-4">
-              {recentSubmissions.map((submission) => (
-                <div key={submission.id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
-                  <div className="space-y-1">
-                    <h4 className="font-medium">{submission.title}</h4>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>by {submission.user}</span>
-                      <span>•</span>
-                      <span>{submission.date}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      variant={
-                        submission.status === "Approved" ? "default" : 
-                        submission.status === "Pending" ? "secondary" : 
-                        "outline"
-                      }
-                    >
-                      {submission.status}
-                    </Badge>
-                    <Button size="sm" variant="ghost">
-                      View
-                    </Button>
-                  </div>
-                </div>
-              ))}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <span className="text-sm font-medium">Active Sessions</span>
+              </div>
+              <div className="text-2xl font-bold">247</div>
+              <p className="text-xs text-muted-foreground">Users currently online</p>
             </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No submissions yet</p>
-              <p className="text-sm">When users submit projects or assignments, they'll appear here.</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm font-medium">Course Completion</span>
+              </div>
+              <div className="text-2xl font-bold">78%</div>
+              <p className="text-xs text-muted-foreground">Average completion rate</p>
             </div>
-          )}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                <span className="text-sm font-medium">New Enrollments</span>
+              </div>
+              <div className="text-2xl font-bold">156</div>
+              <p className="text-xs text-muted-foreground">This month</p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                <span className="text-sm font-medium">Revenue</span>
+              </div>
+              <div className="text-2xl font-bold">$12.4k</div>
+              <p className="text-xs text-muted-foreground">Monthly recurring</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

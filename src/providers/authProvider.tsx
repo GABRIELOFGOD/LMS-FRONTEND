@@ -40,7 +40,7 @@ const AuthLogic = ({ children }: { children: React.ReactNode }) => {
       gettingProfile();
     } else {
       setHasDecided(true);
-      // router.push("/login"); // Commented out to allow dashboard access without login
+       router.push("/login"); // Commented out to allow dashboard access without login
     }
   }, []);
   
