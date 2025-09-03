@@ -52,7 +52,8 @@ const MyLoginForm = () => {
     try {
       await login(data.email, data.password);
       toast.success("Login successful!, Redirecting...");
-      location.assign(nextRoute ? nextRoute : "/");
+      // Let the useEffect handle routing based on user role
+      window.location.reload();
     } catch (error: unknown) {
       if (isError(error)) {
         toast.error(error.message);
@@ -73,7 +74,7 @@ const MyLoginForm = () => {
         if (nextRoute) {
           router.push(nextRoute);
         } else {
-          router.push("/learner/dashboard");
+          router.push("/learner");
         }
       } else {
         if (nextRoute) {

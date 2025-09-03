@@ -7,9 +7,11 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/context/user-context";
 
 const LearnerSidebar = () => {
   const currentPath = usePathname();
+  const { user } = useUser();
   
   const learnerNavigation = [
     {
@@ -50,7 +52,7 @@ const LearnerSidebar = () => {
           />
         </div>
         <div className="my-auto">
-          <p className="font-bold">Sarah</p>
+          <p className="font-bold">{user?.fname || "Learner"}</p>
           <p className="text-foreground/50 text-sm font-semibold">Level 1 learner</p>
         </div>
       </div>
