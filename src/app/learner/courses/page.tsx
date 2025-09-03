@@ -3,42 +3,15 @@
 import CourseMapper from "@/components/layout/courses/course-mapper";
 import Crumb from "@/components/Crumb";
 import InProgressCourses from "@/components/layout/learner/in-progress-courses";
-import { getUserStats } from "@/services/common";
 import { useUser } from "@/context/user-context";
-import { useEffect, useState } from "react";
+import { useStats } from "@/context/stats-context";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Award, Clock, Target } from "lucide-react";
 
-interface UserStats {
-  coursesEnrolled: number;
-  coursesCompleted: number;
-  lessonsCompleted: number;
-  totalLessons: number;
-  overallProgress: number;
-}
-
 const LearnerCourses = () => {
   const { user } = useUser();
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const userStats = await getUserStats();
-      if (userStats) {
-        setStats(userStats);
-      }
-    } catch (error) {
-      console.error("Error fetching user stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const { stats, isLoading: loading, refreshStats } = useStats();
 
   const statsCards = stats ? [
     {
@@ -130,7 +103,7 @@ const LearnerCourses = () => {
         {/* All Available Courses with Enrollment */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Browse All Courses</h2>
-          <CourseMapper />
+          <CourseMapper onStatsUpdate={refreshStats} />
         </div>
       </div>
     </div>

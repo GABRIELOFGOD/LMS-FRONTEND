@@ -10,6 +10,7 @@ import { useCourse } from "@/hooks/useCourse";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { CheckCircle, Play, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface EnhancedCourseCardProps {
   course: Course;
@@ -26,6 +27,7 @@ const EnhancedCourseCard = ({
 }: EnhancedCourseCardProps) => {
   const { isLoggedIn } = useUser();
   const { enrollCourse } = useCourse();
+  const router = useRouter();
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [enrolled, setEnrolled] = useState(isEnrolled);
   const [courseProgress, setCourseProgress] = useState(progress);
@@ -64,6 +66,14 @@ const EnhancedCourseCard = ({
         console.log('EnhancedCourseCard - Calling onEnrollmentUpdate');
         onEnrollmentUpdate();
       }
+      
+      // Show success message and redirect to course content
+      toast.success("Successfully enrolled! Opening course...");
+      
+      // Small delay then redirect to course content
+      setTimeout(() => {
+        router.push(`/learner/courses/${course.id}`);
+      }, 1000);
       
     } catch (error) {
       console.error('EnhancedCourseCard - Enrollment failed:', error);

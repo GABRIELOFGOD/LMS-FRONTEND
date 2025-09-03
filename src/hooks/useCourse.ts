@@ -356,7 +356,7 @@ export const useCourse = () => {
         throw new Error("Please log in to enroll in courses");
       }
       
-      console.log('Enrolling in course:', courseId);
+      console.log('Enrolling in course:', courseId, 'with token present:', !!token);
       const response = await fetch(`${BASEURL}/courses/${courseId}/enroll`, {
         method: "POST",
         headers: {
@@ -366,11 +366,25 @@ export const useCourse = () => {
       });
 
       const res = await response.json();
-      console.log('Enrollment response:', { status: response.status, ok: response.ok, response: res });
+      console.log('Enrollment response:', { 
+        status: response.status, 
+        ok: response.ok, 
+        response: res,
+        headers: response.headers 
+      });
       
       if (!response.ok) {
-        const errorMessage = res.message || res.error || `Enrollment failed (${response.status})`;
-        throw new Error(errorMessage);
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error("Your session has expired. Please log in again.");
+        } else if (response.status === 409) {
+          // User is already enrolled
+          toast.info("You are already enrolled in this course!");
+          return res; // Don't throw error for already enrolled
+        } else {
+          const errorMessage = res.message || res.error || `Enrollment failed (${response.status})`;
+          throw new Error(errorMessage);
+        }
       }
       
       console.log('Enrollment successful:', res);
@@ -379,11 +393,11 @@ export const useCourse = () => {
     } catch (error: unknown) {
       console.error("Enrollment error:", error);
       
-      if (isError(error)) {
+      if (error instanceof Error) {
         // Don't show toast here if it's already handled elsewhere
-        if (error.message.includes('401') || error.message.includes('unauthorized')) {
+        if (error.message.includes('401') || error.message.includes('unauthorized') || error.message.includes('session has expired')) {
           toast.error("Please log in again to enroll in courses");
-        } else {
+        } else if (!error.message.includes('already enrolled')) {
           toast.error(error.message);
         }
         console.error("Enrollment failed", error.message);

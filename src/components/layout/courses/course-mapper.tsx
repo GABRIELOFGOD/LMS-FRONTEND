@@ -17,7 +17,11 @@ interface EnrollmentData {
   progress: number;
 }
 
-const CourseMapper = () => {
+interface CourseMapperProps {
+  onStatsUpdate?: () => void; // New prop to trigger parent stats refresh
+}
+
+const CourseMapper = ({ onStatsUpdate }: CourseMapperProps = {}) => {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<EnrollmentData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -117,6 +121,12 @@ const CourseMapper = () => {
     // Refresh enrollment data when a user enrolls in a new course
     console.log('CourseMapper - Enrollment update triggered, refreshing data...');
     getEnrollmentData();
+    
+    // Trigger parent stats refresh if callback provided
+    if (onStatsUpdate) {
+      console.log('CourseMapper - Triggering parent stats update...');
+      onStatsUpdate();
+    }
   };
 
   return (

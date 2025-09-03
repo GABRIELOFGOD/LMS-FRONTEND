@@ -9,7 +9,11 @@ interface EnrollmentState {
   enrollments: any[];
 }
 
-export const useEnrollmentStatus = (courseId?: string) => {
+interface UseEnrollmentStatusOptions {
+  onStatsUpdate?: () => void; // Callback to refresh stats after enrollment
+}
+
+export const useEnrollmentStatus = (courseId?: string, options?: UseEnrollmentStatusOptions) => {
   const { isLoggedIn, isLoaded } = useUser();
   const { getUserEnrollments, getCourseProgress, enrollCourse } = useCourse();
   
@@ -71,6 +75,12 @@ export const useEnrollmentStatus = (courseId?: string) => {
       // Update state immediately
       setState(prev => ({ ...prev, isEnrolled: true, progress: 0 }));
       
+      // Trigger stats refresh if callback provided
+      if (options?.onStatsUpdate) {
+        console.log('useEnrollmentStatus - Triggering stats update...');
+        options.onStatsUpdate();
+      }
+      
       // Then refresh from server to ensure consistency
       setTimeout(checkEnrollmentStatus, 1000);
       
@@ -78,7 +88,7 @@ export const useEnrollmentStatus = (courseId?: string) => {
       setState(prev => ({ ...prev, isLoading: false }));
       throw error;
     }
-  }, [courseId, isLoggedIn, enrollCourse, checkEnrollmentStatus]);
+  }, [courseId, isLoggedIn, enrollCourse, checkEnrollmentStatus, options]);
 
   const refresh = useCallback(() => {
     checkEnrollmentStatus();
