@@ -16,7 +16,7 @@ const LearnerSidebar = () => {
   const learnerNavigation = [
     {
       id: 1,
-      label: "Home",
+      label: "Dashboard",
       path: "/learner",
       icon: Home
     },
@@ -28,18 +28,12 @@ const LearnerSidebar = () => {
     },
     {
       id: 3,
-      label: "Browse Courses",
-      path: "/courses",
-      icon: Videotape
-    },
-    {
-      id: 4,
       label: "Profile",
       path: "/learner/profile",
       icon: User2
     },
     {
-      id: 5,
+      id: 4,
       label: "Notification",
       path: "/learner/notification",
       icon: Bell
