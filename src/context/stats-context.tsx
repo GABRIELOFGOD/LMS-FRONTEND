@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { getUserStats, UserStats } from "@/services/common";
 import { useUser } from "./user-context";
 
@@ -19,9 +19,10 @@ export const StatsProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const { isLoggedIn, isLoaded } = useUser();
 
-  const refreshStats = async () => {
+  const refreshStats = useCallback(async () => {
     if (!isLoggedIn) {
       setStats(null);
+      setError(null);
       return;
     }
 
@@ -40,14 +41,14 @@ export const StatsProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoggedIn]);
 
   // Initial load when user context is ready
   useEffect(() => {
     if (isLoaded) {
       refreshStats();
     }
-  }, [isLoaded, isLoggedIn]);
+  }, [isLoaded, refreshStats]);
 
   return (
     <StatsContext.Provider value={{

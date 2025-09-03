@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useCourse } from "./useCourse";
 import { useUser } from "@/context/user-context";
 
@@ -16,6 +16,12 @@ interface UseEnrollmentStatusOptions {
 export const useEnrollmentStatus = (courseId?: string, options?: UseEnrollmentStatusOptions) => {
   const { isLoggedIn, isLoaded } = useUser();
   const { getUserEnrollments, getCourseProgress, enrollCourse } = useCourse();
+  const optionsRef = useRef(options);
+  
+  // Update the ref when options change
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
   
   const [state, setState] = useState<EnrollmentState>({
     isEnrolled: false,
@@ -76,9 +82,9 @@ export const useEnrollmentStatus = (courseId?: string, options?: UseEnrollmentSt
       setState(prev => ({ ...prev, isEnrolled: true, progress: 0 }));
       
       // Trigger stats refresh if callback provided
-      if (options?.onStatsUpdate) {
+      if (optionsRef.current?.onStatsUpdate) {
         console.log('useEnrollmentStatus - Triggering stats update...');
-        options.onStatsUpdate();
+        optionsRef.current.onStatsUpdate();
       }
       
       // Then refresh from server to ensure consistency
@@ -88,7 +94,7 @@ export const useEnrollmentStatus = (courseId?: string, options?: UseEnrollmentSt
       setState(prev => ({ ...prev, isLoading: false }));
       throw error;
     }
-  }, [courseId, isLoggedIn, enrollCourse, checkEnrollmentStatus, options]);
+  }, [courseId, isLoggedIn, enrollCourse, checkEnrollmentStatus]);
 
   const refresh = useCallback(() => {
     checkEnrollmentStatus();
