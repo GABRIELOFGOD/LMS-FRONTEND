@@ -8,6 +8,13 @@ export const useAuth = () => {
   const login = async (email: string, password: string) => {
     try {
       console.log('Starting login process for:', email);
+      console.log('BASEURL:', BASEURL);
+      console.log('Full login URL:', `${BASEURL}/auth/login`);
+      
+      if (!BASEURL) {
+        throw new Error('API base URL is not configured');
+      }
+      
       const response = await fetch(`${BASEURL}/auth/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
@@ -20,6 +27,11 @@ export const useAuth = () => {
       console.log('Login response:', { status: response.status, ok: response.ok, hasToken: !!data.token });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Invalid email or password");
+        } else if (response.status >= 500) {
+          throw new Error("Server error. Please try again later.");
+        }
         throw new Error(data.message || data.error || `Login failed (${response.status})`);
       }
       
@@ -31,11 +43,38 @@ export const useAuth = () => {
       console.log('Login successful, storing token');
       localStorage.setItem("token", token);
       
+      // Store user data for use in user context
+      const userData = {
+        id: data.id,
+        role: data.role,
+        email: email, // Use the email from login form
+        fname: '', // Will be filled when we get full profile
+        lname: ''  // Will be filled when we get full profile
+      };
+      localStorage.setItem("user", JSON.stringify(userData));
+      console.log('User data stored:', userData);
+      
       // Return success to allow the component to handle routing
-      return { success: true, user: data.user };
+      return { success: true, user: userData };
       
     } catch (error) {
       console.error('Login failed:', error);
+      
+      // Show user-friendly error message
+      if (error instanceof Error) {
+        if (error.message.includes('fetch') || error.message.includes('Network')) {
+          toast.error('Network error. Please check your connection and try again.');
+        } else if (error.message.includes('Invalid email or password')) {
+          toast.error('Invalid email or password. Please try again.');
+        } else if (error.message.includes('Server error')) {
+          toast.error('Server error. Please try again later.');
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.error('An unexpected error occurred. Please try again.');
+      }
+      
       throw error;
     }
   };

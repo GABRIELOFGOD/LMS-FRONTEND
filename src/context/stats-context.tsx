@@ -32,12 +32,22 @@ export const StatsProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('StatsContext - Refreshing user stats...');
       const userStats = await getUserStats();
-      setStats(userStats);
-      console.log('StatsContext - Stats updated:', userStats);
+      if (userStats) {
+        setStats(userStats);
+        console.log('StatsContext - Stats updated:', userStats);
+      } else {
+        console.warn('StatsContext - No stats returned, setting to null');
+        setStats(null);
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch stats';
       setError(errorMessage);
       console.error("StatsContext - Error fetching user stats:", error);
+      
+      // Don't clear stats on network errors, keep previous data
+      if (!errorMessage.includes('network') && !errorMessage.includes('timeout')) {
+        setStats(null);
+      }
     } finally {
       setIsLoading(false);
     }

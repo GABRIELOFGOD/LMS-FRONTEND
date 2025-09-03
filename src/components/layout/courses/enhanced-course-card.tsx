@@ -87,32 +87,36 @@ const EnhancedCourseCard = ({
   const getActionButton = () => {
     if (!isLoggedIn) {
       return (
-        <Button className="w-full" variant="outline">
-          <Link href="/login" className="w-full">
+        <Link href="/login" className="w-full">
+          <Button className="w-full" variant="outline">
             Login to Enroll
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       );
     }
 
     if (enrolled) {
       if (courseProgress === 100) {
         return (
-          <Button className="w-full bg-green-600 hover:bg-green-700">
-            <Link href={`/learner/courses/${course.id}`} className="w-full flex items-center justify-center gap-2">
-              <CheckCircle size={16} />
-              Completed
-            </Link>
-          </Button>
+          <Link href={`/learner/courses/${course.id}`} className="w-full">
+            <Button className="w-full bg-green-600 hover:bg-green-700">
+              <div className="w-full flex items-center justify-center gap-2">
+                <CheckCircle size={16} />
+                Completed
+              </div>
+            </Button>
+          </Link>
         );
       } else {
         return (
-          <Button className="w-full">
-            <Link href={`/learner/courses/${course.id}`} className="w-full flex items-center justify-center gap-2">
-              <Play size={16} />
-              Continue Learning
-            </Link>
-          </Button>
+          <Link href={`/learner/courses/${course.id}`} className="w-full">
+            <Button className="w-full">
+              <div className="w-full flex items-center justify-center gap-2">
+                <Play size={16} />
+                Continue Learning
+              </div>
+            </Button>
+          </Link>
         );
       }
     }

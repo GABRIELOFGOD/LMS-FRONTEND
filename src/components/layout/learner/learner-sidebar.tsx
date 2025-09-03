@@ -54,7 +54,7 @@ const LearnerSidebar = () => {
         <div className="my-auto">
           <p className="font-bold">{user?.fname || "Learner"}</p>
           <p className="text-foreground/50 text-sm font-semibold">
-            {user?.fname ? `${user.fname}'s Dashboard` : "Level 1 learner"}
+            {user?.fname ? `${user.fname}&apos;s Dashboard` : "Level 1 learner"}
           </p>
         </div>
       </div>

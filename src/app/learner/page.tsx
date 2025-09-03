@@ -92,6 +92,7 @@ const LearnerHome = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [coursesLoading, setCoursesLoading] = useState(true);
   const [progressData, setProgressData] = useState([
     { name: "Digital Literacy", lessons: 25, completedLessons: 21 },
     { name: "Digital Communication & Collaboration", lessons: 30, completedLessons: 18 },
@@ -101,22 +102,36 @@ const LearnerHome = () => {
 
   const gettingCourse = async () => {
     try {
+      setCoursesLoading(true);
+      console.log('LearnerHome - Fetching available courses...');
       const courses = await getAvailableCourses();
+      console.log('LearnerHome - Courses fetched:', courses);
       setCourses(courses || []);
     } catch (error) {
       console.error("Failed to fetch courses:", error);
       setCourses([]);
+      // Don't show error toast for course loading failure
+    } finally {
+      setCoursesLoading(false);
     }
   }
 
   const fetchUserStats = async () => {
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('LearnerHome - Fetching user stats...');
       const stats = await getUserStats();
       if (stats) {
         setUserStats(stats);
+        console.log('LearnerHome - Stats loaded successfully:', stats);
       } else {
         console.warn("No user stats received - using fallback data");
+        // Keep userStats as null to use fallback data
       }
     } catch (error) {
       console.error("Failed to fetch user stats:", error);
@@ -127,13 +142,18 @@ const LearnerHome = () => {
   };
 
   useEffect(() => {
-    // Only fetch data when user context is loaded and user is logged in
+    // Only fetch data when user context is loaded
     if (isLoaded) {
-      gettingCourse(); // This uses getAvailableCourses which doesn't require auth
+      console.log('LearnerHome - User context loaded, isLoggedIn:', isLoggedIn);
+      // Always fetch courses (public endpoint)
+      gettingCourse();
+      
+      // Only fetch user-specific data if logged in
       if (isLoggedIn) {
-        fetchUserStats(); // This requires authentication
+        fetchUserStats();
       } else {
-        setLoading(false); // If not logged in, stop loading
+        console.log('LearnerHome - User not logged in, skipping stats fetch');
+        setLoading(false);
       }
     }
   }, [isLoaded, isLoggedIn]);
@@ -196,6 +216,31 @@ const LearnerHome = () => {
     { id: 2, action: "Started course", title: "React Components", course: "React Mastery", time: "1 day ago" },
     { id: 3, action: "Earned certificate", title: "HTML/CSS Basics", course: "Web Fundamentals", time: "3 days ago" },
   ];
+
+  // Don't render learner dashboard if not authenticated
+  if (isLoaded && !isLoggedIn) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="mb-4">
+            <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
+          <p className="text-muted-foreground mb-6">Please log in to access your learner dashboard.</p>
+          <div className="space-x-4">
+            <Button asChild>
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/register">Sign Up</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
@@ -428,7 +473,23 @@ const LearnerHome = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {courses && courses.length > 0 ? (
+          {coursesLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="animate-pulse">
+                  <CardContent className="p-4">
+                    <div className="aspect-video bg-muted rounded-lg mb-3"></div>
+                    <div className="h-4 bg-muted rounded mb-2"></div>
+                    <div className="h-3 bg-muted rounded mb-3"></div>
+                    <div className="flex justify-between">
+                      <div className="h-6 w-16 bg-muted rounded"></div>
+                      <div className="h-8 w-20 bg-muted rounded"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : courses && courses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {courses.slice(0, 3).map((course) => (
                 <Link key={course.id} href={`/course/${course.id}`}>
@@ -436,7 +497,7 @@ const LearnerHome = () => {
                     <CardContent className="p-4">
                       <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg mb-3 overflow-hidden">
                         <Image
-                          src={ImagePlaceholder}
+                          src={course.imageUrl || ImagePlaceholder}
                           alt={course.title}
                           width={300}
                           height={200}
@@ -446,7 +507,7 @@ const LearnerHome = () => {
                       <h3 className="font-semibold mb-2 line-clamp-2">{course.title}</h3>
                       <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{course.description}</p>
                       <div className="flex items-center justify-between">
-                        <Badge variant="outline">Beginner</Badge>
+                        <Badge variant="outline">{course.isFree ? 'Free' : 'Premium'}</Badge>
                         <Button size="sm" variant="ghost">
                           Start Learning
                         </Button>

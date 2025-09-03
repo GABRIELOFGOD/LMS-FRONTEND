@@ -9,17 +9,26 @@ export const useCourse = () => {
 
   const getAvailableCourses = async () => {
     try {
+      console.log('getAvailableCourses - Fetching published courses...');
       const response = await fetch(`${BASEURL}/courses/published`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch courses: ${response.status}`);
+      }
+      
       const res = await response.json();
-      if (!response.ok) throw new Error(res.message);
-      return res;
+      console.log('getAvailableCourses - Courses fetched successfully:', res);
+      
+      // Handle different response structures
+      return res.value || res.data || res || [];
     } catch (error: unknown) {
       if (isError(error)) {
-        toast.error(error.message);
-        console.error("Login failed", error.message);
+        console.error("Failed to fetch available courses", error.message);
+        // Don't show toast for course loading errors as it's not critical
       } else {
-        console.error("Unknown error", error);
+        console.error("Unknown error fetching courses", error);
       }
+      return [];
     }
   }
   
@@ -357,7 +366,9 @@ export const useCourse = () => {
       }
       
       console.log('Enrolling in course:', courseId, 'with token present:', !!token);
-      const response = await fetch(`${BASEURL}/courses/${courseId}/enroll`, {
+      
+      // Try the courses/{id}/enroll endpoint first
+      let response = await fetch(`${BASEURL}/courses/${courseId}/enroll`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -365,12 +376,24 @@ export const useCourse = () => {
         }
       });
 
+      // If that fails, try the original pattern
+      if (!response.ok && response.status === 404) {
+        console.log('Trying alternative enrollment endpoint...');
+        response = await fetch(`${BASEURL}/courses/enroll/${courseId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "authorization": `Bearer ${token}`
+          }
+        });
+      }
+
       const res = await response.json();
       console.log('Enrollment response:', { 
         status: response.status, 
         ok: response.ok, 
         response: res,
-        headers: response.headers 
+        endpoint: response.url
       });
       
       if (!response.ok) {
@@ -418,21 +441,39 @@ export const useCourse = () => {
       }
       
       console.log('Fetching user enrollments...');
-      const response = await fetch(`${BASEURL}/enrollments/user`, {
-        headers: {
-          "authorization": `Bearer ${token}`
+      let response;
+      let res;
+      
+      try {
+        // Try primary endpoint
+        response = await fetch(`${BASEURL}/enrollments/user`, {
+          headers: {
+            "authorization": `Bearer ${token}`
+          }
+        });
+        res = await response.json();
+        console.log('Enrollments response:', { status: response.status, ok: response.ok, response: res });
+        
+        if (response.ok) {
+          console.log('User enrollments fetched successfully:', res);
+          return res;
         }
-      });
-
-      const res = await response.json();
-      console.log('Enrollments response:', { status: response.status, ok: response.ok, response: res });
+      } catch (error) {
+        console.warn('Primary enrollments endpoint failed, trying fallback...');
+      }
+      
+      // Fallback: Try alternative endpoint or return empty for now
+      if (!response || response.status === 404) {
+        console.log('Enrollments endpoint not available, returning empty array');
+        return [];
+      }
       
       if (!response.ok) {
         if (response.status === 401) {
           console.warn("Unauthorized - user may need to log in again");
           return [];
         }
-        throw new Error(res.message || `Failed to fetch enrollments (${response.status})`);
+        throw new Error(res?.message || `Failed to fetch enrollments (${response.status})`);
       }
       
       console.log('User enrollments fetched successfully:', res);

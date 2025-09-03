@@ -5,7 +5,6 @@ import Crumb from "@/components/Crumb";
 import InProgressCourses from "@/components/layout/learner/in-progress-courses";
 import { useUser } from "@/context/user-context";
 import { useStats } from "@/context/stats-context";
-import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Award, Clock, Target } from "lucide-react";
 
@@ -57,7 +56,7 @@ const LearnerCourses = () => {
         </p>
         <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            💡 <strong>Tip:</strong> Click "Enroll Now" to add new courses to your learning dashboard. 
+            💡 <strong>Tip:</strong> Click &quot;Enroll Now&quot; to add new courses to your learning dashboard. 
             Track your progress and access course materials anytime.
           </p>
         </div>
