@@ -8,7 +8,12 @@ export interface Category {
   updatedAt?: Date;
 }
 
-export interface Video {}
+export interface Video {
+  // TODO: Define video properties when backend schema is available
+  id?: string;
+  url?: string;
+  duration?: number;
+}
 
 export interface Chapter {
   id?: string;

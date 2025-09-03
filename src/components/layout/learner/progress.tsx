@@ -13,7 +13,9 @@ const LearnerProgress = ({
   const [overallProgress, setOverallProgress] = useState<number>(0);
 
   useEffect(() => {
-    progress && setOverallProgress(progress);
+    if (progress) {
+      setOverallProgress(progress);
+    }
   }, [progress]);
   
   return (

@@ -204,6 +204,7 @@ const ResourcesForm = () => {
                 <FormControl>
                   <Input
                     {...fieldProps}
+                    value={undefined}
                     type="file"
                     accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov"
                     onChange={(e) => {

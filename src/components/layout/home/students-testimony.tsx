@@ -61,7 +61,7 @@ const Testimony = () => {
           <div ref={sliderRef} className="keen-slider">
             {testimonials.map((testimonial, index) => (
               <div key={index} className="keen-slider__slide bg-muted rounded-md p-6 shadow-md">
-                <p className="text-lg italic not-dark:text-gray-800 dark:text-gray-200">"{testimonial.text}"</p>
+                <p className="text-lg italic not-dark:text-gray-800 dark:text-gray-200">&ldquo;{testimonial.text}&rdquo;</p>
                 <div className="mt-4">
                   <p className="font-semibold">{testimonial.name}</p>
                   <p className="text-sm text-muted-foreground">{testimonial.role}</p>

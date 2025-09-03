@@ -1,9 +1,8 @@
 // authProvider.tsx
 "use client";
 
-import { UserProvider, useUser } from "@/context/user-context";
+import { UserProvider } from "@/context/user-context";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -19,8 +18,6 @@ const WaitingForProfile = () => {
 // Separate the auth logic from the provider wrapper
 const AuthLogic = ({ children }: { children: React.ReactNode }) => {
   const [hasDecided, setHasDecided] = useState(false);
-  const { login } = useAuth();
-  const { user } = useUser(); // Use the available user context
   const router = useRouter();
 
   useEffect(() => {

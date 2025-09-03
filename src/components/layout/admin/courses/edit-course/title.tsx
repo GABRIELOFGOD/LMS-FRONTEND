@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useCreateCourse } from "@/achive/hooks/create-course";
+import { useCourse } from "@/hooks/useCourse";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader, Pencil } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -34,7 +34,7 @@ const TitleForm = ({
     }
   });
 
-  const { updateCourseTitle } = useCreateCourse();
+  const { updateCourseTitle } = useCourse();
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -50,10 +50,7 @@ const TitleForm = ({
 
   const onSubmit = async (value: z.infer<typeof formSchema>) => {
     try {
-      const response = await updateCourseTitle({
-        id: courseId,
-        value: value.title
-      });
+      const response = await updateCourseTitle(courseId, value.title);
 
       if (response.message) toast.success(response.message);
       title = value.title;
