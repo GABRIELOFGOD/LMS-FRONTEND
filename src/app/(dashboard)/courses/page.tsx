@@ -9,6 +9,9 @@ const Courses = () => {
 
   return (
     <div>
+      <div style={{backgroundColor: 'yellow', color: 'black', padding: '10px', margin: '10px'}}>
+        COURSES PAGE - Dashboard Route Group - User: {isLoggedIn ? 'LOGGED IN' : 'GUEST'}
+      </div>
       <div className="container mx-auto px-3 py-10">
         {/* Breadcrumb for logged-in users */}
         {isLoggedIn && (

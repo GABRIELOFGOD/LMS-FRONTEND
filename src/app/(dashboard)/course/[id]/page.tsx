@@ -5,6 +5,9 @@ const SingleCoursePreview = async ({ params }: { params: Promise<{ id: string }>
 
   return (
     <div>
+      <div style={{backgroundColor: 'orange', color: 'black', padding: '10px', margin: '10px'}}>
+        COURSE DETAIL PAGE - Dashboard Route Group - ID: {id}
+      </div>
       <div className="container px-3 py-10 mx-auto">
         {id && <CourseView id={id} />}
       </div>

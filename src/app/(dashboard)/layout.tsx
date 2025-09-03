@@ -15,15 +15,14 @@ const HomeLayout = ({
 }) => {
   const { isLoggedIn, isLoaded } = useUser();
 
-  // Debug logging
-  console.log('Dashboard Layout - isLoaded:', isLoaded, 'isLoggedIn:', isLoggedIn);
-
   // Show loading state while user context is loading
   if (!isLoaded) {
-    console.log('Dashboard Layout - Showing loading state');
     return (
       <div>
         <Navbar />
+        <div style={{backgroundColor: 'red', color: 'white', padding: '10px'}}>
+          DASHBOARD LAYOUT - LOADING
+        </div>
         {children}
         <Footer />
       </div>
@@ -32,9 +31,11 @@ const HomeLayout = ({
 
   // Layout for logged-in users (similar to learner layout)
   if (isLoggedIn) {
-    console.log('Dashboard Layout - Showing learner layout');
     return (
       <div className="h-screen flex flex-col">
+        <div style={{backgroundColor: 'green', color: 'white', padding: '10px'}}>
+          DASHBOARD LAYOUT - LOGGED IN USER
+        </div>
         {/* Learner Navbar at the top */}
         <LearnerNavbar />
         
@@ -53,9 +54,11 @@ const HomeLayout = ({
   }
 
   // Layout for guest users
-  console.log('Dashboard Layout - Showing guest layout');
   return (
     <div>
+      <div style={{backgroundColor: 'blue', color: 'white', padding: '10px'}}>
+        DASHBOARD LAYOUT - GUEST USER
+      </div>
       <Navbar />
       {children}
       <Footer />
