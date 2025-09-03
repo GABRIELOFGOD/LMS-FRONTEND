@@ -7,6 +7,10 @@ export const useAuth = () => {
 
   const login = async (email: string, password: string) => {
     try {
+      if (!BASEURL) {
+        throw new Error("API URL is not configured. Please check your environment variables.");
+      }
+
       const response = await fetch(`${BASEURL}/auth/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
@@ -16,14 +20,26 @@ export const useAuth = () => {
       });
 
       const data = await response.json();
-      if (data.error || !data.token) throw new Error(data.message || "Login failed");
+      if (data.error || !data.token) {
+        throw new Error(data.message || "Login failed");
+      }
+      
       const token = data.token;
       localStorage.setItem("token", token);
+      
+      // Show success message
+      toast.success("Login successful!");
       
       // Return success to allow the component to handle routing
       return { success: true, user: data.user };
       
     } catch (error) {
+      console.error("Login error:", error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred during login");
+      }
       throw error;
     }
   };

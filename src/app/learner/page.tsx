@@ -213,7 +213,9 @@ const LearnerHome = () => {
             </Avatar>
             <div className="flex-1">
               <h2 className="text-xl font-semibold">{user?.fname} {user?.lname}</h2>
-              <p className="text-muted-foreground">Aspiring Developer & Lifelong Learner</p>
+              <p className="text-muted-foreground">
+                {user?.fname ? `${user.fname} - Aspiring Developer & Lifelong Learner` : "Aspiring Developer & Lifelong Learner"}
+              </p>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarDays className="h-4 w-4" />

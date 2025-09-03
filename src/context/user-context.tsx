@@ -27,6 +27,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      if (!BASEURL) {
+        console.error("API URL is not configured");
+        setIsLoggedIn(false);
+        setUser(null);
+        return;
+      }
+
       const req = await fetch(`${BASEURL}/auth/`, {
         headers: {
           "Content-Type": "application/json",

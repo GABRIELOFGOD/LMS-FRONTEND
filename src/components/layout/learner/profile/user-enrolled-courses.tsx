@@ -5,8 +5,11 @@ import { Course } from "@/types/course";
 import { useState, useEffect } from "react";
 import ProfileCourseCard from "./profile-course-card";
 import Link from "next/link";
+import { useUser } from "@/context/user-context";
+
 const UserEnrolledCourses = () => {
   const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
+  const { user } = useUser();
 
   const { getCourses } = useCourse();
 
@@ -22,7 +25,9 @@ const UserEnrolledCourses = () => {
   return (
     <div>
       <div className="flex flex-col gap-5">
-        <p className="text-lg md:text-xl font-bold">Enrolled Courses</p>
+        <p className="text-lg md:text-xl font-bold">
+          {user?.fname ? `${user.fname}'s Enrolled Courses` : "Enrolled Courses"}
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {enrolledCourses.map((course) => (
             <Link
