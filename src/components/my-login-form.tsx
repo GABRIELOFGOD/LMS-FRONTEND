@@ -19,11 +19,9 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useUser } from "@/context/user-context";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserRole } from "@/types/user";
-import { useUser } from "@/context/user-context";
-import { toast } from "sonner";
-import { isError } from "@/services/helper";
 
 const formSchema = z.object({
   email: z.string().min(1, { message: "Email is required" }),
@@ -32,11 +30,11 @@ const formSchema = z.object({
 
 const MyLoginForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user, isLoaded } = useUser();
+  const { isLoggedIn, user, refreshUser } = useUser();
   const router = useRouter();
 
   const param = useSearchParams();
-  const nextRoute = param.get("to");
+  // const nextRoute = param.get("to"); // TODO: Implement redirect to specific route after login
   
   const { login } = useAuth();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -50,41 +48,38 @@ const MyLoginForm = () => {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      await login(data.email, data.password);
-      toast.success("Login successful!, Redirecting...");
-      // Let the useEffect handle routing based on user role
-      window.location.reload();
-    } catch (error: unknown) {
-      if (isError(error)) {
-        toast.error(error.message);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
+      const result = await login(data.email, data.password);
+      if (result?.success) {
+        // Refresh user context to get updated user data
+        refreshUser();
+        // Route to learner dashboard after successful login
+        router.push("/learner");
       }
-      console.error("[LOGIN ERROR]:", error);
+    } catch (error) {
+      console.error("Login failed:", error);
     } finally {
       setIsSubmitting(false);
     }
   }
 
   useEffect(() => {
-    if (isLoaded && user) {
-      if (user.role === UserRole.ADMIN) {
-        router.push("/dashboard");
-      } else if (user.role === UserRole.STUDENT) {
-        if (nextRoute) {
-          router.push(nextRoute);
-        } else {
+    if (isLoggedIn && user) {
+      // Route based on user role
+      switch (user.role) {
+        case UserRole.ADMIN:
+          router.push("/admin");
+          break;
+        case UserRole.TEACHER:
+          router.push("/dashboard");
+          break;
+        case UserRole.STUDENT:
           router.push("/learner");
-        }
-      } else {
-        if (nextRoute) {
-          router.push(nextRoute);
-        } else {
-          router.push("/");
-        }
+          break;
+        default:
+          router.push("/learner");
       }
     }
-  }, [isLoaded, user, nextRoute, router]);
+  }, [isLoggedIn, user, router]);
   
   return (
     <div>

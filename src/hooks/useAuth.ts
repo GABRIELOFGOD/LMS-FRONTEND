@@ -20,8 +20,8 @@ export const useAuth = () => {
       const token = data.token;
       localStorage.setItem("token", token);
       
-      // Reload the page to update the global context
-      window.location.reload();
+      // Return success to allow the component to handle routing
+      return { success: true, user: data.user };
       
     } catch (error) {
       throw error;

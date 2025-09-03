@@ -12,7 +12,7 @@ interface UploadCompProps {
   acceptedFileTypes?: string;
 }
 
-const UploadComp = ({ image, setImage, setFile, acceptedFileTypes = "image/*" }: UploadCompProps) => {
+const UploadComp = ({ image, setImage, setFile }: Omit<UploadCompProps, 'acceptedFileTypes'>) => {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {

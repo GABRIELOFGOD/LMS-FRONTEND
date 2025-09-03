@@ -38,7 +38,7 @@ const formSchema = z.object({
     .min(1, { message: "Last name is required" })
     .min(2, { message: "Last name must be at least 2 characters long" }),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: "Passwords don&apos;t match",
   path: ["confirmPassword"],
 });
 

@@ -7,37 +7,54 @@ import { createContext, ReactNode, useContext, useEffect, useState } from "react
 interface userContextType {
   user: User | null;
   isLoaded: boolean;
+  isLoggedIn: boolean;
+  refreshUser: () => void;
 }
 
 const UserContext = createContext<userContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [isloaded, setIsLoaded] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   const getUser = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token not found");
-      const req = await fetch(`${BASEURL}/users/profile`, {
+      if (!token) {
+        setIsLoggedIn(false);
+        setUser(null);
+        return;
+      }
+
+      const req = await fetch(`${BASEURL}/auth/`, {
         headers: {
           "Content-Type": "application/json",
           "authorization": `Bearer ${token}`
         }
       });
+
       const res = await req.json();
       if (!req.ok) throw new Error(res.error);
       if (res.error) throw new Error(res.error);
-      setUser(res as User);
+      
+      setUser(res.user as User);
+      setIsLoggedIn(true);
 
     } catch (error: unknown) {
-      if (error == typeof Error){
-        console.log("[ERROR] ", error);
-      }
       console.log("[ERROR] ", error);
+      setUser(null);
+      setIsLoggedIn(false);
+      // Clear invalid token
+      localStorage.removeItem("token");
     } finally {
       setIsLoaded(true);
     }
+  }
+
+  const refreshUser = () => {
+    setIsLoaded(false);
+    getUser();
   }
 
   useEffect(() => {
@@ -45,7 +62,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   
   return (
-    <UserContext.Provider value={{ user, isLoaded }}>
+    <UserContext.Provider value={{ 
+      user, 
+      isLoaded: isloaded, 
+      isLoggedIn,
+      refreshUser 
+    }}>
       {children}
     </UserContext.Provider>
   )

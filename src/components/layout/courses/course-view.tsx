@@ -14,7 +14,6 @@ import { toast } from "sonner";
 
 const CourseView = ({id}: {id: string}) => {
   const [course, setCourse] = useState<Course | null>(null);
-  const [enrolling, setEnrolling] = useState<boolean>(false);
 
   const { getACourse } = useCourse();
   const { user, isLoaded } = useUser();
@@ -32,7 +31,6 @@ const CourseView = ({id}: {id: string}) => {
       router.push(`/login?to=/course/${course.id}`);
       return;
     };
-    setEnrolling(true);
     try {
       await enrollCourse(course.id);
     } catch (error: unknown) {
@@ -42,8 +40,6 @@ const CourseView = ({id}: {id: string}) => {
       } else {
         console.error("Unknown error", error);
       }
-    } finally {
-      setEnrolling(false);
     }
   }
 
