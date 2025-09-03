@@ -1,6 +1,7 @@
 "use client";
 import Crumb from "@/components/Crumb";
 import { useCourse } from "@/hooks/useCourse";
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 import { Course } from "@/types/course";
 import { useEffect, useState } from "react";
 
@@ -9,18 +10,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/context/user-context";
 import { useRouter } from "next/navigation";
-import { isError } from "@/services/helper";
 import { toast } from "sonner";
 
 const CourseView = ({id}: {id: string}) => {
   const [course, setCourse] = useState<Course | null>(null);
-  const [isEnrolled, setIsEnrolled] = useState(false);
-  const [isEnrolling, setIsEnrolling] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const { getACourse, enrollCourse, getUserEnrollments } = useCourse();
+  const { getACourse } = useCourse();
   const { user, isLoaded, isLoggedIn } = useUser();
   const router = useRouter();
+  
+  // Use the new enrollment hook for better state management
+  const { 
+    isEnrolled, 
+    isLoading: isEnrolling, 
+    progress, 
+    enroll 
+  } = useEnrollmentStatus(id);
 
   const gettingCourse = async () => {
     try {
@@ -34,21 +40,6 @@ const CourseView = ({id}: {id: string}) => {
     }
   }
 
-  const checkEnrollmentStatus = async () => {
-    if (!isLoggedIn || !id) return;
-    
-    console.log('CourseView - Checking enrollment status for course:', id);
-    
-    try {
-      const enrollments = await getUserEnrollments();
-      const enrolled = enrollments.some((enrollment: any) => enrollment.courseId === id);
-      console.log('CourseView - Enrollment status:', enrolled);
-      setIsEnrolled(enrolled);
-    } catch (error) {
-      console.error("Failed to check enrollment status:", error);
-    }
-  };
-
   const enrollForCurrentCourse = async () => {
     if (!course) return;
     
@@ -58,21 +49,13 @@ const CourseView = ({id}: {id: string}) => {
       return;
     }
     
-    setIsEnrolling(true);
     try {
-      await enrollCourse(course.id);
-      setIsEnrolled(true);
-      toast.success("Successfully enrolled in the course!");
-    } catch (error: unknown) {
-      if (isError(error)) {
-        toast.error(error.message);
-        console.error("Enrollment failed", error.message);
-      } else {
-        console.error("Unknown error", error);
-        toast.error("Failed to enroll in course");
-      }
-    } finally {
-      setIsEnrolling(false);
+      console.log('CourseView - Starting enrollment for course:', course.id);
+      await enroll();
+      console.log('CourseView - Enrollment completed successfully');
+    } catch (error) {
+      console.error('CourseView - Enrollment failed:', error);
+      // Error handling is done in the hook
     }
   }
 
@@ -81,12 +64,6 @@ const CourseView = ({id}: {id: string}) => {
       gettingCourse();
     }
   }, [id]);
-
-  useEffect(() => {
-    if (isLoaded && id) {
-      checkEnrollmentStatus();
-    }
-  }, [isLoaded, isLoggedIn, id]);
 
   if (loading) {
     return (

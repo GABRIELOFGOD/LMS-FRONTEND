@@ -40,21 +40,43 @@ const CourseMapper = () => {
   };
 
   const getEnrollmentData = async () => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      console.log('CourseMapper - User not logged in, skipping enrollment data fetch');
+      return;
+    }
     
     try {
+      console.log('CourseMapper - Fetching user enrollments...');
       const userEnrollments = await getUserEnrollments();
+      console.log('CourseMapper - User enrollments:', userEnrollments);
+      
+      if (!userEnrollments || !Array.isArray(userEnrollments)) {
+        console.warn('CourseMapper - Invalid enrollments data received:', userEnrollments);
+        setEnrollments([]);
+        return;
+      }
+      
       const enrollmentData: EnrollmentData[] = [];
       
       // Get progress for each enrolled course
       for (const enrollment of userEnrollments) {
-        const progress = await getCourseProgress(enrollment.courseId);
-        enrollmentData.push({
-          courseId: enrollment.courseId,
-          progress: progress?.completionPercentage || 0
-        });
+        try {
+          const progress = await getCourseProgress(enrollment.courseId);
+          enrollmentData.push({
+            courseId: enrollment.courseId,
+            progress: progress?.completionPercentage || 0
+          });
+        } catch (error) {
+          console.error(`CourseMapper - Failed to get progress for course ${enrollment.courseId}:`, error);
+          // Still add the enrollment even if progress fetch fails
+          enrollmentData.push({
+            courseId: enrollment.courseId,
+            progress: 0
+          });
+        }
       }
       
+      console.log('CourseMapper - Final enrollment data:', enrollmentData);
       setEnrollments(enrollmentData);
     } catch (error: unknown) {
       if (isError(error)) {
@@ -62,6 +84,7 @@ const CourseMapper = () => {
       } else {
         console.error("Unknown error", error);
       }
+      setEnrollments([]);
     }
   };
 
@@ -92,6 +115,7 @@ const CourseMapper = () => {
 
   const handleEnrollmentUpdate = () => {
     // Refresh enrollment data when a user enrolls in a new course
+    console.log('CourseMapper - Enrollment update triggered, refreshing data...');
     getEnrollmentData();
   };
 

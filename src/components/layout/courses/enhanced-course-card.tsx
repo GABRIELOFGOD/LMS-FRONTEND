@@ -32,6 +32,15 @@ const EnhancedCourseCard = ({
 
   const actualChapters = course.chapters.filter((cht) => cht.isPublished);
 
+  // Sync local state with props when they change
+  useEffect(() => {
+    setEnrolled(isEnrolled);
+  }, [isEnrolled]);
+
+  useEffect(() => {
+    setCourseProgress(progress);
+  }, [progress]);
+
   const handleEnrollment = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -43,12 +52,23 @@ const EnhancedCourseCard = ({
 
     setIsEnrolling(true);
     try {
+      console.log('EnhancedCourseCard - Starting enrollment for course:', course.id);
       await enrollCourse(course.id);
+      
+      console.log('EnhancedCourseCard - Enrollment successful, updating state');
       setEnrolled(true);
       setCourseProgress(0);
-      onEnrollmentUpdate?.();
+      
+      // Notify parent component to refresh data
+      if (onEnrollmentUpdate) {
+        console.log('EnhancedCourseCard - Calling onEnrollmentUpdate');
+        onEnrollmentUpdate();
+      }
+      
     } catch (error) {
-      // Error is already handled in the enrollCourse function
+      console.error('EnhancedCourseCard - Enrollment failed:', error);
+      // Error is already handled in the enrollCourse function with toast
+      // Don't show additional toast here to avoid duplication
     } finally {
       setIsEnrolling(false);
     }

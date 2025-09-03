@@ -352,8 +352,11 @@ export const useCourse = () => {
   const enrollCourse = async (courseId: string) => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("Please log in to enroll in courses");
+      if (!token) {
+        throw new Error("Please log in to enroll in courses");
+      }
       
+      console.log('Enrolling in course:', courseId);
       const response = await fetch(`${BASEURL}/courses/${courseId}/enroll`, {
         method: "POST",
         headers: {
@@ -363,13 +366,26 @@ export const useCourse = () => {
       });
 
       const res = await response.json();
-      if (!response.ok) throw new Error(res.message);
+      console.log('Enrollment response:', { status: response.status, ok: response.ok, response: res });
       
+      if (!response.ok) {
+        const errorMessage = res.message || res.error || `Enrollment failed (${response.status})`;
+        throw new Error(errorMessage);
+      }
+      
+      console.log('Enrollment successful:', res);
       toast.success("Successfully enrolled in course!");
       return res;
     } catch (error: unknown) {
+      console.error("Enrollment error:", error);
+      
       if (isError(error)) {
-        toast.error(error.message);
+        // Don't show toast here if it's already handled elsewhere
+        if (error.message.includes('401') || error.message.includes('unauthorized')) {
+          toast.error("Please log in again to enroll in courses");
+        } else {
+          toast.error(error.message);
+        }
         console.error("Enrollment failed", error.message);
       } else {
         toast.error("Failed to enroll in course");
@@ -382,8 +398,12 @@ export const useCourse = () => {
   const getUserEnrollments = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return [];
+      if (!token) {
+        console.warn("No authentication token found for getUserEnrollments");
+        return [];
+      }
       
+      console.log('Fetching user enrollments...');
       const response = await fetch(`${BASEURL}/enrollments/user`, {
         headers: {
           "authorization": `Bearer ${token}`
@@ -391,7 +411,17 @@ export const useCourse = () => {
       });
 
       const res = await response.json();
-      if (!response.ok) throw new Error(res.message);
+      console.log('Enrollments response:', { status: response.status, ok: response.ok, response: res });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.warn("Unauthorized - user may need to log in again");
+          return [];
+        }
+        throw new Error(res.message || `Failed to fetch enrollments (${response.status})`);
+      }
+      
+      console.log('User enrollments fetched successfully:', res);
       return res;
     } catch (error: unknown) {
       if (isError(error)) {
