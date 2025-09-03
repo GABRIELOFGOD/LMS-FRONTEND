@@ -2,6 +2,7 @@
 
 import LearnerHeader from "@/components/layout/learner/learner-header";
 import LearnerSidebar from "@/components/layout/learner/learner-sidebar";
+import LearnerNavbar from "@/components/layout/learner/learner-navbar";
 import { ReactNode, useEffect } from "react";
 import { useUser } from "@/context/user-context";
 import { UserRole } from "@/types/user";
@@ -24,13 +25,19 @@ const LearnerLayout = ({
   }, []);
   
   return (
-    <div className="h-screen flex">
-      <div className="hidden md:flex">
-        <LearnerSidebar />
-      </div>
-      <div className="px-3 md:px-5 h-full overflow-auto w-full">
-        <LearnerHeader />
-        {children}
+    <div className="h-screen flex flex-col">
+      {/* Learner-specific Navbar at the top */}
+      <LearnerNavbar />
+      
+      {/* Main content area with sidebar and content */}
+      <div className="flex flex-1 overflow-hidden">
+        <div className="hidden md:flex">
+          <LearnerSidebar />
+        </div>
+        <div className="px-3 md:px-5 h-full overflow-auto w-full">
+          <LearnerHeader />
+          {children}
+        </div>
       </div>
     </div>
   )

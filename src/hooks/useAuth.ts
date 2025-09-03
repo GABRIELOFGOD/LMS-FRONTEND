@@ -7,6 +7,7 @@ export const useAuth = () => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Starting login process for:', email);
       const response = await fetch(`${BASEURL}/auth/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
@@ -16,14 +17,25 @@ export const useAuth = () => {
       });
 
       const data = await response.json();
-      if (data.error || !data.token) throw new Error(data.message || "Login failed");
+      console.log('Login response:', { status: response.status, ok: response.ok, hasToken: !!data.token });
+      
+      if (!response.ok) {
+        throw new Error(data.message || data.error || `Login failed (${response.status})`);
+      }
+      
+      if (data.error || !data.token) {
+        throw new Error(data.message || data.error || "Login failed - no token received");
+      }
+      
       const token = data.token;
+      console.log('Login successful, storing token');
       localStorage.setItem("token", token);
       
       // Return success to allow the component to handle routing
       return { success: true, user: data.user };
       
     } catch (error) {
+      console.error('Login failed:', error);
       throw error;
     }
   };

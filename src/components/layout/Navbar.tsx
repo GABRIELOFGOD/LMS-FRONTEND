@@ -8,35 +8,24 @@ import { useUser } from "@/context/user-context";
 import ThemeToggle from "../ui/ToggleTheme";
 
 const Navbar = () => {
-  const { user } = useUser();
+  const { user, isLoggedIn, isLoaded } = useUser();
 
-  const menuItems = [
-    {
-      id: 1,
-      label: "Home",
-      path: "/"
-    },
-    {
-      id: 2,
-      label: "courses",
-      path: "/courses"
-    },
-    {
-      id: 3,
-      label: "About",
-      path: "/about"
-    },
-    {
-      id: 4,
-      label: "contact",
-      path: "/contact"
-    },
-    // {
-    //   id: 5,
-    //   label: "Login",
-    //   path: "/login"
-    // }
-  ]
+  // Don't render until user context is loaded
+  if (!isLoaded) {
+    return (
+      <div className="shadow-sm bg-background">
+        <div className="w-full px-3 py-4 flex justify-between container md:px-0 mx-auto">
+          <Logo />
+          <div className="flex gap-10 my-auto">
+            <ThemeToggle />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Explicitly check if user is logged in
+  const userIsLoggedIn = isLoggedIn && user !== null;
   
   return (
     <div className="shadow-sm bg-background">
@@ -47,28 +36,45 @@ const Navbar = () => {
             <div className="my-auto">
               <ThemeToggle />
             </div>
-            {menuItems.map((item) => (
-              <Link
-                key={item.id}
-                href={item.path}
-                className="capitalize text-sm my-auto font-semibold"
-              >
-                {item.label}
-              </Link>
-            ))}
-            {!user && (
-              <Link href={"/login"} className="capitalize text-sm my-auto font-semibold">
-                Login
-              </Link>
+            
+            {/* Render menu items based on login status */}
+            {userIsLoggedIn ? (
+              // Logged in user menu - only show essential items
+              <>
+                <Link href="/courses" className="capitalize text-sm my-auto font-semibold">
+                  courses
+                </Link>
+                <Link href="/about" className="capitalize text-sm my-auto font-semibold">
+                  About
+                </Link>
+                <Link href="/contact" className="capitalize text-sm my-auto font-semibold">
+                  contact
+                </Link>
+              </>
+            ) : (
+              // Public menu - show all items
+              <>
+                <Link href="/" className="capitalize text-sm my-auto font-semibold">
+                  Home
+                </Link>
+                <Link href="/courses" className="capitalize text-sm my-auto font-semibold">
+                  courses
+                </Link>
+                <Link href="/about" className="capitalize text-sm my-auto font-semibold">
+                  About
+                </Link>
+                <Link href="/contact" className="capitalize text-sm my-auto font-semibold">
+                  contact
+                </Link>
+                <Link href="/login" className="capitalize text-sm my-auto font-semibold">
+                  Login
+                </Link>
+              </>
             )}
           </div>
-          {!user ?
-          (
-            <Button className="my-auto">
-              <Link href={"/register"}>Get Started</Link>
-            </Button>
-          ) :
-          (
+          
+          {/* Show Get Started button or User Profile */}
+          {userIsLoggedIn ? (
             <Button
               className="w-8 h-8 rounded-full flex justify-center items-center my-auto"
               variant={"ghost"}
@@ -77,7 +83,10 @@ const Navbar = () => {
                 <UserIcon className="text-muted-foreground" size={20} />
               </Link>
             </Button>
-              
+          ) : (
+            <Button className="my-auto">
+              <Link href={"/register"}>Get Started</Link>
+            </Button>
           )}
         </div>
       </div>

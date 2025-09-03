@@ -10,7 +10,9 @@ const UserProfile = () => {
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-2xl md:text-3xl font-bold">My Profile</p>
+      <p className="text-2xl md:text-3xl font-bold">
+        {user?.fname ? `${user.fname}'s Profile` : "My Profile"}
+      </p>
       <div className="flex gap-5">
         <div className="w-20 h-20 rounded-full overflow-hidden bg-accent">
           <Image src={User} alt="profile" width={100} height={100} />

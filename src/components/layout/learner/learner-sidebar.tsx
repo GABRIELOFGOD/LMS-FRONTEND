@@ -16,13 +16,13 @@ const LearnerSidebar = () => {
   const learnerNavigation = [
     {
       id: 1,
-      label: "Home",
+      label: "Dashboard",
       path: "/learner",
       icon: Home
     },
     {
       id: 2,
-      label: "Courses",
+      label: "My Courses",
       path: "/learner/courses",
       icon: Videotape
     },
@@ -53,7 +53,9 @@ const LearnerSidebar = () => {
         </div>
         <div className="my-auto">
           <p className="font-bold">{user?.fname || "Learner"}</p>
-          <p className="text-foreground/50 text-sm font-semibold">Level 1 learner</p>
+          <p className="text-foreground/50 text-sm font-semibold">
+            {user?.fname ? `${user.fname}'s Dashboard` : "Level 1 learner"}
+          </p>
         </div>
       </div>
 
@@ -80,6 +82,10 @@ const LearnerSidebar = () => {
       <Button
         className="mt-auto flex gap-3 mb-10 bg-transparent hover:bg-destructive/50"
         variant={"outline"}
+        onClick={() => {
+          localStorage.removeItem("token");
+          window.location.href = "/";
+        }}
       >
         <LogOut className="my-auto" />
         Logout

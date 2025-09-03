@@ -1,8 +1,10 @@
 "use client";
 
-import LearnerCourseMapper from "@/components/layout/learner/learner-course-mapper";
+import CourseMapper from "@/components/layout/courses/course-mapper";
+import Crumb from "@/components/Crumb";
 import InProgressCourses from "@/components/layout/learner/in-progress-courses";
 import { getUserStats } from "@/services/common";
+import { useUser } from "@/context/user-context";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Award, Clock, Target } from "lucide-react";
@@ -16,6 +18,7 @@ interface UserStats {
 }
 
 const LearnerCourses = () => {
+  const { user } = useUser();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -66,9 +69,25 @@ const LearnerCourses = () => {
   
   return (
     <div className="flex flex-col gap-5">
+      {/* Breadcrumb */}
+      <div className="mb-6">
+        <Crumb 
+          current={{ title: "My Courses", link: "/learner/courses" }}
+          previous={[{ title: "Dashboard", link: "/learner" }]}
+        />
+      </div>
+
       <div>
         <p className="font-bold text-2xl md:text-[32px]">My Courses</p>
-        <p className="text-muted-foreground mt-2">Track your learning progress and achievements</p>
+        <p className="text-muted-foreground mt-2">
+          Welcome back, {user?.fname || 'Learner'}! Track your learning progress and discover new courses.
+        </p>
+        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            💡 <strong>Tip:</strong> Click "Enroll Now" to add new courses to your learning dashboard. 
+            Track your progress and access course materials anytime.
+          </p>
+        </div>
       </div>
 
       {/* Stats Overview */}
@@ -107,7 +126,12 @@ const LearnerCourses = () => {
 
       <div className="mt-5">
         <InProgressCourses />
-        <LearnerCourseMapper />
+        
+        {/* All Available Courses with Enrollment */}
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Browse All Courses</h2>
+          <CourseMapper />
+        </div>
       </div>
     </div>
   )

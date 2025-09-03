@@ -52,11 +52,15 @@ const MyLoginForm = () => {
       if (result?.success) {
         // Refresh user context to get updated user data
         refreshUser();
-        // Route to learner dashboard after successful login
-        router.push("/learner");
+        // Small delay to allow user context to update
+        setTimeout(() => {
+          // Route to learner dashboard after successful login
+          router.push("/learner");
+        }, 100);
       }
     } catch (error) {
       console.error("Login failed:", error);
+      // Error is already handled in useAuth hook with toast
     } finally {
       setIsSubmitting(false);
     }
