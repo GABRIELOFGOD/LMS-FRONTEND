@@ -87,8 +87,8 @@ const CircularProgress = ({
 };
 
 const LearnerHome = () => {
-  const { user } = useUser();
-  const { getCourses } = useCourse();
+  const { user, isLoggedIn, isLoaded } = useUser();
+  const { getAvailableCourses } = useCourse();
   const [courses, setCourses] = useState<Course[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,26 +100,43 @@ const LearnerHome = () => {
   ]);
 
   const gettingCourse = async () => {
-    const courses = await getCourses();
-    setCourses(courses);
+    try {
+      const courses = await getAvailableCourses();
+      setCourses(courses || []);
+    } catch (error) {
+      console.error("Failed to fetch courses:", error);
+      setCourses([]);
+    }
   }
 
   const fetchUserStats = async () => {
     try {
       setLoading(true);
       const stats = await getUserStats();
-      setUserStats(stats);
+      if (stats) {
+        setUserStats(stats);
+      } else {
+        console.warn("No user stats received - using fallback data");
+      }
     } catch (error) {
       console.error("Failed to fetch user stats:", error);
+      // Stats will remain null and fallback data will be used
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    gettingCourse();
-    fetchUserStats();
-  }, []);
+    // Only fetch data when user context is loaded and user is logged in
+    if (isLoaded) {
+      gettingCourse(); // This uses getAvailableCourses which doesn't require auth
+      if (isLoggedIn) {
+        fetchUserStats(); // This requires authentication
+      } else {
+        setLoading(false); // If not logged in, stop loading
+      }
+    }
+  }, [isLoaded, isLoggedIn]);
 
   // Function to simulate completing a lesson (for testing)
   const completeLesson = (courseIndex: number) => {
@@ -140,30 +157,30 @@ const LearnerHome = () => {
   const stats = userStats ? [
     { 
       title: "Courses Enrolled", 
-      value: userStats.coursesEnrolled.toString(), 
+      value: userStats.coursesEnrolled?.toString() || "0", 
       icon: BookOpen, 
-      trend: userStats.trends.coursesThisMonth, 
+      trend: userStats.trends?.coursesThisMonth || "+0 this month", 
       color: "text-blue-600" 
     },
     { 
       title: "Courses Completed", 
-      value: userStats.coursesCompleted.toString(), 
+      value: userStats.coursesCompleted?.toString() || "0", 
       icon: Award, 
-      trend: userStats.trends.completedThisMonth, 
+      trend: userStats.trends?.completedThisMonth || "+0 this month", 
       color: "text-green-600" 
     },
     { 
       title: "Lessons Completed", 
-      value: userStats.lessonsCompleted.toString(), 
+      value: userStats.lessonsCompleted?.toString() || "0", 
       icon: Clock, 
-      trend: userStats.trends.remainingLessons, 
+      trend: userStats.trends?.remainingLessons || "0 remaining", 
       color: "text-purple-600" 
     },
     { 
       title: "Overall Progress", 
-      value: `${userStats.overallProgress}%`, 
+      value: `${userStats.overallProgress || 0}%`, 
       icon: Target, 
-      trend: userStats.trends.progressEncouragement, 
+      trend: userStats.trends?.progressEncouragement || "Getting started!", 
       color: "text-orange-600" 
     },
   ] : [
@@ -171,7 +188,7 @@ const LearnerHome = () => {
     { title: "Courses Enrolled", value: progressData.length.toString(), icon: BookOpen, trend: "+3 this month", color: "text-blue-600" },
     { title: "Courses Completed", value: "0", icon: Award, trend: "+0 this month", color: "text-green-600" },
     { title: "Lessons Completed", value: "0", icon: Clock, trend: "0 remaining", color: "text-purple-600" },
-    { title: "Overall Progress", value: "0%", icon: Target, trend: "Loading...", color: "text-orange-600" },
+    { title: "Overall Progress", value: "0%", icon: Target, trend: "Getting started!", color: "text-orange-600" },
   ];
 
   const recentActivity = [
@@ -272,15 +289,15 @@ const LearnerHome = () => {
               size={120} 
               strokeWidth={8}
               color="hsl(var(--primary))"
-              completedLessons={userStats?.lessonsCompleted}
-              totalLessons={userStats?.totalLessons}
+              completedLessons={userStats?.lessonsCompleted || 0}
+              totalLessons={userStats?.totalLessons || 100}
             />
             <div className="text-center space-y-1">
               <p className="text-sm font-medium">
-                {userStats?.lessonsCompleted || 0} of {userStats?.totalLessons || 0} lessons completed
+                {userStats?.lessonsCompleted || 0} of {userStats?.totalLessons || 100} lessons completed
               </p>
               <p className="text-xs text-muted-foreground">
-                {userStats?.trends.progressEncouragement || "Keep going!"}
+                {userStats?.trends?.progressEncouragement || "Keep going!"}
               </p>
             </div>
           </CardContent>
@@ -411,7 +428,7 @@ const LearnerHome = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {courses.length > 0 ? (
+          {courses && courses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {courses.slice(0, 3).map((course) => (
                 <Link key={course.id} href={`/course/${course.id}`}>

@@ -22,18 +22,24 @@ const LearnerSidebar = () => {
     },
     {
       id: 2,
-      label: "Courses",
+      label: "My Courses",
       path: "/learner/courses",
       icon: Videotape
     },
     {
       id: 3,
+      label: "Browse Courses",
+      path: "/courses",
+      icon: Videotape
+    },
+    {
+      id: 4,
       label: "Profile",
       path: "/learner/profile",
       icon: User2
     },
     {
-      id: 4,
+      id: 5,
       label: "Notification",
       path: "/learner/notification",
       icon: Bell
@@ -82,6 +88,10 @@ const LearnerSidebar = () => {
       <Button
         className="mt-auto flex gap-3 mb-10 bg-transparent hover:bg-destructive/50"
         variant={"outline"}
+        onClick={() => {
+          localStorage.removeItem("token");
+          window.location.href = "/";
+        }}
       >
         <LogOut className="my-auto" />
         Logout

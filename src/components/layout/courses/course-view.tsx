@@ -4,9 +4,9 @@ import { useCourse } from "@/hooks/useCourse";
 import { Course } from "@/types/course";
 import { useEffect, useState } from "react";
 
-import { Check } from "lucide-react";
+import { Check, BookOpen, Users, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { enrollCourse } from "@/services/common";
+import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/context/user-context";
 import { useRouter } from "next/navigation";
 import { isError } from "@/services/helper";
@@ -14,39 +14,105 @@ import { toast } from "sonner";
 
 const CourseView = ({id}: {id: string}) => {
   const [course, setCourse] = useState<Course | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const { getACourse } = useCourse();
-  const { user, isLoaded } = useUser();
+  const { getACourse, enrollCourse, getUserEnrollments } = useCourse();
+  const { user, isLoaded, isLoggedIn } = useUser();
   const router = useRouter();
 
   const gettingCourse = async () => {
-    const course = await getACourse(id);
-    setCourse(course);
+    try {
+      const course = await getACourse(id);
+      setCourse(course);
+    } catch (error) {
+      console.error("Failed to fetch course:", error);
+      toast.error("Failed to load course details");
+    } finally {
+      setLoading(false);
+    }
   }
+
+  const checkEnrollmentStatus = async () => {
+    if (!isLoggedIn || !id) return;
+    
+    console.log('CourseView - Checking enrollment status for course:', id);
+    
+    try {
+      const enrollments = await getUserEnrollments();
+      const enrolled = enrollments.some((enrollment: any) => enrollment.courseId === id);
+      console.log('CourseView - Enrollment status:', enrolled);
+      setIsEnrolled(enrolled);
+    } catch (error) {
+      console.error("Failed to check enrollment status:", error);
+    }
+  };
 
   const enrollForCurrentCourse = async () => {
     if (!course) return;
-    if (!user || !isLoaded) {
+    
+    if (!isLoggedIn || !user) {
       toast.error("You must be logged in to enroll in a course");
       router.push(`/login?to=/course/${course.id}`);
       return;
-    };
+    }
+    
+    setIsEnrolling(true);
     try {
       await enrollCourse(course.id);
+      setIsEnrolled(true);
+      toast.success("Successfully enrolled in the course!");
     } catch (error: unknown) {
       if (isError(error)) {
         toast.error(error.message);
-        console.error("Login failed", error.message);
+        console.error("Enrollment failed", error.message);
       } else {
         console.error("Unknown error", error);
+        toast.error("Failed to enroll in course");
       }
+    } finally {
+      setIsEnrolling(false);
     }
   }
 
   useEffect(() => {
-    gettingCourse();
+    if (id) {
+      gettingCourse();
+    }
   }, [id]);
-  
+
+  useEffect(() => {
+    if (isLoaded && id) {
+      checkEnrollmentStatus();
+    }
+  }, [isLoaded, isLoggedIn, id]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading course details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold mb-4">Course Not Found</h2>
+        <p className="text-muted-foreground mb-8">The course you're looking for doesn't exist or has been removed.</p>
+        <Button onClick={() => router.push('/courses')}>
+          Browse All Courses
+        </Button>
+      </div>
+    );
+  }
+
+  const actualChapters = course.chapters.filter(cht => cht.isPublished);
+
   return (
     <div>
       <Crumb
@@ -55,78 +121,161 @@ const CourseView = ({id}: {id: string}) => {
           link: `/course/${course?.id}`
         }}
         previous={[
-          {link: "/", title: "Home"},
+          isLoggedIn ? {link: "/learner", title: "Dashboard"} : {link: "/", title: "Home"},
           {link: "/courses", title: "Courses"},
         ]}
       />
 
       <div className="mt-5">
-        <div className="flex flex-col gap-2">
-          <p className="text-2xl md:text-4xl font-bold capitalize">{course?.title}</p>
-          <p className="text-lg text-foreground/50 font-light">{course?.description}</p>
-        </div>
-
-        <div className="mt-5">
-          <p className="font-bold">Course info</p>
-          <div className="mt-2 w-full h-[2px] bg-border "/>
-        </div>
-
-        <div className="flex flex-col gap-2 mt-10">
-          <p className="font-bold text-xl">Course Overview</p>
-          <p>{course?.description}</p>
-        </div>
-
-        {/* <div className="flex flex-col gap-2 mt-10">
-          <p className="font-bold text-lg">Instructor</p>
-          <div className="flex gap-5">
-            <div className="h-20 w-20 bg-accent rounded-full overflow-hidden relative">
-              <Image
-                src={Instructor}
-                alt="Instructor Image"
-                fill
-                className="object-bottom rounded-full w-full h-full relative"
-              />
-            </div>
-            <div className="my-auto">
-              <p className="font-bold text-lg">{course?.instructor.name}</p>
-              <p className="text-foreground/50">{course?.instructor.role}</p>
-            </div>
-          </div>
-
-          <div>
-            <p>{course?.instructor.description}</p>
-          </div>
-        </div> */}
-
-        <div className="flex flex-col gap-2 mt-10">
-          <p className="font-bold text-xl">Syllabus</p>
-          <div className="mt-5 flex flex-col gap-3">
-            {course?.chapters.filter(cht => cht.isPublished).map((mod, i) => (
-              <div
-                key={i}
-                className="flex gap-[10px]"
-              >
-                <div className="flex justify-center items-center rounded-sm h-[48px] w-[48px] bg-accent text-accent-foreground">
-                  <Check />
+        {/* Course Header */}
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl md:text-4xl font-bold capitalize">{course.title}</h1>
+                {isEnrolled && (
+                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                    ✓ Enrolled
+                  </Badge>
+                )}
+              </div>
+              <p className="text-lg text-foreground/70 font-light mb-4">{course.description}</p>
+              
+              {/* Course Stats */}
+              <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  <span>{actualChapters.length} Chapter{actualChapters.length !== 1 ? 's' : ''}</span>
                 </div>
-                <div className="my-auto">
-                  <p className="font-medium text-[16px]">{mod.name}</p>
-                  {/* <p className="text-foreground/50">{mod.description}</p> */}
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span>Self-paced</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>Free</span>
                 </div>
               </div>
-            ))}
+            </div>
+          </div>
+
+          {/* Enrollment Button */}
+          <div className="flex gap-4">
+            {isLoggedIn ? (
+              isEnrolled ? (
+                <Button 
+                  size="lg" 
+                  onClick={() => router.push(`/learner/courses/${course.id}`)}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Continue Learning
+                </Button>
+              ) : (
+                <Button 
+                  size="lg" 
+                  onClick={enrollForCurrentCourse}
+                  disabled={isEnrolling}
+                >
+                  {isEnrolling ? "Enrolling..." : "Enroll Now (Free)"}
+                </Button>
+              )
+            ) : (
+              <Button 
+                size="lg" 
+                onClick={() => router.push(`/login?to=/course/${course.id}`)}
+              >
+                Login to Enroll
+              </Button>
+            )}
           </div>
         </div>
 
-        {course && (<div className="mt-10">
-          <Button
-            onClick={enrollForCurrentCourse}
-          >
-            Enroll (Free)
-          </Button>
-        </div>)}
+        {/* Course Info Divider */}
+        <div className="mt-8 mb-8">
+          <h2 className="font-bold text-lg mb-3">Course Information</h2>
+          <div className="w-full h-[2px] bg-border" />
+        </div>
+
+        {/* Course Overview */}
+        <div className="flex flex-col gap-2 mb-10">
+          <h3 className="font-bold text-xl">Course Overview</h3>
+          <div className="prose prose-sm max-w-none">
+            <p className="text-foreground/80">{course.description}</p>
+          </div>
+        </div>
+
+        {/* Course Syllabus */}
+        <div className="flex flex-col gap-2 mb-10">
+          <h3 className="font-bold text-xl">Course Syllabus</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            This course contains {actualChapters.length} chapter{actualChapters.length !== 1 ? 's' : ''} covering all essential topics.
+          </p>
+          <div className="space-y-3">
+            {actualChapters.length > 0 ? (
+              actualChapters.map((chapter, i) => (
+                <div
+                  key={i}
+                  className="flex gap-4 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex justify-center items-center rounded-sm h-[48px] w-[48px] bg-accent text-accent-foreground flex-shrink-0">
+                    <Check className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-[16px] mb-1">
+                      Chapter {i + 1}: {chapter.name}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Learn about {chapter.name.toLowerCase()} and its applications
+                    </p>
+                  </div>
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    {isEnrolled ? (
+                      <Badge variant="outline" className="text-xs">
+                        Available
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">
+                        Enroll to access
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No chapters available yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        {!isEnrolled && (
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-lg border">
+            <h3 className="font-bold text-lg mb-2">Ready to Start Learning?</h3>
+            <p className="text-muted-foreground mb-4">
+              Join thousands of learners and start your journey today. This course is completely free!
+            </p>
+            {isLoggedIn ? (
+              <Button 
+                onClick={enrollForCurrentCourse}
+                disabled={isEnrolling}
+                size="lg"
+              >
+                {isEnrolling ? "Enrolling..." : "Enroll Now - It's Free!"}
+              </Button>
+            ) : (
+              <Button 
+                onClick={() => router.push(`/login?to=/course/${course.id}`)}
+                size="lg"
+              >
+                Login to Enroll
+              </Button>
+            )}
+          </div>
+        )}
       </div>
-      
     </div>
   )
 }

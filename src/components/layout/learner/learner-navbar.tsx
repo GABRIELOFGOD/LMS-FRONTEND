@@ -16,6 +16,8 @@ import {
 const LearnerNavbar = () => {
   const { user, refreshUser } = useUser();
 
+  console.log('LearnerNavbar rendering - user:', user);
+
   const handleLogout = () => {
     // Clear token from localStorage
     localStorage.removeItem("token");

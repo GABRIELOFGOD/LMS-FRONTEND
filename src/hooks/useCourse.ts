@@ -1,4 +1,5 @@
 import { BASEURL } from "@/lib/utils";
+import { isError } from "@/services/helper";
 import { AddChapterResponse } from "@/types/course";
 import { toast } from "sonner";
 
@@ -10,27 +11,39 @@ export const useCourse = () => {
     try {
       const response = await fetch(`${BASEURL}/courses/published`);
       const res = await response.json();
-      if (!response.ok || res.error) throw new Error(res.message);
+      if (!response.ok) throw new Error(res.message);
       return res;
-    } catch (error) {
-      throw error;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        toast.error(error.message);
+        console.error("Login failed", error.message);
+      } else {
+        console.error("Unknown error", error);
+      }
     }
   }
   
   const getCourses = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token!");
+      if (!token) {
+        console.warn("No authentication token found for getCourses");
+        return [];
+      }
       const response = await fetch(`${BASEURL}/courses`, {
         headers: {
           "authorization": `Bearer ${token}`
         }
       });
-      const res = await response.json();
-      if (!response.ok || res.error) throw new Error(res.message);
-      return res;
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch courses: ${response.status}`);
+      }
+      
+      return await response.json();
     } catch (error) {
-      throw error;
+      console.error("Error fetching courses:", error);
+      return [];
     }
   };
 
@@ -336,9 +349,83 @@ export const useCourse = () => {
     }
   };
 
-  // const enrollCourse = async (id: string) => {
-  //   trycat
-  // }
+  const enrollCourse = async (courseId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Please log in to enroll in courses");
+      
+      const response = await fetch(`${BASEURL}/courses/${courseId}/enroll`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "authorization": `Bearer ${token}`
+        }
+      });
+
+      const res = await response.json();
+      if (!response.ok) throw new Error(res.message);
+      
+      toast.success("Successfully enrolled in course!");
+      return res;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        toast.error(error.message);
+        console.error("Enrollment failed", error.message);
+      } else {
+        toast.error("Failed to enroll in course");
+        console.error("Unknown error", error);
+      }
+      throw error;
+    }
+  }
+
+  const getUserEnrollments = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return [];
+      
+      const response = await fetch(`${BASEURL}/enrollments/user`, {
+        headers: {
+          "authorization": `Bearer ${token}`
+        }
+      });
+
+      const res = await response.json();
+      if (!response.ok) throw new Error(res.message);
+      return res;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        console.error("Failed to get enrollments", error.message);
+      } else {
+        console.error("Unknown error", error);
+      }
+      return [];
+    }
+  }
+
+  const getCourseProgress = async (courseId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return null;
+      
+      const response = await fetch(`${BASEURL}/progress/course/${courseId}`, {
+        headers: {
+          "authorization": `Bearer ${token}`
+        }
+      });
+
+      const res = await response.json();
+      if (!response.ok) throw new Error(res.message);
+      return res;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        console.error("Failed to get course progress", error.message);
+      } else {
+        console.error("Unknown error", error);
+      }
+      return null;
+    }
+  }
   
   return {
     getCourses,
@@ -357,6 +444,10 @@ export const useCourse = () => {
     unpublishChapter,
     reorderChapters,
     uploadVideo,
-    publishCourse
+    publishCourse,
+
+    enrollCourse,
+    getUserEnrollments,
+    getCourseProgress
   }
 }

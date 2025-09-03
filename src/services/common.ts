@@ -51,13 +51,16 @@ import { Course } from "@/types/course";
 
 export const getUserStats = async (): Promise<UserStats | null> => {
   try {
-    // Check if running on client side or if we have a base URL
-    const baseUrl = BASEURL || (typeof window !== 'undefined' ? window.location.origin : '');
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("No authentication token found");
+      return null;
+    }
     
-    const req = await fetch(`${baseUrl}/api/users/stats`, {
+    const req = await fetch(`${BASEURL}/users/stats`, {
       method: "GET",
       headers: {
-        "authorization": `Bearer ${localStorage.getItem("token")}`,
+        "authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
     });

@@ -21,14 +21,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const getUser = async () => {
     try {
       const token = localStorage.getItem("token");
+      console.log('UserContext - Token found:', !!token);
+      
       if (!token) {
-        setIsLoggedIn(false);
-        setUser(null);
-        return;
-      }
-
-      if (!BASEURL) {
-        console.error("API URL is not configured");
         setIsLoggedIn(false);
         setUser(null);
         return;
@@ -45,16 +40,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       if (!req.ok) throw new Error(res.error);
       if (res.error) throw new Error(res.error);
       
+      console.log('UserContext - User authenticated:', res.user);
       setUser(res.user as User);
       setIsLoggedIn(true);
 
     } catch (error: unknown) {
-      console.log("[ERROR] ", error);
+      console.log("UserContext - Authentication error:", error);
       setUser(null);
       setIsLoggedIn(false);
       // Clear invalid token
       localStorage.removeItem("token");
     } finally {
+      console.log('UserContext - Setting loaded to true');
       setIsLoaded(true);
     }
   }
