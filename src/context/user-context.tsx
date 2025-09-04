@@ -3,6 +3,7 @@
 import { BASEURL } from "@/lib/utils";
 import { User } from "@/types/user";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { getUserProfile } from "@/services/common";
 
 interface userContextType {
   user: User | null;
@@ -60,6 +61,21 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(res.error || res.message || `HTTP ${req.status}`);
       }
       
+      // Token is valid, try to get fresh user profile data first
+      console.log('UserContext - Token valid, fetching user profile...');
+      const freshUserData = await getUserProfile();
+      
+      if (freshUserData && freshUserData.fname) {
+        console.log('UserContext - Fresh user data retrieved:', freshUserData);
+        // Update localStorage with fresh data
+        localStorage.setItem("user", JSON.stringify(freshUserData));
+        setUser(freshUserData as User);
+        setIsLoggedIn(true);
+        return;
+      }
+      
+      console.log('UserContext - No fresh user data available, using stored data...');
+      
       // Token is valid, get or create user data
       const storedUserData = localStorage.getItem("user");
       let userData;
@@ -69,16 +85,24 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           userData = JSON.parse(storedUserData);
           console.log('UserContext - Using stored user data:', userData);
           
-          // Validate required fields and fill in missing ones
+          // Validate required fields - only use default if fname is truly missing
+          const originalData = userData; // Keep reference to original for checking
           userData = {
             id: userData.id || 'unknown',
             role: userData.role || 'student',
             email: userData.email || '',
-            fname: userData.fname || userData.name?.split(' ')[0] || 'Learner',
-            lname: userData.lname || userData.name?.split(' ')[1] || '',
+            fname: userData.fname || userData.firstName || '', // Don't default to 'Learner' if we have stored data
+            lname: userData.lname || userData.lastName || '',
             createdAt: userData.createdAt || new Date().toISOString(),
             updatedAt: userData.updatedAt || new Date().toISOString()
           };
+          
+          // Only default to 'Learner' if we have no first name at all
+          if (!userData.fname && !originalData.firstName) {
+            console.log('UserContext - No first name found, using default');
+            userData.fname = 'Learner';
+          }
+          
         } catch {
           console.log('UserContext - Failed to parse stored user data, creating minimal user');
           userData = {

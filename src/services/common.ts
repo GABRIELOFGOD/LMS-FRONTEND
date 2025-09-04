@@ -172,3 +172,73 @@ export const getUserCourses = async (): Promise<UserCourseStats | null> => {
     return null;
   }
 }
+
+// Get user profile data
+export const getUserProfile = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("getUserProfile - No token found");
+      return null;
+    }
+    
+    console.log('getUserProfile - Fetching user profile...');
+    
+    // Try /users/profile first, fallback to /users/me if available
+    let req = await fetch(`${BASEURL}/users/profile`, {
+      method: "GET",
+      headers: {
+        "authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+    });
+
+    // If profile endpoint doesn't exist, try /users/me
+    if (req.status === 404) {
+      console.log('getUserProfile - /users/profile not found, trying /users/me...');
+      req = await fetch(`${BASEURL}/users/me`, {
+        method: "GET",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      });
+    }
+
+    if (!req.ok) {
+      if (req.status === 401) {
+        console.warn("getUserProfile - Unauthorized, token may be expired");
+        return null;
+      }
+      if (req.status === 404) {
+        console.warn("getUserProfile - User profile endpoints not available");
+        return null;
+      }
+      const errorRes = await req.json().catch(() => ({}));
+      throw new Error(errorRes.message || `Failed to fetch user profile (${req.status})`);
+    }
+
+    const userData = await req.json();
+    console.log('getUserProfile - User profile fetched successfully:', userData);
+    
+    // Normalize the user data structure
+    const normalizedUser = {
+      id: userData.id || userData._id,
+      role: userData.role,
+      email: userData.email,
+      fname: userData.fname || userData.firstName || userData.first_name,
+      lname: userData.lname || userData.lastName || userData.last_name,
+      createdAt: userData.createdAt || userData.created_at,
+      updatedAt: userData.updatedAt || userData.updated_at
+    };
+    
+    return normalizedUser;
+  } catch (error: unknown) {
+    if (isError(error)) {
+      console.error("Failed to fetch user profile", error.message);
+    } else {
+      console.error("Unknown error fetching user profile", error);
+    }
+    return null;
+  }
+};
