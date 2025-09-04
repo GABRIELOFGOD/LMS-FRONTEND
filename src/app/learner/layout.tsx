@@ -32,7 +32,7 @@ const LearnerLayout = ({
         // Redirect based on actual role
         switch (user.role) {
           case UserRole.ADMIN:
-            router.push("/admin");
+            router.push("/dashboard");
             break;
           case UserRole.TEACHER:
             router.push("/dashboard");
