@@ -4,23 +4,47 @@ import { toast } from "sonner";
 
 export const enrollCourse = async (courseId: string) => {
   try {
+    console.log('enrollCourse - Starting enrollment for course:', courseId);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Please log in to enroll in courses");
+    }
+
     const req = await fetch(`${BASEURL}/courses/enroll/${courseId}`, {
       method: "PUT",
       headers: {
-        "authorization": `Bearer ${localStorage.getItem("token")}`,
+        "authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
     });
 
+    if (!req.ok) {
+      const errorRes = await req.json().catch(() => ({}));
+      if (req.status === 401) {
+        throw new Error("Your session has expired. Please log in again.");
+      } else if (req.status === 409) {
+        toast.info("You are already enrolled in this course!");
+        return { success: true, message: "Already enrolled" };
+      }
+      throw new Error(errorRes.message || errorRes.error || `Enrollment failed (${req.status})`);
+    }
+
     const res = await req.json();
-    if (!req.ok) throw new Error(res.message || "Failed to enroll for course");
+    console.log('enrollCourse - Enrollment successful:', res);
+    toast.success("Successfully enrolled in course!");
+    return res;
   } catch (error: unknown) {
+    console.error('enrollCourse - Error:', error);
     if (isError(error)) {
-      toast.error(error.message);
-      console.error("Login failed", error.message);
+      if (!error.message.includes('already enrolled')) {
+        toast.error(error.message);
+      }
+      console.error("Enrollment failed", error.message);
     } else {
+      toast.error("Failed to enroll in course");
       console.error("Unknown error", error);
     }
+    throw error;
   }
 }
 
@@ -57,6 +81,7 @@ export const getUserStats = async (): Promise<UserStats | null> => {
       return null;
     }
     
+    console.log('getUserStats - Fetching user statistics...');
     const req = await fetch(`${BASEURL}/users/stats`, {
       method: "GET",
       headers: {
@@ -65,9 +90,17 @@ export const getUserStats = async (): Promise<UserStats | null> => {
       },
     });
 
+    if (!req.ok) {
+      if (req.status === 401) {
+        console.warn("getUserStats - Unauthorized, token may be expired");
+        return null;
+      }
+      const errorRes = await req.json().catch(() => ({}));
+      throw new Error(errorRes.message || `Failed to fetch user stats (${req.status})`);
+    }
+
     const res = await req.json();
-    if (!req.ok) throw new Error(res.message || "Failed to fetch user stats");
-    
+    console.log('getUserStats - Stats fetched successfully:', res);
     return res as UserStats;
   } catch (error: unknown) {
     if (isError(error)) {

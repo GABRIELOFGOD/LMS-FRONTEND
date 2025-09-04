@@ -63,7 +63,8 @@ const RegistrationForm = () => {
     setIsSubmitting(true);
     try {
       // Remove confirmPassword before sending to backend
-      const { confirmPassword, ...registrationData } = data;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { confirmPassword: _, ...registrationData } = data;
       await registerUser(registrationData);
     } finally {
       setIsSubmitting(false);

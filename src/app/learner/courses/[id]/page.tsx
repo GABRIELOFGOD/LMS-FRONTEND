@@ -31,7 +31,7 @@ const LearnerCourseDetails = () => {
   const [progress, setProgress] = useState(0);
 
   const { getACourse, getCourseProgress } = useCourse();
-  const { user, isLoggedIn } = useUser();
+  const { isLoggedIn } = useUser();
 
   useEffect(() => {
     if (!isLoggedIn) {

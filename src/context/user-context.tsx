@@ -18,7 +18,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isloaded, setIsLoaded] = useState<boolean>(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
-  const getUser = async () => {
+  const getUser = async (retryCount = 0) => {
+    const maxRetries = 3;
+    
     try {
       const token = localStorage.getItem("token");
       console.log('UserContext - Token found:', !!token);
@@ -32,40 +34,82 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
 
       console.log('UserContext - Validating token with server...');
-      const req = await fetch(`${BASEURL}/auth/`, {
+      
+      // Use /users/stats endpoint (works for all roles) to validate token
+      const req = await fetch(`${BASEURL}/users/stats`, {
         headers: {
           "Content-Type": "application/json",
           "authorization": `Bearer ${token}`
         }
       });
 
-      const res = await req.json();
-      console.log('UserContext - Server response:', { status: req.status, ok: req.ok, response: res });
+      console.log('UserContext - Server response:', { status: req.status, ok: req.ok });
       
       if (!req.ok) {
+        if (req.status === 401) {
+          console.log('UserContext - Token expired or invalid, clearing token');
+          localStorage.removeItem("token");
+          throw new Error('Authentication token expired');
+        }
+        if (req.status === 403) {
+          console.log('UserContext - Access forbidden, clearing token');
+          localStorage.removeItem("token");
+          throw new Error('Access forbidden - please login again');
+        }
+        const res = await req.json().catch(() => ({}));
         throw new Error(res.error || res.message || `HTTP ${req.status}`);
       }
       
-      if (res.error) {
-        throw new Error(res.error);
+      // Token is valid, get or create user data
+      const storedUserData = localStorage.getItem("user");
+      let userData;
+      
+      if (storedUserData) {
+        try {
+          userData = JSON.parse(storedUserData);
+          console.log('UserContext - Using stored user data:', userData);
+        } catch (error) {
+          console.log('UserContext - Failed to parse stored user data, creating minimal user');
+          userData = {
+            id: 'unknown',
+            role: 'student',
+            email: '',
+            fname: '',
+            lname: ''
+          };
+        }
+      } else {
+        console.log('UserContext - No stored user data, creating minimal user');
+        userData = {
+          id: 'unknown', 
+          role: 'student',
+          email: '',
+          fname: '',
+          lname: ''
+        };
       }
       
-      if (!res.user) {
-        throw new Error('No user data received from server');
-      }
-      
-      console.log('UserContext - User authenticated successfully:', res.user);
-      setUser(res.user as User);
+      console.log('UserContext - User authenticated successfully:', userData);
+      setUser(userData as User);
       setIsLoggedIn(true);
 
     } catch (error: unknown) {
       console.error("UserContext - Authentication error:", error);
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Retry on network errors, but not on auth errors
+      if (retryCount < maxRetries && !errorMessage.includes('401') && !errorMessage.includes('expired')) {
+        console.log(`UserContext - Retrying authentication attempt ${retryCount + 1}/${maxRetries}`);
+        setTimeout(() => getUser(retryCount + 1), 1000 * (retryCount + 1));
+        return;
+      }
+      
       setUser(null);
       setIsLoggedIn(false);
       
       // Clear invalid token only if it's an authentication error
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('401') || errorMessage.includes('unauthorized') || errorMessage.includes('token')) {
+      if (errorMessage.includes('401') || errorMessage.includes('unauthorized') || errorMessage.includes('token') || errorMessage.includes('expired')) {
         console.log('UserContext - Clearing invalid token');
         localStorage.removeItem("token");
       }

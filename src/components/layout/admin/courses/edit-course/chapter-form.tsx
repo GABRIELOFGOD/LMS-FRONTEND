@@ -42,7 +42,7 @@ const formSchema = z.object({
 
 // Video Upload Component
 interface VideoUploadProps {
-  value?: string;
+  value?: string | File;
   onChange: (file: File | null) => void;
   disabled?: boolean;
 }

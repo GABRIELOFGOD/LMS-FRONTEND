@@ -13,16 +13,57 @@ const LearnerLayout = ({
 }: {
   children: ReactNode
 }) => {
-  const { user } = useUser();
+  const { user, isLoggedIn, isLoaded } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      if (user.role !== UserRole.STUDENT) {
-        router.push("/");
+    if (isLoaded) {
+      if (!isLoggedIn) {
+        console.log('LearnerLayout - User not logged in, redirecting to login');
+        router.push("/login");
+        return;
+      }
+      
+      if (user && user.role !== UserRole.STUDENT) {
+        console.log('LearnerLayout - User role mismatch, redirecting to appropriate dashboard');
+        // Redirect based on actual role
+        switch (user.role) {
+          case UserRole.ADMIN:
+            router.push("/admin");
+            break;
+          case UserRole.TEACHER:
+            router.push("/dashboard");
+            break;
+          default:
+            router.push("/");
+        }
       }
     }
-  }, []);
+  }, [isLoaded, isLoggedIn, user, router]);
+
+  // Show loading state while checking authentication
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render content if not authenticated or wrong role
+  if (!isLoggedIn || (user && user.role !== UserRole.STUDENT)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="h-screen flex flex-col">

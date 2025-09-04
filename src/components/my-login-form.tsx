@@ -20,7 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useUser } from "@/context/user-context";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { UserRole } from "@/types/user";
 
 const formSchema = z.object({
@@ -33,7 +33,6 @@ const MyLoginForm = () => {
   const { isLoggedIn, user, refreshUser } = useUser();
   const router = useRouter();
 
-  const param = useSearchParams();
   // const nextRoute = param.get("to"); // TODO: Implement redirect to specific route after login
   
   const { login } = useAuth();
@@ -48,19 +47,21 @@ const MyLoginForm = () => {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
+      console.log('MyLoginForm - Starting login for:', data.email);
       const result = await login(data.email, data.password);
       if (result?.success) {
+        console.log('MyLoginForm - Login successful, refreshing user context');
         // Refresh user context to get updated user data
         refreshUser();
-        // Small delay to allow user context to update
-        setTimeout(() => {
-          // Route to learner dashboard after successful login
-          router.push("/learner");
-        }, 100);
+        // Don't manually route here, let the useEffect handle it
       }
     } catch (error) {
       console.error("Login failed:", error);
-      // Error is already handled in useAuth hook with toast
+      // Error is already handled in the login function with toast
+      // Just reset the form state
+      form.setError("root", {
+        message: error instanceof Error ? error.message : "Login failed"
+      });
     } finally {
       setIsSubmitting(false);
     }

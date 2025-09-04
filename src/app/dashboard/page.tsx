@@ -52,7 +52,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.fname || 'Admin'}!</h1>
-          <p className="text-muted-foreground">Here's what's happening with your platform today.</p>
+          <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your platform today.</p>
         </div>
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>

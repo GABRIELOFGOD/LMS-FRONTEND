@@ -9,6 +9,7 @@ import { Check, BookOpen, Users, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/context/user-context";
+import { useStats } from "@/context/stats-context";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -17,16 +18,16 @@ const CourseView = ({id}: {id: string}) => {
   const [loading, setLoading] = useState(true);
 
   const { getACourse } = useCourse();
-  const { user, isLoaded, isLoggedIn } = useUser();
+  const { user, isLoggedIn } = useUser();
+  const { refreshStats } = useStats();
   const router = useRouter();
   
-  // Use the new enrollment hook for better state management
+  // Use the new enrollment hook with stats refresh callback
   const { 
     isEnrolled, 
     isLoading: isEnrolling, 
-    progress, 
     enroll 
-  } = useEnrollmentStatus(id);
+  } = useEnrollmentStatus(id, { onStatsUpdate: refreshStats });
 
   const gettingCourse = async () => {
     try {
@@ -53,6 +54,15 @@ const CourseView = ({id}: {id: string}) => {
       console.log('CourseView - Starting enrollment for course:', course.id);
       await enroll();
       console.log('CourseView - Enrollment completed successfully');
+      
+      // Show success message and redirect to course content
+      toast.success("Successfully enrolled! Redirecting to course content...");
+      
+      // Wait a moment for the toast to show, then redirect
+      setTimeout(() => {
+        router.push(`/learner/courses/${course.id}`);
+      }, 1500);
+      
     } catch (error) {
       console.error('CourseView - Enrollment failed:', error);
       // Error handling is done in the hook
@@ -80,7 +90,7 @@ const CourseView = ({id}: {id: string}) => {
     return (
       <div className="text-center py-20">
         <h2 className="text-2xl font-bold mb-4">Course Not Found</h2>
-        <p className="text-muted-foreground mb-8">The course you're looking for doesn't exist or has been removed.</p>
+        <p className="text-muted-foreground mb-8">The course you&apos;re looking for doesn&apos;t exist or has been removed.</p>
         <Button onClick={() => router.push('/courses')}>
           Browse All Courses
         </Button>

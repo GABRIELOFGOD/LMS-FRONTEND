@@ -3,42 +3,14 @@
 import CourseMapper from "@/components/layout/courses/course-mapper";
 import Crumb from "@/components/Crumb";
 import InProgressCourses from "@/components/layout/learner/in-progress-courses";
-import { getUserStats } from "@/services/common";
 import { useUser } from "@/context/user-context";
-import { useEffect, useState } from "react";
+import { useStats } from "@/context/stats-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Award, Clock, Target } from "lucide-react";
 
-interface UserStats {
-  coursesEnrolled: number;
-  coursesCompleted: number;
-  lessonsCompleted: number;
-  totalLessons: number;
-  overallProgress: number;
-}
-
 const LearnerCourses = () => {
   const { user } = useUser();
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const userStats = await getUserStats();
-      if (userStats) {
-        setStats(userStats);
-      }
-    } catch (error) {
-      console.error("Error fetching user stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const { stats, isLoading: loading, refreshStats } = useStats();
 
   const statsCards = stats ? [
     {
@@ -84,7 +56,7 @@ const LearnerCourses = () => {
         </p>
         <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            💡 <strong>Tip:</strong> Click "Enroll Now" to add new courses to your learning dashboard. 
+            💡 <strong>Tip:</strong> Click &quot;Enroll Now&quot; to add new courses to your learning dashboard. 
             Track your progress and access course materials anytime.
           </p>
         </div>
@@ -130,7 +102,7 @@ const LearnerCourses = () => {
         {/* All Available Courses with Enrollment */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Browse All Courses</h2>
-          <CourseMapper />
+          <CourseMapper onStatsUpdate={refreshStats} />
         </div>
       </div>
     </div>

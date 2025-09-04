@@ -10,6 +10,7 @@ import { useCourse } from "@/hooks/useCourse";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { CheckCircle, Play, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface EnhancedCourseCardProps {
   course: Course;
@@ -26,6 +27,7 @@ const EnhancedCourseCard = ({
 }: EnhancedCourseCardProps) => {
   const { isLoggedIn } = useUser();
   const { enrollCourse } = useCourse();
+  const router = useRouter();
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [enrolled, setEnrolled] = useState(isEnrolled);
   const [courseProgress, setCourseProgress] = useState(progress);
@@ -65,6 +67,14 @@ const EnhancedCourseCard = ({
         onEnrollmentUpdate();
       }
       
+      // Show success message and redirect to course content
+      toast.success("Successfully enrolled! Opening course...");
+      
+      // Small delay then redirect to course content
+      setTimeout(() => {
+        router.push(`/learner/courses/${course.id}`);
+      }, 1000);
+      
     } catch (error) {
       console.error('EnhancedCourseCard - Enrollment failed:', error);
       // Error is already handled in the enrollCourse function with toast
@@ -77,32 +87,36 @@ const EnhancedCourseCard = ({
   const getActionButton = () => {
     if (!isLoggedIn) {
       return (
-        <Button className="w-full" variant="outline">
-          <Link href="/login" className="w-full">
+        <Link href="/login" className="w-full">
+          <Button className="w-full" variant="outline">
             Login to Enroll
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       );
     }
 
     if (enrolled) {
       if (courseProgress === 100) {
         return (
-          <Button className="w-full bg-green-600 hover:bg-green-700">
-            <Link href={`/learner/courses/${course.id}`} className="w-full flex items-center justify-center gap-2">
-              <CheckCircle size={16} />
-              Completed
-            </Link>
-          </Button>
+          <Link href={`/learner/courses/${course.id}`} className="w-full">
+            <Button className="w-full bg-green-600 hover:bg-green-700">
+              <div className="w-full flex items-center justify-center gap-2">
+                <CheckCircle size={16} />
+                Completed
+              </div>
+            </Button>
+          </Link>
         );
       } else {
         return (
-          <Button className="w-full">
-            <Link href={`/learner/courses/${course.id}`} className="w-full flex items-center justify-center gap-2">
-              <Play size={16} />
-              Continue Learning
-            </Link>
-          </Button>
+          <Link href={`/learner/courses/${course.id}`} className="w-full">
+            <Button className="w-full">
+              <div className="w-full flex items-center justify-center gap-2">
+                <Play size={16} />
+                Continue Learning
+              </div>
+            </Button>
+          </Link>
         );
       }
     }
