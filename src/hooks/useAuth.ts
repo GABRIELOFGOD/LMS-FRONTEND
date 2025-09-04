@@ -48,8 +48,10 @@ export const useAuth = () => {
         id: data.id,
         role: data.role,
         email: email, // Use the email from login form
-        fname: '', // Will be filled when we get full profile
-        lname: ''  // Will be filled when we get full profile
+        fname: data.fname || data.firstName || '', // Handle different API response formats
+        lname: data.lname || data.lastName || '',  // Handle different API response formats
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || new Date().toISOString()
       };
       localStorage.setItem("user", JSON.stringify(userData));
       console.log('User data stored:', userData);

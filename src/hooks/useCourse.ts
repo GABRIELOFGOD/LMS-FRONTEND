@@ -49,7 +49,11 @@ export const useCourse = () => {
         throw new Error(`Failed to fetch courses: ${response.status}`);
       }
       
-      return await response.json();
+      const res = await response.json();
+      console.log('getCourses - Raw response:', res);
+      
+      // Handle different response structures consistently
+      return res.value || res.data || res || [];
     } catch (error) {
       console.error("Error fetching courses:", error);
       return [];
@@ -458,7 +462,7 @@ export const useCourse = () => {
           console.log('User enrollments fetched successfully:', res);
           return res;
         }
-      } catch (error) {
+      } catch {
         console.warn('Primary enrollments endpoint failed, trying fallback...');
       }
       

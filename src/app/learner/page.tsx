@@ -93,12 +93,13 @@ const LearnerHome = () => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [coursesLoading, setCoursesLoading] = useState(true);
-  const [progressData, setProgressData] = useState([
-    { name: "Digital Literacy", lessons: 25, completedLessons: 21 },
-    { name: "Digital Communication & Collaboration", lessons: 30, completedLessons: 18 },
-    { name: "Digital Safety & Security", lessons: 28, completedLessons: 11 },
-    { name: "Digital Content Creation", lessons: 35, completedLessons: 5 },
-  ]);
+  const [progressData, setProgressData] = useState<Array<{
+    name: string;
+    progress: number;
+    id: string;
+    lessons: number;
+    completedLessons: number;
+  }>>([]);
 
   const gettingCourse = async () => {
     try {
@@ -106,7 +107,20 @@ const LearnerHome = () => {
       console.log('LearnerHome - Fetching available courses...');
       const courses = await getAvailableCourses();
       console.log('LearnerHome - Courses fetched:', courses);
-      setCourses(courses || []);
+      
+      // Ensure courses is an array and contains valid course objects
+      if (Array.isArray(courses)) {
+        const validCourses = courses.filter(course => 
+          course && 
+          typeof course === 'object' && 
+          course.id && 
+          course.title
+        );
+        setCourses(validCourses);
+      } else {
+        console.warn('LearnerHome - Courses is not an array:', courses);
+        setCourses([]);
+      }
     } catch (error) {
       console.error("Failed to fetch courses:", error);
       setCourses([]);
@@ -115,6 +129,33 @@ const LearnerHome = () => {
       setCoursesLoading(false);
     }
   }
+
+  const fetchRealProgressData = async () => {
+    if (!userStats?.coursesEnrolled?.length) {
+      setProgressData([]);
+      return;
+    }
+
+    try {
+      console.log('LearnerHome - Processing enrolled courses for display...');
+      
+      // Since progress API is not available yet, create course entries with 0% progress
+      // This will be updated when backend implements progress tracking
+      const progressData = userStats.coursesEnrolled.map((course) => ({
+        name: course.title,
+        progress: 0, // No progress API available yet
+        id: course.id,
+        lessons: 1, // Default until lessons API is available
+        completedLessons: 0 // Default until progress API is available
+      }));
+
+      setProgressData(progressData);
+      console.log('LearnerHome - Course data prepared for display:', progressData);
+    } catch (error) {
+      console.error('Failed to prepare course data:', error);
+      setProgressData([]);
+    }
+  };
 
   const fetchUserStats = async () => {
     if (!isLoggedIn) {
@@ -127,15 +168,26 @@ const LearnerHome = () => {
       console.log('LearnerHome - Fetching user stats...');
       const stats = await getUserStats();
       if (stats) {
+        console.log('LearnerHome - Raw stats response:', stats);
+        console.log('LearnerHome - coursesEnrolled length:', stats.coursesEnrolled?.length);
+        console.log('LearnerHome - coursesCompleted length:', stats.coursesCompleted?.length);
+        console.log('LearnerHome - currentStraek:', stats.currentStraek);
+        console.log('LearnerHome - longestStreak:', stats.longestStreak);
+        
         setUserStats(stats);
-        console.log('LearnerHome - Stats loaded successfully:', stats);
+        console.log('LearnerHome - Stats loaded successfully');
+        
+        // Process course data for display (no API call needed)
+        fetchRealProgressData();
       } else {
-        console.warn("No user stats received - using fallback data");
-        // Keep userStats as null to use fallback data
+        console.warn("No user stats received");
+        setUserStats(null);
+        setProgressData([]);
       }
     } catch (error) {
       console.error("Failed to fetch user stats:", error);
-      // Stats will remain null and fallback data will be used
+      setUserStats(null);
+      setProgressData([]);
     } finally {
       setLoading(false);
     }
@@ -154,68 +206,62 @@ const LearnerHome = () => {
       } else {
         console.log('LearnerHome - User not logged in, skipping stats fetch');
         setLoading(false);
+        setProgressData([]); // Clear progress data when not logged in
       }
     }
   }, [isLoaded, isLoggedIn]);
 
-  // Function to simulate completing a lesson (for testing)
-  const completeLesson = (courseIndex: number) => {
-    setProgressData(prev => prev.map((course, index) => 
-      index === courseIndex && course.completedLessons < course.lessons
-        ? { ...course, completedLessons: course.completedLessons + 1 }
-        : course
-    ));
-  };
+  // Separate effect to fetch progress data when userStats changes
+  useEffect(() => {
+    if (userStats?.coursesEnrolled?.length) {
+      fetchRealProgressData();
+    }
+  }, [userStats]);
 
-  // Dynamic course progress calculation based on lessons completed
-  const courseProgress = progressData.map(course => ({
-    ...course,
-    progress: Math.round((course.completedLessons / course.lessons) * 100)
-  }));
+  // Function to fetch real progress data (moved up and now called from fetchUserStats)
+  // This function is kept for future use when backend provides lesson completion API
 
-  // Dynamic learner stats - use API data if available, fallback to calculated stats
+  // Use real progress data from API - progressData state contains the real course progress
+
+  // Dynamic learner stats - use API data where available and accurate
   const stats = userStats ? [
     { 
       title: "Courses Enrolled", 
-      value: userStats.coursesEnrolled?.toString() || "0", 
+      value: userStats.coursesEnrolled?.length?.toString() || "0", 
       icon: BookOpen, 
       trend: userStats.trends?.coursesThisMonth || "+0 this month", 
       color: "text-blue-600" 
     },
     { 
       title: "Courses Completed", 
-      value: userStats.coursesCompleted?.toString() || "0", 
+      value: userStats.coursesCompleted?.length?.toString() || "0", 
       icon: Award, 
       trend: userStats.trends?.completedThisMonth || "+0 this month", 
       color: "text-green-600" 
     },
     { 
-      title: "Lessons Completed", 
-      value: userStats.lessonsCompleted?.toString() || "0", 
+      title: "Current Streak", 
+      value: "0", // Real streak calculation requires activity tracking API
       icon: Clock, 
-      trend: userStats.trends?.remainingLessons || "0 remaining", 
+      trend: `Longest: ${userStats.longestStreak || 0} days`, 
       color: "text-purple-600" 
     },
     { 
-      title: "Overall Progress", 
-      value: `${userStats.overallProgress || 0}%`, 
+      title: "Certificates", 
+      value: userStats.certificates?.length?.toString() || "0", 
       icon: Target, 
-      trend: userStats.trends?.progressEncouragement || "Getting started!", 
+      trend: userStats.trends?.progressEncouragement || "Keep learning!", 
       color: "text-orange-600" 
     },
   ] : [
-    // Fallback to calculated stats if API fails
-    { title: "Courses Enrolled", value: progressData.length.toString(), icon: BookOpen, trend: "+3 this month", color: "text-blue-600" },
-    { title: "Courses Completed", value: "0", icon: Award, trend: "+0 this month", color: "text-green-600" },
-    { title: "Lessons Completed", value: "0", icon: Clock, trend: "0 remaining", color: "text-purple-600" },
-    { title: "Overall Progress", value: "0%", icon: Target, trend: "Getting started!", color: "text-orange-600" },
+    // Show zeros for new users - no dummy data
+    { title: "Courses Enrolled", value: "0", icon: BookOpen, trend: "Start your learning journey", color: "text-blue-600" },
+    { title: "Courses Completed", value: "0", icon: Award, trend: "Complete your first course", color: "text-green-600" },
+    { title: "Current Streak", value: "0", icon: Clock, trend: "Start learning today", color: "text-purple-600" },
+    { title: "Certificates", value: "0", icon: Target, trend: "Earn your first certificate", color: "text-orange-600" },
   ];
 
-  const recentActivity = [
-    { id: 1, action: "Completed lesson", title: "JavaScript Functions", course: "JS Advanced", time: "2 hours ago" },
-    { id: 2, action: "Started course", title: "React Components", course: "React Mastery", time: "1 day ago" },
-    { id: 3, action: "Earned certificate", title: "HTML/CSS Basics", course: "Web Fundamentals", time: "3 days ago" },
-  ];
+  // Recent activity will be fetched from API in future - for now show empty state
 
   // Don't render learner dashboard if not authenticated
   if (isLoaded && !isLoggedIn) {
@@ -330,16 +376,16 @@ const LearnerHome = () => {
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4">
             <CircularProgress 
-              percentage={userStats?.overallProgress || 0} 
+              percentage={userStats ? Math.round((userStats.coursesCompleted.length / Math.max(userStats.coursesEnrolled.length, 1)) * 100) : 0} 
               size={120} 
               strokeWidth={8}
               color="hsl(var(--primary))"
-              completedLessons={userStats?.lessonsCompleted || 0}
-              totalLessons={userStats?.totalLessons || 100}
+              completedLessons={userStats?.coursesCompleted?.length || 0}
+              totalLessons={userStats?.coursesEnrolled?.length || 1}
             />
             <div className="text-center space-y-1">
               <p className="text-sm font-medium">
-                {userStats?.lessonsCompleted || 0} of {userStats?.totalLessons || 100} lessons completed
+                {userStats?.coursesCompleted?.length || 0} of {userStats?.coursesEnrolled?.length || 0} courses completed
               </p>
               <p className="text-xs text-muted-foreground">
                 {userStats?.trends?.progressEncouragement || "Keep going!"}
@@ -354,56 +400,75 @@ const LearnerHome = () => {
             <CardTitle>Learning Progress</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {courseProgress.map((course, index) => (
-              <div key={index} className="flex items-center gap-6">
-                <div className="flex-shrink-0">
-                  <CircularProgress 
-                    percentage={course.progress} 
-                    size={80} 
-                    strokeWidth={6}
-                    color={index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`}
-                    completedLessons={course.completedLessons}
-                    totalLessons={course.lessons}
-                  />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium flex items-center gap-2">
-                      {course.name}
-                      {course.progress === 100 && (
-                        <Badge variant="default" className="text-xs bg-green-500">
-                          ✓ Complete
-                        </Badge>
-                      )}
-                    </h3>
-                    <span className="text-sm text-muted-foreground">{course.progress}% Complete</span>
+            {progressData.length > 0 ? (
+              progressData.map((course, index) => (
+                <div key={course.id || index} className="flex items-center gap-6">
+                  <div className="flex-shrink-0">
+                    <CircularProgress 
+                      percentage={course.progress} 
+                      size={80} 
+                      strokeWidth={6}
+                      color={index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`}
+                      completedLessons={course.completedLessons}
+                      totalLessons={course.lessons}
+                    />
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>📚 {course.completedLessons}/{course.lessons} Lessons Completed</span>
-                    <span>🎯 {course.lessons - course.completedLessons} Remaining</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="w-full bg-muted rounded-full h-2 mr-4">
-                      <div 
-                        className="h-2 rounded-full transition-all duration-1000 ease-out"
-                        style={{ 
-                          width: `${course.progress}%`,
-                          backgroundColor: index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`
-                        }}
-                      />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium flex items-center gap-2">
+                        {course.name}
+                        {course.progress === 100 && (
+                          <Badge variant="default" className="text-xs bg-green-500">
+                            ✓ Complete
+                          </Badge>
+                        )}
+                      </h3>
+                      <span className="text-sm text-muted-foreground">{course.progress}% Complete</span>
                     </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => completeLesson(index)}
-                      disabled={course.completedLessons >= course.lessons}
-                    >
-                      {course.completedLessons >= course.lessons ? "Completed" : "Continue"}
-                    </Button>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>📚 {course.completedLessons}/{course.lessons} Lessons Completed</span>
+                      <span>🎯 {course.lessons - course.completedLessons} Remaining</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="w-full bg-muted rounded-full h-2 mr-4">
+                        <div 
+                          className="h-2 rounded-full transition-all duration-1000 ease-out"
+                          style={{ 
+                            width: `${course.progress}%`,
+                            backgroundColor: index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`
+                          }}
+                        />
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        asChild
+                      >
+                        <Link href={`/learner/courses/${course.id}`}>
+                          Continue
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              // Empty state for new users with no enrolled courses
+              <div className="text-center py-12">
+                <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
+                  <BookOpen className="w-12 h-12 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">No Courses Enrolled Yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Start your learning journey by enrolling in a course
+                </p>
+                <Button asChild>
+                  <Link href="/learner/courses">
+                    Browse Courses
+                  </Link>
+                </Button>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
@@ -442,21 +507,16 @@ const LearnerHome = () => {
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="space-y-1 border-b pb-3 last:border-b-0">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {activity.action}
-                    </Badge>
-                  </div>
-                  <h4 className="font-medium text-sm">{activity.title}</h4>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>in {activity.course}</span>
-                    <span>•</span>
-                    <span>{activity.time}</span>
-                  </div>
+              {/* Empty state for recent activity - will be connected to real API later */}
+              <div className="text-center py-8">
+                <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <Clock className="w-8 h-8 text-muted-foreground" />
                 </div>
-              ))}
+                <h3 className="text-sm font-medium mb-2">No Recent Activity</h3>
+                <p className="text-xs text-muted-foreground">
+                  Your learning activity will appear here
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -491,7 +551,10 @@ const LearnerHome = () => {
             </div>
           ) : courses && courses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {courses.slice(0, 3).map((course) => (
+              {courses
+                .slice(0, 3)
+                .filter(course => course && course.id && course.title) // Filter out invalid courses
+                .map((course) => (
                 <Link key={course.id} href={`/course/${course.id}`}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardContent className="p-4">

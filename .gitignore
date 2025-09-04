@@ -42,3 +42,8 @@ next-env.d.ts
 
 achive
 hi.txt
+
+# Test files
+test-api-fixed.js
+test-new-user-scenario.js
+test-real-api.js

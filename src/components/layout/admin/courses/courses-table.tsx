@@ -19,7 +19,16 @@ const CoursesTable = () => {
     try {
       const gottenCourse = await getCourses();
       if (gottenCourse.message) throw new Error(gottenCourse.message);
-      setCourses(gottenCourse);
+      
+      // Ensure gottenCourse is an array and contains valid course objects
+      if (Array.isArray(gottenCourse)) {
+        const validCourses = gottenCourse
+          .filter(course => course && typeof course === 'object' && course.id && course.title);
+        setCourses(validCourses);
+      } else {
+        console.warn('CoursesTable - Courses is not an array:', gottenCourse);
+        setCourses([]);
+      }
     } catch (error: unknown) {
       if (isError(error)) {
         toast.error(error.message);
@@ -27,6 +36,7 @@ const CoursesTable = () => {
       } else {
         console.error("Unknown error", error);
       }
+      setCourses([]);
     } finally {
       setIsLoading(false);
     }

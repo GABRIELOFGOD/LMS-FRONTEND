@@ -15,25 +15,25 @@ const LearnerCourses = () => {
   const statsCards = stats ? [
     {
       title: "Enrolled Courses",
-      value: stats.coursesEnrolled,
+      value: stats.coursesEnrolled?.length?.toString() || "0",
       icon: BookOpen,
       color: "text-blue-600"
     },
     {
       title: "Completed",
-      value: stats.coursesCompleted,
+      value: stats.coursesCompleted?.length?.toString() || "0",
       icon: Award,
       color: "text-green-600"
     },
     {
-      title: "Lessons Done",
-      value: `${stats.lessonsCompleted}/${stats.totalLessons}`,
+      title: "Current Streak",
+      value: "0", // Real streak calculation requires activity tracking API
       icon: Clock,
       color: "text-purple-600"
     },
     {
-      title: "Overall Progress",
-      value: `${stats.overallProgress}%`,
+      title: "Certificates",
+      value: stats.certificates?.length?.toString() || "0",
       icon: Target,
       color: "text-orange-600"
     }

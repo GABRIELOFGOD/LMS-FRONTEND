@@ -40,16 +40,11 @@ const CourseCard = ({ course }: {
           </div>
         </div>
         <div className="mt-5 w-full">
-          <Button
-            className="w-full"
-            // onClick={() => enrollCourse(course.id)}
-          >
-            <Link
-              href={`/course/${course.id}`}
-            >
+          <Link href={`/course/${course.id}`} className="w-full">
+            <Button className="w-full">
               Enroll
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
