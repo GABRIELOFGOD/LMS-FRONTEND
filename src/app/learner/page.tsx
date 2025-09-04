@@ -106,7 +106,20 @@ const LearnerHome = () => {
       console.log('LearnerHome - Fetching available courses...');
       const courses = await getAvailableCourses();
       console.log('LearnerHome - Courses fetched:', courses);
-      setCourses(courses || []);
+      
+      // Ensure courses is an array and contains valid course objects
+      if (Array.isArray(courses)) {
+        const validCourses = courses.filter(course => 
+          course && 
+          typeof course === 'object' && 
+          course.id && 
+          course.title
+        );
+        setCourses(validCourses);
+      } else {
+        console.warn('LearnerHome - Courses is not an array:', courses);
+        setCourses([]);
+      }
     } catch (error) {
       console.error("Failed to fetch courses:", error);
       setCourses([]);
@@ -491,7 +504,10 @@ const LearnerHome = () => {
             </div>
           ) : courses && courses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {courses.slice(0, 3).map((course) => (
+              {courses
+                .slice(0, 3)
+                .filter(course => course && course.id && course.title) // Filter out invalid courses
+                .map((course) => (
                 <Link key={course.id} href={`/course/${course.id}`}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardContent className="p-4">

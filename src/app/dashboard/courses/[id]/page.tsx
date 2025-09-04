@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useCourse } from "@/hooks/useCourse";
 import { isError } from "@/services/helper";
 import { Course } from "@/types/course";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 
 interface EditCourseDetailsProps {
@@ -24,7 +24,7 @@ const EditCourseDetails = ({ params }: EditCourseDetailsProps) => {
 
   const { getACourse, publishCourse } = useCourse();
 
-  const gettingACourse = async () => {
+  const gettingACourse = useCallback(async () => {
     try {
       const gottenCourse = await getACourse(id);
       setCourse(gottenCourse);
@@ -36,7 +36,7 @@ const EditCourseDetails = ({ params }: EditCourseDetailsProps) => {
         console.error("Unknown error", error);
       }
     }
-  }
+  }, [id, getACourse]);
 
   const requiredFields = [
     course?.title,
@@ -62,7 +62,7 @@ const EditCourseDetails = ({ params }: EditCourseDetailsProps) => {
 
   useEffect(() => {
     gettingACourse();
-  }, [id]);
+  }, [id, gettingACourse]);
 
   return (
     <div className="flex flex-col px-3 md:px-5 py-10 gap-5">

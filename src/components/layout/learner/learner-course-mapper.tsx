@@ -15,11 +15,49 @@ const LearnerCourseMapper = () => {
     try {
       setLoading(true);
       const courseData = await getUserCoursesFromStats();
-      if (courseData) {
-        setCourses(courseData.completedCourses);
+      console.log('LearnerCourseMapper - Raw course data:', courseData);
+      
+      if (courseData && courseData.completedCourses) {
+        // Ensure completedCourses is an array and contains valid course objects
+        if (Array.isArray(courseData.completedCourses)) {
+          const validCourses = courseData.completedCourses
+            .filter(course => {
+              // More robust validation
+              const isValid = course && 
+                typeof course === 'object' && 
+                course.id && 
+                course.title &&
+                typeof course.title === 'string';
+              
+              if (!isValid) {
+                console.warn('LearnerCourseMapper - Invalid course object:', course);
+              }
+              return isValid;
+            })
+            .map(course => ({
+              // Ensure all required fields are present
+              id: course.id,
+              title: course.title,
+              description: course.description || '',
+              imageUrl: course.imageUrl || '',
+              chapters: course.chapters || [],
+              createdAt: course.createdAt || '',
+              updatedAt: course.updatedAt || '',
+              publish: course.publish || false
+            }));
+          setCourses(validCourses);
+          console.log('LearnerCourseMapper - Valid courses:', validCourses);
+        } else {
+          console.warn('LearnerCourseMapper - Completed courses is not an array:', courseData.completedCourses);
+          setCourses([]);
+        }
+      } else {
+        console.log('LearnerCourseMapper - No completed courses found');
+        setCourses([]);
       }
     } catch (error) {
       console.error("Error fetching completed courses:", error);
+      setCourses([]);
     } finally {
       setLoading(false);
     }

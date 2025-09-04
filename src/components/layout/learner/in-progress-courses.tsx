@@ -14,11 +14,49 @@ const InProgressCourses = () => {
     try {
       setLoading(true);
       const courseData = await getUserCoursesFromStats();
-      if (courseData) {
-        setCourses(courseData.inProgressCourses);
+      console.log('InProgressCourses - Raw course data:', courseData);
+      
+      if (courseData && courseData.inProgressCourses) {
+        // Ensure inProgressCourses is an array and contains valid course objects
+        if (Array.isArray(courseData.inProgressCourses)) {
+          const validCourses = courseData.inProgressCourses
+            .filter(course => {
+              // More robust validation
+              const isValid = course && 
+                typeof course === 'object' && 
+                course.id && 
+                course.title &&
+                typeof course.title === 'string';
+              
+              if (!isValid) {
+                console.warn('InProgressCourses - Invalid course object:', course);
+              }
+              return isValid;
+            })
+            .map(course => ({
+              // Ensure all required fields are present
+              id: course.id,
+              title: course.title,
+              description: course.description || '',
+              imageUrl: course.imageUrl || '',
+              chapters: course.chapters || [],
+              createdAt: course.createdAt || '',
+              updatedAt: course.updatedAt || '',
+              publish: course.publish || false
+            }));
+          setCourses(validCourses);
+          console.log('InProgressCourses - Valid courses:', validCourses);
+        } else {
+          console.warn('InProgressCourses - In progress courses is not an array:', courseData.inProgressCourses);
+          setCourses([]);
+        }
+      } else {
+        console.log('InProgressCourses - No in-progress courses found');
+        setCourses([]);
       }
     } catch (error) {
       console.error("Error fetching in-progress courses:", error);
+      setCourses([]);
     } finally {
       setLoading(false);
     }

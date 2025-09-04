@@ -32,7 +32,16 @@ const CourseMapper = ({ onStatsUpdate }: CourseMapperProps = {}) => {
   const gettingCourse = async () => {
     try {
       const courses = await getAvailableCourses();
-      setAllCourses(courses);
+      
+      // Ensure courses is an array and contains valid course objects
+      if (Array.isArray(courses)) {
+        const validCourses = courses
+          .filter(course => course && typeof course === 'object' && course.id && course.title);
+        setAllCourses(validCourses);
+      } else {
+        console.warn('CourseMapper - Courses is not an array:', courses);
+        setAllCourses([]);
+      }
     } catch (error: unknown) {
       if (isError(error)) {
         toast.error(error.message);
@@ -40,6 +49,7 @@ const CourseMapper = ({ onStatsUpdate }: CourseMapperProps = {}) => {
       } else {
         console.error("Unknown error", error);
       }
+      setAllCourses([]);
     }
   };
 

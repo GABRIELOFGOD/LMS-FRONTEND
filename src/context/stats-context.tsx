@@ -1,8 +1,33 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import { getUserStats, UserStats } from "@/services/common";
 import { useUser } from "./user-context";
+
+// Import getUserStats dynamically to avoid module loading issues
+const getUserStatsAsync = async () => {
+  try {
+    const { getUserStats } = await import("@/services/common");
+    return getUserStats;
+  } catch (error) {
+    console.error("Failed to import getUserStats:", error);
+    return null;
+  }
+};
+
+// Temporary inline UserStats interface to avoid import issues
+interface UserStats {
+  coursesEnrolled: number;
+  coursesCompleted: number;
+  lessonsCompleted: number;
+  totalLessons: number;
+  overallProgress: number;
+  trends: {
+    coursesThisMonth: string;
+    completedThisMonth: string;
+    remainingLessons: string;
+    progressEncouragement: string;
+  };
+}
 
 interface StatsContextType {
   stats: UserStats | null;
@@ -31,6 +56,13 @@ export const StatsProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       console.log('StatsContext - Refreshing user stats...');
+      
+      // Use dynamic import to avoid module loading issues
+      const getUserStats = await getUserStatsAsync();
+      if (!getUserStats) {
+        throw new Error("Failed to load getUserStats function");
+      }
+      
       const userStats = await getUserStats();
       if (userStats) {
         setStats(userStats);

@@ -14,8 +14,23 @@ const UserEnrolledCourses = () => {
   const { getCourses } = useCourse();
 
   const fetchEnrolledCourses = async () => {
-    const courses = await getCourses();
-    setEnrolledCourses(courses.slice(0, 3));
+    try {
+      const courses = await getCourses();
+      
+      // Ensure courses is an array and contains valid course objects
+      if (Array.isArray(courses)) {
+        const validCourses = courses
+          .filter(course => course && typeof course === 'object' && course.id && course.title)
+          .slice(0, 3);
+        setEnrolledCourses(validCourses);
+      } else {
+        console.warn('UserEnrolledCourses - Courses is not an array:', courses);
+        setEnrolledCourses([]);
+      }
+    } catch (error) {
+      console.error('UserEnrolledCourses - Error fetching courses:', error);
+      setEnrolledCourses([]);
+    }
   }
 
   useEffect(() => {

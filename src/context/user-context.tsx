@@ -68,14 +68,27 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         try {
           userData = JSON.parse(storedUserData);
           console.log('UserContext - Using stored user data:', userData);
-        } catch (error) {
+          
+          // Validate required fields and fill in missing ones
+          userData = {
+            id: userData.id || 'unknown',
+            role: userData.role || 'student',
+            email: userData.email || '',
+            fname: userData.fname || userData.name?.split(' ')[0] || 'Learner',
+            lname: userData.lname || userData.name?.split(' ')[1] || '',
+            createdAt: userData.createdAt || new Date().toISOString(),
+            updatedAt: userData.updatedAt || new Date().toISOString()
+          };
+        } catch {
           console.log('UserContext - Failed to parse stored user data, creating minimal user');
           userData = {
             id: 'unknown',
             role: 'student',
             email: '',
-            fname: '',
-            lname: ''
+            fname: 'Learner',
+            lname: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           };
         }
       } else {
@@ -84,8 +97,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           id: 'unknown', 
           role: 'student',
           email: '',
-          fname: '',
-          lname: ''
+          fname: 'Learner',
+          lname: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
       }
       

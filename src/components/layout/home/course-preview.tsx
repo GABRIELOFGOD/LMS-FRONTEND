@@ -16,9 +16,20 @@ const CoursePreview = () => {
     try {
       const courses = await getAvailableCourses();
       console.log("[COURSES]: ", courses);
-      setSlicedCourses(courses.slice(0, 4));
+      
+      // Ensure courses is an array and contains valid course objects
+      if (Array.isArray(courses)) {
+        const validCourses = courses
+          .filter(course => course && typeof course === 'object' && course.id && course.title)
+          .slice(0, 4);
+        setSlicedCourses(validCourses);
+      } else {
+        console.warn('CoursePreview - Courses is not an array:', courses);
+        setSlicedCourses([]);
+      }
     } catch (error) {
-      console.log(error);
+      console.error('CoursePreview - Error fetching courses:', error);
+      setSlicedCourses([]);
     } finally {
       setLoadingCourses(false);
     }

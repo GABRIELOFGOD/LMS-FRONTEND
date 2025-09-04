@@ -23,14 +23,39 @@ const AuthLogic = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      // If there's a token, we can assume user is logged in
-      // The user context will handle fetching user data
-      setHasDecided(true);
+      // Validate token format and expiration if it's a JWT
+      try {
+        // Simple JWT validation - check if it has 3 parts
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          // Decode payload to check expiration
+          const payload = JSON.parse(atob(parts[1]));
+          const now = Date.now() / 1000;
+          
+          if (payload.exp && payload.exp < now) {
+            // Token expired
+            console.log('AuthProvider - Token expired, clearing storage');
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            router.push("/login");
+          } else {
+            // Token is valid
+            setHasDecided(true);
+          }
+        } else {
+          // Invalid token format
+          setHasDecided(true);
+        }
+      } catch (error) {
+        // Not a valid JWT or parsing error, but let user context handle validation
+        console.log('AuthProvider - Token validation error:', error);
+        setHasDecided(true);
+      }
     } else {
       setHasDecided(true);
-      router.push("/login");
+      // Don't auto-redirect to login, let components handle this
     }
-  }, []);
+  }, [router]);
   
   return hasDecided ? <>{children}</> : <WaitingForProfile />;
 };

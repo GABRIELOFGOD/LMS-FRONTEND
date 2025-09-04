@@ -15,13 +15,13 @@ const LearnerCourses = () => {
   const statsCards = stats ? [
     {
       title: "Enrolled Courses",
-      value: stats.coursesEnrolled,
+      value: stats.coursesEnrolled.toString(),
       icon: BookOpen,
       color: "text-blue-600"
     },
     {
       title: "Completed",
-      value: stats.coursesCompleted,
+      value: stats.coursesCompleted.toString(),
       icon: Award,
       color: "text-green-600"
     },

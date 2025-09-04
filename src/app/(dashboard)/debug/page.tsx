@@ -28,7 +28,7 @@ export default function DebugPage() {
     // Test auth endpoint
     const testAuthEndpoint = async () => {
       try {
-        const response = await fetch(`${BASEURL}/auth/login`, {
+        await fetch(`${BASEURL}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: 'test', password: 'test' })
