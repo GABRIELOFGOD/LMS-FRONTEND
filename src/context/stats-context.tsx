@@ -16,12 +16,24 @@ const getUserStatsAsync = async () => {
 
 // Temporary inline UserStats interface to avoid import issues
 interface UserStats {
-  coursesEnrolled: number;
-  coursesCompleted: number;
-  lessonsCompleted: number;
-  totalLessons: number;
-  overallProgress: number;
-  trends: {
+  progress: unknown[]; // Progress tracking array
+  certificates: unknown[]; // User certificates
+  coursesCompleted: unknown[]; // Completed courses array
+  coursesEnrolled: {
+    id: string;
+    title: string;
+    description: string;
+    price: string;
+    imageUrl: string;
+    isFree: boolean;
+    publish: boolean;
+    isDeleted: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }[]; // Enrolled courses array
+  currentStraek: number; // Current streak (note: API has typo "Straek")
+  longestStreak: number; // Longest streak
+  trends?: {
     coursesThisMonth: string;
     completedThisMonth: string;
     remainingLessons: string;

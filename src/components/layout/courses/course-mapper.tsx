@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Course } from "@/types/course";
 import { useCourse } from "@/hooks/useCourse";
 import { useUser } from "@/context/user-context";
+import { useStats } from "@/context/stats-context";
 import { isError } from "@/services/helper";
 import { toast } from "sonner";
 import { TbHourglassEmpty } from "react-icons/tb";
@@ -26,6 +27,7 @@ const CourseMapper = ({ onStatsUpdate }: CourseMapperProps = {}) => {
   const [enrollments, setEnrollments] = useState<EnrollmentData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { isLoggedIn, isLoaded } = useUser();
+  const { refreshStats } = useStats();
 
   const { getAvailableCourses, getUserEnrollments, getCourseProgress } = useCourse();
 
@@ -127,10 +129,14 @@ const CourseMapper = ({ onStatsUpdate }: CourseMapperProps = {}) => {
     return enrollment?.progress || 0;
   };
 
-  const handleEnrollmentUpdate = () => {
+  const handleEnrollmentUpdate = async () => {
     // Refresh enrollment data when a user enrolls in a new course
     console.log('CourseMapper - Enrollment update triggered, refreshing data...');
     getEnrollmentData();
+    
+    // Refresh stats context to update dashboard cards
+    console.log('CourseMapper - Refreshing stats context...');
+    await refreshStats();
     
     // Trigger parent stats refresh if callback provided
     if (onStatsUpdate) {

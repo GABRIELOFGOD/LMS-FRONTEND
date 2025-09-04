@@ -48,14 +48,26 @@ export const enrollCourse = async (courseId: string) => {
   }
 }
 
-// User Stats API
+// User Stats API - Updated to match actual backend response
 export interface UserStats {
-  coursesEnrolled: number;
-  coursesCompleted: number;
-  lessonsCompleted: number;
-  totalLessons: number;
-  overallProgress: number;
-  trends: {
+  progress: unknown[]; // Progress tracking array
+  certificates: unknown[]; // User certificates
+  coursesCompleted: unknown[]; // Completed courses array
+  coursesEnrolled: {
+    id: string;
+    title: string;
+    description: string;
+    price: string;
+    imageUrl: string;
+    isFree: boolean;
+    publish: boolean;
+    isDeleted: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }[]; // Enrolled courses array
+  currentStraek: number; // Current streak (note: API has typo "Straek")
+  longestStreak: number; // Longest streak
+  trends?: {
     coursesThisMonth: string;
     completedThisMonth: string;
     remainingLessons: string;
@@ -63,11 +75,12 @@ export interface UserStats {
   };
 }
 
-// Extended interface for user course data
-export interface UserCourseStats extends UserStats {
+// Extended interface for user course data  
+export interface UserCourseStats {
   enrolledCourses: Course[];
   completedCourses: Course[];
   inProgressCourses: Course[];
+  stats: UserStats;
 }
 
 // Import Course type
@@ -100,8 +113,31 @@ export const getUserStats = async (): Promise<UserStats | null> => {
     }
 
     const res = await req.json();
-    console.log('getUserStats - Stats fetched successfully:', res);
-    return res as UserStats;
+    console.log('getUserStats - Raw response:', res);
+    console.log('getUserStats - Response type:', typeof res);
+    console.log('getUserStats - coursesEnrolled:', res.coursesEnrolled, typeof res.coursesEnrolled);
+    console.log('getUserStats - progress:', res.progress, typeof res.progress);
+    console.log('getUserStats - currentStraek:', res.currentStraek, typeof res.currentStraek);
+    console.log('getUserStats - longestStreak:', res.longestStreak, typeof res.longestStreak);
+    
+    // Ensure the response matches expected structure
+    const userStats: UserStats = {
+      progress: res.progress || [],
+      certificates: res.certificates || [],
+      coursesCompleted: res.coursesCompleted || [],
+      coursesEnrolled: res.coursesEnrolled || [],
+      currentStraek: res.currentStraek || 0,
+      longestStreak: res.longestStreak || 0,
+      trends: res.trends || {
+        coursesThisMonth: "+0 this month",
+        completedThisMonth: "+0 this month",
+        remainingLessons: "0 remaining",
+        progressEncouragement: "Getting started!"
+      }
+    };
+    
+    console.log('getUserStats - Processed stats:', userStats);
+    return userStats;
   } catch (error: unknown) {
     if (isError(error)) {
       console.error("Failed to fetch user stats", error.message);

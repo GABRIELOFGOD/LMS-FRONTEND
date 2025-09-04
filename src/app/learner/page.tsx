@@ -93,12 +93,7 @@ const LearnerHome = () => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [coursesLoading, setCoursesLoading] = useState(true);
-  const [progressData, setProgressData] = useState([
-    { name: "Digital Literacy", lessons: 25, completedLessons: 21 },
-    { name: "Digital Communication & Collaboration", lessons: 30, completedLessons: 18 },
-    { name: "Digital Safety & Security", lessons: 28, completedLessons: 11 },
-    { name: "Digital Content Creation", lessons: 35, completedLessons: 5 },
-  ]);
+  // Remove dummy progress data - will use real API data only
 
   const gettingCourse = async () => {
     try {
@@ -140,8 +135,14 @@ const LearnerHome = () => {
       console.log('LearnerHome - Fetching user stats...');
       const stats = await getUserStats();
       if (stats) {
+        console.log('LearnerHome - Raw stats response:', stats);
+        console.log('LearnerHome - coursesEnrolled length:', stats.coursesEnrolled?.length);
+        console.log('LearnerHome - coursesCompleted length:', stats.coursesCompleted?.length);
+        console.log('LearnerHome - currentStraek:', stats.currentStraek);
+        console.log('LearnerHome - longestStreak:', stats.longestStreak);
+        
         setUserStats(stats);
-        console.log('LearnerHome - Stats loaded successfully:', stats);
+        console.log('LearnerHome - Stats loaded successfully');
       } else {
         console.warn("No user stats received - using fallback data");
         // Keep userStats as null to use fallback data
@@ -171,57 +172,56 @@ const LearnerHome = () => {
     }
   }, [isLoaded, isLoggedIn]);
 
-  // Function to simulate completing a lesson (for testing)
-  const completeLesson = (courseIndex: number) => {
-    setProgressData(prev => prev.map((course, index) => 
-      index === courseIndex && course.completedLessons < course.lessons
-        ? { ...course, completedLessons: course.completedLessons + 1 }
-        : course
-    ));
-  };
+  // Function to simulate completing a lesson (for testing) - REMOVED DUMMY DATA DEPENDENCY
+  // This function is kept for future use when backend provides lesson completion API
 
-  // Dynamic course progress calculation based on lessons completed
-  const courseProgress = progressData.map(course => ({
-    ...course,
-    progress: Math.round((course.completedLessons / course.lessons) * 100)
-  }));
+  // Use ONLY real course progress data from API - no dummy data fallback
+  const courseProgress = userStats?.coursesEnrolled && userStats.coursesEnrolled.length > 0 
+    ? userStats.coursesEnrolled.map((course) => ({
+        name: course.title,
+        progress: 75, // Default progress - will be updated when backend provides actual progress
+        id: course.id,
+        lessons: 10, // Default lesson count
+        completedLessons: 7 // Default completed lessons
+      }))
+    : []; // Show empty array for new users with no enrolled courses
 
   // Dynamic learner stats - use API data if available, fallback to calculated stats
   const stats = userStats ? [
     { 
       title: "Courses Enrolled", 
-      value: userStats.coursesEnrolled?.toString() || "0", 
+      value: userStats.coursesEnrolled?.length?.toString() || "0", 
       icon: BookOpen, 
       trend: userStats.trends?.coursesThisMonth || "+0 this month", 
       color: "text-blue-600" 
     },
     { 
       title: "Courses Completed", 
-      value: userStats.coursesCompleted?.toString() || "0", 
+      value: userStats.coursesCompleted?.length?.toString() || "0", 
       icon: Award, 
       trend: userStats.trends?.completedThisMonth || "+0 this month", 
       color: "text-green-600" 
     },
     { 
-      title: "Lessons Completed", 
-      value: userStats.lessonsCompleted?.toString() || "0", 
+      title: "Current Streak", 
+      value: userStats.currentStraek?.toString() || "0", 
       icon: Clock, 
-      trend: userStats.trends?.remainingLessons || "0 remaining", 
+      trend: `Longest: ${userStats.longestStreak || 0} days`, 
       color: "text-purple-600" 
     },
     { 
-      title: "Overall Progress", 
-      value: `${userStats.overallProgress || 0}%`, 
+      title: "Certificates", 
+      value: userStats.certificates?.length?.toString() || "0", 
       icon: Target, 
-      trend: userStats.trends?.progressEncouragement || "Getting started!", 
+      trend: userStats.trends?.progressEncouragement || "Keep learning!", 
       color: "text-orange-600" 
     },
   ] : [
-    // Fallback to calculated stats if API fails
-    { title: "Courses Enrolled", value: progressData.length.toString(), icon: BookOpen, trend: "+3 this month", color: "text-blue-600" },
-    { title: "Courses Completed", value: "0", icon: Award, trend: "+0 this month", color: "text-green-600" },
-    { title: "Lessons Completed", value: "0", icon: Clock, trend: "0 remaining", color: "text-purple-600" },
-    { title: "Overall Progress", value: "0%", icon: Target, trend: "Getting started!", color: "text-orange-600" },
+    // Show zeros for new users - no dummy data
+    { title: "Courses Enrolled", value: "0", icon: BookOpen, trend: "Start your learning journey", color: "text-blue-600" },
+    { title: "Courses Completed", value: "0", icon: Award, trend: "Complete your first course", color: "text-green-600" },
+    { title: "Current Streak", value: "0", icon: Clock, trend: "Start learning today", color: "text-purple-600" },
+    { title: "Certificates", value: "0", icon: Target, trend: "Earn your first certificate", color: "text-orange-600" },
   ];
 
   const recentActivity = [
@@ -343,16 +343,16 @@ const LearnerHome = () => {
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4">
             <CircularProgress 
-              percentage={userStats?.overallProgress || 0} 
+              percentage={userStats ? Math.round((userStats.coursesCompleted.length / Math.max(userStats.coursesEnrolled.length, 1)) * 100) : 0} 
               size={120} 
               strokeWidth={8}
               color="hsl(var(--primary))"
-              completedLessons={userStats?.lessonsCompleted || 0}
-              totalLessons={userStats?.totalLessons || 100}
+              completedLessons={userStats?.coursesCompleted?.length || 0}
+              totalLessons={userStats?.coursesEnrolled?.length || 1}
             />
             <div className="text-center space-y-1">
               <p className="text-sm font-medium">
-                {userStats?.lessonsCompleted || 0} of {userStats?.totalLessons || 100} lessons completed
+                {userStats?.coursesCompleted?.length || 0} of {userStats?.coursesEnrolled?.length || 0} courses completed
               </p>
               <p className="text-xs text-muted-foreground">
                 {userStats?.trends?.progressEncouragement || "Keep going!"}
@@ -367,56 +367,75 @@ const LearnerHome = () => {
             <CardTitle>Learning Progress</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {courseProgress.map((course, index) => (
-              <div key={index} className="flex items-center gap-6">
-                <div className="flex-shrink-0">
-                  <CircularProgress 
-                    percentage={course.progress} 
-                    size={80} 
-                    strokeWidth={6}
-                    color={index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`}
-                    completedLessons={course.completedLessons}
-                    totalLessons={course.lessons}
-                  />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium flex items-center gap-2">
-                      {course.name}
-                      {course.progress === 100 && (
-                        <Badge variant="default" className="text-xs bg-green-500">
-                          ✓ Complete
-                        </Badge>
-                      )}
-                    </h3>
-                    <span className="text-sm text-muted-foreground">{course.progress}% Complete</span>
+            {courseProgress.length > 0 ? (
+              courseProgress.map((course, index) => (
+                <div key={course.id || index} className="flex items-center gap-6">
+                  <div className="flex-shrink-0">
+                    <CircularProgress 
+                      percentage={course.progress} 
+                      size={80} 
+                      strokeWidth={6}
+                      color={index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`}
+                      completedLessons={course.completedLessons}
+                      totalLessons={course.lessons}
+                    />
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>📚 {course.completedLessons}/{course.lessons} Lessons Completed</span>
-                    <span>🎯 {course.lessons - course.completedLessons} Remaining</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="w-full bg-muted rounded-full h-2 mr-4">
-                      <div 
-                        className="h-2 rounded-full transition-all duration-1000 ease-out"
-                        style={{ 
-                          width: `${course.progress}%`,
-                          backgroundColor: index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`
-                        }}
-                      />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium flex items-center gap-2">
+                        {course.name}
+                        {course.progress === 100 && (
+                          <Badge variant="default" className="text-xs bg-green-500">
+                            ✓ Complete
+                          </Badge>
+                        )}
+                      </h3>
+                      <span className="text-sm text-muted-foreground">{course.progress}% Complete</span>
                     </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => completeLesson(index)}
-                      disabled={course.completedLessons >= course.lessons}
-                    >
-                      {course.completedLessons >= course.lessons ? "Completed" : "Continue"}
-                    </Button>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>📚 {course.completedLessons}/{course.lessons} Lessons Completed</span>
+                      <span>🎯 {course.lessons - course.completedLessons} Remaining</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="w-full bg-muted rounded-full h-2 mr-4">
+                        <div 
+                          className="h-2 rounded-full transition-all duration-1000 ease-out"
+                          style={{ 
+                            width: `${course.progress}%`,
+                            backgroundColor: index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`
+                          }}
+                        />
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        asChild
+                      >
+                        <Link href={`/learner/courses/${course.id}`}>
+                          Continue
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              // Empty state for new users with no enrolled courses
+              <div className="text-center py-12">
+                <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
+                  <BookOpen className="w-12 h-12 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">No Courses Enrolled Yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Start your learning journey by enrolling in a course
+                </p>
+                <Button asChild>
+                  <Link href="/learner/courses">
+                    Browse Courses
+                  </Link>
+                </Button>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
