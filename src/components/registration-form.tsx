@@ -72,13 +72,13 @@ const RegistrationForm = () => {
   }
 
   return (
-    <div>
-      <div className="flex flex-col gap-5 px-6 py-6 rounded-lg w-full md:w-sm items-center justify-center shadow-md bg-background border border-border/50">
+    <div className="w-full max-w-md mx-auto">
+      <div className="flex flex-col gap-5 px-4 md:px-6 py-6 rounded-lg w-full items-center justify-center shadow-md bg-background border border-border/50">
         <p className="text-lg font-extrabold">Register</p>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="w-full grid gap-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="fname"

@@ -25,21 +25,22 @@ const steps = [
 const HowItWorks = () => {
   return (
     <div className="bg-muted/40">
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 px-3 py-10 md:py-20">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-5 px-3 py-10 md:py-20">
         {/* Image */}
-        <div className=" flex justify-center items-center mx-auto my-auto relative aspect-[4/3] md:aspect-auto">
+        <div className="flex justify-center items-center mx-auto my-auto relative aspect-square md:aspect-auto order-2 md:order-1">
           <Image
             src={Champion}
             alt="Hero image"
-            height={300}
-            width={300}
+            height={250}
+            width={250}
+            className="md:h-[300px] md:w-[300px]"
           />
         </div>
 
         {/* Steps */}
-        <div className="flex flex-col md:ml-5">
-          <p className="text-2xl md:text-4xl font-bold">How it works</p>
-          <div className="mt-10 relative flex flex-col md:flex-row items-start md:items-center gap-10 md:gap-5">
+        <div className="flex flex-col md:ml-5 order-1 md:order-2">
+          <p className="text-xl md:text-2xl lg:text-4xl font-bold text-center md:text-left">How it works</p>
+          <div className="mt-6 md:mt-10 relative flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-5">
 
             {/* Dotted Line */}
             <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 border-t-2 border-dotted border-gray-300 z-0"></div>
@@ -47,13 +48,13 @@ const HowItWorks = () => {
             {steps.map((step, index) => (
               <div
                 key={index}
-                className="relative z-10 flex flex-col items-start text-left md:items-center md:text-center w-full md:w-1/3"
+                className="relative z-10 flex flex-col items-center text-center w-full md:w-1/3"
               >
-                <div className="bg-white p-3 rounded-full shadow-md mb-3">
+                <div className="bg-white p-3 rounded-full shadow-md mb-3 flex items-center justify-center">
                   {step.icon}
                 </div>
-                <h4 className="text-lg font-semibold">{step.title}</h4>
-                <p className="text-sm text-muted-foreground">{step.description}</p>
+                <h4 className="text-base md:text-lg font-semibold">{step.title}</h4>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">{step.description}</p>
               </div>
             ))}
 

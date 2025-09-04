@@ -47,21 +47,21 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
+    <div className="flex flex-1 flex-col gap-4 md:gap-6">
       {/* Header Section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.fname || 'Admin'}!</h1>
-          <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your platform today.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Welcome back, {user?.fname || 'Admin'}!</h1>
+          <p className="text-muted-foreground text-sm md:text-base">Here&apos;s what&apos;s happening with your platform today.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+          <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
             <Link href="/dashboard/analytics">
               <Eye className="mr-2 h-4 w-4" />
               View Analytics
             </Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/dashboard/create">
               <Plus className="mr-2 h-4 w-4" />
               Create Course
@@ -72,18 +72,18 @@ export default function DashboardPage() {
 
       {/* User Profile Section */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <Avatar className="h-12 w-12 md:h-16 md:w-16">
               <AvatarImage src="" alt={user?.fname || 'Admin'} />
-              <AvatarFallback className="text-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+              <AvatarFallback className="text-sm md:text-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                 {user?.fname?.[0] || 'A'}{user?.lname?.[0] || 'D'}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold">{user?.fname} {user?.lname}</h2>
-              <p className="text-muted-foreground">System Administrator</p>
-              <div className="flex items-center gap-2 mt-2">
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-lg md:text-xl font-semibold">{user?.fname} {user?.lname}</h2>
+              <p className="text-muted-foreground text-sm md:text-base">System Administrator</p>
+              <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
                 <Badge variant="outline" className="text-xs">
                   <Shield className="mr-1 h-3 w-3" />
                   Admin Access
@@ -94,53 +94,53 @@ export default function DashboardPage() {
                 </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span>Last login: Today, 9:42 AM</span>
+            <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+              <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-center sm:text-left">Last login: Today, 9:42 AM</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <CardTitle className="text-xs md:text-sm font-medium truncate">{stat.title}</CardTitle>
+              <stat.icon className={`h-3 w-3 md:h-4 md:w-4 ${stat.color} flex-shrink-0`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-lg md:text-2xl font-bold">{stat.value}</div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3" />
-                <span className="text-green-600">{stat.trend} from last month</span>
+                <TrendingUp className="h-2 w-2 md:h-3 md:w-3" />
+                <span className="text-green-600 truncate">{stat.trend} from last month</span>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         {/* Quick Actions */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="text-sm md:text-base">Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2">
             {quickActions.map((action, index) => (
               <Button
                 key={index}
                 variant="outline"
-                className="h-auto p-4 justify-start text-left"
+                className="h-auto p-3 md:p-4 justify-start text-left"
                 asChild
               >
                 <Link href={action.href}>
                   <div className="flex items-start gap-3">
-                    <action.icon className="h-5 w-5 mt-0.5 text-primary" />
-                    <div>
-                      <p className="font-medium">{action.title}</p>
-                      <p className="text-xs text-muted-foreground">{action.description}</p>
+                    <action.icon className="h-4 w-4 md:h-5 md:w-5 mt-0.5 text-primary flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm md:text-base truncate">{action.title}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{action.description}</p>
                     </div>
                   </div>
                 </Link>
@@ -152,31 +152,31 @@ export default function DashboardPage() {
         {/* System Overview */}
         <Card>
           <CardHeader>
-            <CardTitle>System Overview</CardTitle>
+            <CardTitle className="text-sm md:text-base">System Overview</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 md:space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Server Status</span>
-              <Badge variant="default" className="bg-green-500">
-                <Activity className="mr-1 h-3 w-3" />
+              <span className="text-xs md:text-sm font-medium">Server Status</span>
+              <Badge variant="default" className="bg-green-500 text-xs">
+                <Activity className="mr-1 h-2 w-2 md:h-3 md:w-3" />
                 Healthy
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Database</span>
-              <Badge variant="default" className="bg-green-500">
+              <span className="text-xs md:text-sm font-medium">Database</span>
+              <Badge variant="default" className="bg-green-500 text-xs">
                 Connected
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Storage</span>
-              <Badge variant="outline">
+              <span className="text-xs md:text-sm font-medium">Storage</span>
+              <Badge variant="outline" className="text-xs">
                 78% Used
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Active Users</span>
-              <Badge variant="outline">
+              <span className="text-xs md:text-sm font-medium">Active Users</span>
+              <Badge variant="outline" className="text-xs">
                 247 Online
               </Badge>
             </div>
@@ -187,33 +187,33 @@ export default function DashboardPage() {
       {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Recent Activity</CardTitle>
-            <Button variant="outline" size="sm" asChild>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <CardTitle className="text-sm md:text-base">Recent Activity</CardTitle>
+            <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
               <Link href="/dashboard/activities">View All</Link>
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center gap-4 p-3 rounded-lg border bg-muted/50">
-                <Avatar className="h-8 w-8">
+              <div key={activity.id} className="flex items-start sm:items-center gap-3 md:gap-4 p-3 rounded-lg border bg-muted/50">
+                <Avatar className="h-6 w-6 md:h-8 md:w-8 flex-shrink-0">
                   <AvatarFallback className="text-xs">
                     {activity.user.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
-                  <p className="text-sm">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs md:text-sm">
                     <span className="font-medium">{activity.user}</span>
                     {' '}
                     <span className="text-muted-foreground">{activity.action}</span>
                     {' '}
-                    <span className="font-medium">{activity.course}</span>
+                    <span className="font-medium break-words">{activity.course}</span>
                   </p>
                   <p className="text-xs text-muted-foreground">{activity.time}</p>
                 </div>
-                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                <GraduationCap className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
               </div>
             ))}
           </div>

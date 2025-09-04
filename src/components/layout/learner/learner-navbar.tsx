@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Logo from "../../ui/Logo";
 import { Button } from "../../ui/button";
-import { UserIcon, LogOutIcon } from "lucide-react";
+import { UserIcon, LogOutIcon, Menu, X } from "lucide-react";
 import { useUser } from "@/context/user-context";
 import ThemeToggle from "../../ui/ToggleTheme";
 import {
@@ -12,9 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
+import { useState } from "react";
 
 const LearnerNavbar = () => {
   const { refreshUser } = useUser();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     // Clear token from localStorage
@@ -26,10 +28,12 @@ const LearnerNavbar = () => {
   };
 
   return (
-    <div className="shadow-sm bg-background border-b">
-      <div className="w-full px-3 py-4 flex justify-between container md:px-0 mx-auto">
+    <div className="shadow-sm bg-background border-b relative">
+      <div className="w-full px-3 py-4 flex justify-between items-center container md:px-0 mx-auto">
         <Logo />
-        <div className="flex gap-10 my-auto">
+        
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex gap-10 my-auto">
           <div className="flex gap-5 my-auto">
             <div className="my-auto">
               <ThemeToggle />
@@ -80,7 +84,79 @@ const LearnerNavbar = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2"
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </Button>
+        </div>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="absolute top-full left-0 right-0 bg-background border-b shadow-lg z-50 md:hidden">
+          <div className="container mx-auto px-3 py-4">
+            <div className="flex flex-col space-y-4">
+              {/* Navigation Links */}
+              <Link 
+                href="/learner" 
+                className="capitalize text-sm font-semibold hover:text-primary transition-colors py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+              <Link 
+                href="/learner/courses" 
+                className="capitalize text-sm font-semibold hover:text-primary transition-colors py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                My Courses
+              </Link>
+              <Link 
+                href="/courses" 
+                className="capitalize text-sm font-semibold hover:text-primary transition-colors py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                All Courses
+              </Link>
+              <Link 
+                href="/learner/profile" 
+                className="capitalize text-sm font-semibold hover:text-primary transition-colors py-2 flex items-center gap-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <UserIcon size={16} />
+                Profile
+              </Link>
+              <Link 
+                href="/learner/notification" 
+                className="capitalize text-sm font-semibold hover:text-primary transition-colors py-2 flex items-center gap-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span>🔔</span>
+                Notifications
+              </Link>
+              <Button 
+                variant="destructive" 
+                className="w-full mt-2 flex items-center gap-2" 
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  handleLogout();
+                }}
+              >
+                <LogOutIcon size={16} />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

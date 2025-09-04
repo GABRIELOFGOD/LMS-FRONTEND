@@ -1,29 +1,9 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import LearnerSidebar from "./learner-sidebar";
-import { Menu } from "lucide-react";
-
 const LearnerHeader = () => {
   return (
-    <div>
-      <div className="my-5 bg-accent w-full h-12 rounded-lg">
-        <Sheet>
-          <SheetTrigger>
-            <Menu className="my-auto flex md:hidden" />
-          </SheetTrigger>
-          <SheetContent side="left">
-            <SheetHeader>
-              <SheetDescription>
-                <LearnerSidebar />
-              </SheetDescription>
-            </SheetHeader>
-          </SheetContent>
-        </Sheet>
+    <div className="my-3 md:my-5">
+      {/* Header content can be added here if needed */}
+      <div className="bg-accent/50 w-full h-8 md:h-12 rounded-lg opacity-0">
+        {/* Placeholder for future header content */}
       </div>
     </div>
   )
