@@ -1,5 +1,6 @@
 import { Course } from "@/types/course";
 import Image from "next/image";
+import Link from "next/link";
 
 import ImagePlaceholder from "@/assets/hero-fc.png";
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,11 @@ const MyCourseCard = ({
           <Button
             variant="outline"
             className="w-fit"
+            asChild
           >
-            {isCompleted ? "Review course" : "Resume course"}
+            <Link href={`/learner/courses/${course.id}`}>
+              {isCompleted ? "Review course" : "Resume course"}
+            </Link>
           </Button>
         </div>
         <div className="flex-[1] flex flex-col gap-2">

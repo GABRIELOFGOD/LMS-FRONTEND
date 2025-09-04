@@ -93,7 +93,13 @@ const LearnerHome = () => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [coursesLoading, setCoursesLoading] = useState(true);
-  // Remove dummy progress data - will use real API data only
+  const [progressData, setProgressData] = useState<Array<{
+    name: string;
+    progress: number;
+    id: string;
+    lessons: number;
+    completedLessons: number;
+  }>>([]);
 
   const gettingCourse = async () => {
     try {
@@ -124,6 +130,33 @@ const LearnerHome = () => {
     }
   }
 
+  const fetchRealProgressData = async () => {
+    if (!userStats?.coursesEnrolled?.length) {
+      setProgressData([]);
+      return;
+    }
+
+    try {
+      console.log('LearnerHome - Processing enrolled courses for display...');
+      
+      // Since progress API is not available yet, create course entries with 0% progress
+      // This will be updated when backend implements progress tracking
+      const progressData = userStats.coursesEnrolled.map((course) => ({
+        name: course.title,
+        progress: 0, // No progress API available yet
+        id: course.id,
+        lessons: 1, // Default until lessons API is available
+        completedLessons: 0 // Default until progress API is available
+      }));
+
+      setProgressData(progressData);
+      console.log('LearnerHome - Course data prepared for display:', progressData);
+    } catch (error) {
+      console.error('Failed to prepare course data:', error);
+      setProgressData([]);
+    }
+  };
+
   const fetchUserStats = async () => {
     if (!isLoggedIn) {
       setLoading(false);
@@ -143,13 +176,18 @@ const LearnerHome = () => {
         
         setUserStats(stats);
         console.log('LearnerHome - Stats loaded successfully');
+        
+        // Process course data for display (no API call needed)
+        fetchRealProgressData();
       } else {
-        console.warn("No user stats received - using fallback data");
-        // Keep userStats as null to use fallback data
+        console.warn("No user stats received");
+        setUserStats(null);
+        setProgressData([]);
       }
     } catch (error) {
       console.error("Failed to fetch user stats:", error);
-      // Stats will remain null and fallback data will be used
+      setUserStats(null);
+      setProgressData([]);
     } finally {
       setLoading(false);
     }
@@ -168,25 +206,24 @@ const LearnerHome = () => {
       } else {
         console.log('LearnerHome - User not logged in, skipping stats fetch');
         setLoading(false);
+        setProgressData([]); // Clear progress data when not logged in
       }
     }
   }, [isLoaded, isLoggedIn]);
 
-  // Function to simulate completing a lesson (for testing) - REMOVED DUMMY DATA DEPENDENCY
+  // Separate effect to fetch progress data when userStats changes
+  useEffect(() => {
+    if (userStats?.coursesEnrolled?.length) {
+      fetchRealProgressData();
+    }
+  }, [userStats]);
+
+  // Function to fetch real progress data (moved up and now called from fetchUserStats)
   // This function is kept for future use when backend provides lesson completion API
 
-  // Use ONLY real course progress data from API - no dummy data fallback
-  const courseProgress = userStats?.coursesEnrolled && userStats.coursesEnrolled.length > 0 
-    ? userStats.coursesEnrolled.map((course) => ({
-        name: course.title,
-        progress: 75, // Default progress - will be updated when backend provides actual progress
-        id: course.id,
-        lessons: 10, // Default lesson count
-        completedLessons: 7 // Default completed lessons
-      }))
-    : []; // Show empty array for new users with no enrolled courses
+  // Use real progress data from API - progressData state contains the real course progress
 
-  // Dynamic learner stats - use API data if available, fallback to calculated stats
+  // Dynamic learner stats - use API data where available and accurate
   const stats = userStats ? [
     { 
       title: "Courses Enrolled", 
@@ -204,7 +241,7 @@ const LearnerHome = () => {
     },
     { 
       title: "Current Streak", 
-      value: userStats.currentStraek?.toString() || "0", 
+      value: "0", // Real streak calculation requires activity tracking API
       icon: Clock, 
       trend: `Longest: ${userStats.longestStreak || 0} days`, 
       color: "text-purple-600" 
@@ -224,11 +261,7 @@ const LearnerHome = () => {
     { title: "Certificates", value: "0", icon: Target, trend: "Earn your first certificate", color: "text-orange-600" },
   ];
 
-  const recentActivity = [
-    { id: 1, action: "Completed lesson", title: "JavaScript Functions", course: "JS Advanced", time: "2 hours ago" },
-    { id: 2, action: "Started course", title: "React Components", course: "React Mastery", time: "1 day ago" },
-    { id: 3, action: "Earned certificate", title: "HTML/CSS Basics", course: "Web Fundamentals", time: "3 days ago" },
-  ];
+  // Recent activity will be fetched from API in future - for now show empty state
 
   // Don't render learner dashboard if not authenticated
   if (isLoaded && !isLoggedIn) {
@@ -367,8 +400,8 @@ const LearnerHome = () => {
             <CardTitle>Learning Progress</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {courseProgress.length > 0 ? (
-              courseProgress.map((course, index) => (
+            {progressData.length > 0 ? (
+              progressData.map((course, index) => (
                 <div key={course.id || index} className="flex items-center gap-6">
                   <div className="flex-shrink-0">
                     <CircularProgress 
@@ -474,21 +507,16 @@ const LearnerHome = () => {
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="space-y-1 border-b pb-3 last:border-b-0">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {activity.action}
-                    </Badge>
-                  </div>
-                  <h4 className="font-medium text-sm">{activity.title}</h4>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>in {activity.course}</span>
-                    <span>•</span>
-                    <span>{activity.time}</span>
-                  </div>
+              {/* Empty state for recent activity - will be connected to real API later */}
+              <div className="text-center py-8">
+                <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <Clock className="w-8 h-8 text-muted-foreground" />
                 </div>
-              ))}
+                <h3 className="text-sm font-medium mb-2">No Recent Activity</h3>
+                <p className="text-xs text-muted-foreground">
+                  Your learning activity will appear here
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

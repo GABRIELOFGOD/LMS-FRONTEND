@@ -27,7 +27,7 @@ const LearnerCourses = () => {
     },
     {
       title: "Current Streak",
-      value: stats.currentStraek?.toString() || "0",
+      value: "0", // Real streak calculation requires activity tracking API
       icon: Clock,
       color: "text-purple-600"
     },

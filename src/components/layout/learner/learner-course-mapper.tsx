@@ -3,7 +3,7 @@
 import { Course } from "@/types/course";
 import MyCourseCard from "./my-course-card";
 import { useEffect, useState } from "react";
-import { getUserCoursesFromStats } from "@/services/common";
+import { getUserStats } from "@/services/common";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Award } from "lucide-react";
 
@@ -14,14 +14,28 @@ const LearnerCourseMapper = () => {
   const fetchCompletedCourses = async () => {
     try {
       setLoading(true);
-      const courseData = await getUserCoursesFromStats();
-      console.log('LearnerCourseMapper - Raw course data:', courseData);
+      console.log('LearnerCourseMapper - Fetching user stats...');
+      const userStats = await getUserStats();
+      console.log('LearnerCourseMapper - Raw stats data:', userStats);
       
-      if (courseData && courseData.completedCourses) {
-        // Ensure completedCourses is an array and contains valid course objects
-        if (Array.isArray(courseData.completedCourses)) {
-          const validCourses = courseData.completedCourses
-            .filter(course => {
+      if (userStats && userStats.coursesCompleted) {
+        // Use the same logic as other components - completed courses from stats
+        if (Array.isArray(userStats.coursesCompleted)) {
+          // For now, coursesCompleted returns an empty array from API
+          // When backend implements this properly, this will work
+          const completedCourses = userStats.coursesCompleted as Array<{
+            id: string;
+            title: string;
+            description?: string;
+            imageUrl?: string;
+            createdAt?: string;
+            updatedAt?: string;
+            publish?: boolean;
+            isFree?: boolean;
+          }>;
+          
+          const validCourses = completedCourses
+            .filter((course) => {
               // More robust validation
               const isValid = course && 
                 typeof course === 'object' && 
@@ -34,21 +48,22 @@ const LearnerCourseMapper = () => {
               }
               return isValid;
             })
-            .map(course => ({
-              // Ensure all required fields are present
+            .map((course) => ({
+              // Map API structure to Course type
               id: course.id,
               title: course.title,
               description: course.description || '',
               imageUrl: course.imageUrl || '',
-              chapters: course.chapters || [],
-              createdAt: course.createdAt || '',
-              updatedAt: course.updatedAt || '',
-              publish: course.publish || false
+              chapters: [], // Not available in API, default to empty array
+              createdAt: course.createdAt || new Date().toISOString(),
+              updatedAt: course.updatedAt || new Date().toISOString(),
+              publish: course.publish !== undefined ? course.publish : true,
+              isFree: course.isFree !== undefined ? course.isFree : false
             }));
           setCourses(validCourses);
-          console.log('LearnerCourseMapper - Valid courses:', validCourses);
+          console.log('LearnerCourseMapper - Valid completed courses:', validCourses);
         } else {
-          console.warn('LearnerCourseMapper - Completed courses is not an array:', courseData.completedCourses);
+          console.warn('LearnerCourseMapper - Completed courses is not an array:', userStats.coursesCompleted);
           setCourses([]);
         }
       } else {

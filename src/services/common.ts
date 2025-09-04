@@ -172,32 +172,3 @@ export const getUserCourses = async (): Promise<UserCourseStats | null> => {
     return null;
   }
 }
-
-// Alternative: Get courses from stats endpoint if it includes course data
-export const getUserCoursesFromStats = async (): Promise<{ inProgressCourses: Course[], completedCourses: Course[] } | null> => {
-  try {
-    const req = await fetch(`${BASEURL}/users/stats`, {
-      method: "GET",
-      headers: {
-        "authorization": `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json"
-      },
-    });
-
-    const res = await req.json();
-    if (!req.ok) throw new Error(res.message || "Failed to fetch user stats");
-    
-    // Assuming the stats endpoint returns course data along with stats
-    return {
-      inProgressCourses: res.inProgressCourses || [],
-      completedCourses: res.completedCourses || []
-    };
-  } catch (error: unknown) {
-    if (isError(error)) {
-      console.error("Failed to fetch user courses from stats", error.message);
-    } else {
-      console.error("Unknown error fetching user courses from stats", error);
-    }
-    return null;
-  }
-}
