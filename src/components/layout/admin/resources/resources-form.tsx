@@ -198,7 +198,7 @@ const ResourcesForm = () => {
           <FormField
             control={form.control}
             name="file"
-            render={({ field: { onChange, value, ...fieldProps } }) => (
+            render={({ field: { onChange, ...fieldProps } }) => (
               <FormItem>
                 <FormLabel>Upload File</FormLabel>
                 <FormControl>

@@ -63,7 +63,7 @@ const RegistrationForm = () => {
     setIsSubmitting(true);
     try {
       // Remove confirmPassword before sending to backend
-      const { confirmPassword, ...registrationData } = data;
+      const { ...registrationData } = data;
       await registerUser(registrationData);
     } finally {
       setIsSubmitting(false);

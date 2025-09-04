@@ -42,7 +42,7 @@ const formSchema = z.object({
 
 // Video Upload Component
 interface VideoUploadProps {
-  value?: string;
+  value?: string | File;
   onChange: (file: File | null) => void;
   disabled?: boolean;
 }
@@ -55,12 +55,15 @@ const VideoUpload = ({ value, onChange, disabled }: VideoUploadProps) => {
 
   // Set initial preview from existing video URL
   useEffect(() => {
-    if (typeof value === 'string' && value) {
+    if (typeof value === "string" && value) {
       setPreview(value);
-    } else if (value instanceof File) {
+    } else if (typeof window !== "undefined" && value && value instanceof File) {
       const url = URL.createObjectURL(value);
       setPreview(url);
-      return () => URL.revokeObjectURL(url);
+
+      return () => {
+        URL.revokeObjectURL(url);
+      };
     }
   }, [value]);
 

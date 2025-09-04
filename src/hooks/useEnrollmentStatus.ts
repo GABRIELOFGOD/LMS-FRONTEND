@@ -31,6 +31,7 @@ export const useEnrollmentStatus = (courseId?: string) => {
     try {
       console.log('useEnrollmentStatus - Checking enrollment for course:', courseId);
       const enrollments = await getUserEnrollments();
+      console.log("Enrol", enrollments);
       const isEnrolled = enrollments?.some((e: any) => e.courseId === courseId) || false;
       
       let progress = 0;

@@ -14,7 +14,7 @@ import {
 } from "../../ui/dropdown-menu";
 
 const LearnerNavbar = () => {
-  const { user, refreshUser } = useUser();
+  const { refreshUser } = useUser();
 
   const handleLogout = () => {
     // Clear token from localStorage

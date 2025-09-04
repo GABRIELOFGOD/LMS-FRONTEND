@@ -20,7 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useUser } from "@/context/user-context";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { UserRole } from "@/types/user";
 
 const formSchema = z.object({
@@ -33,7 +33,7 @@ const MyLoginForm = () => {
   const { isLoggedIn, user, refreshUser } = useUser();
   const router = useRouter();
 
-  const param = useSearchParams();
+  // const param = useSearchParams();
   // const nextRoute = param.get("to"); // TODO: Implement redirect to specific route after login
   
   const { login } = useAuth();

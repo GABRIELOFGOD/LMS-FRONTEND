@@ -2,6 +2,7 @@
 
 import CourseMapper from "@/components/layout/courses/course-mapper";
 import { useUser } from "@/context/user-context";
+import Link from "next/link";
 
 const Courses = () => {
   const { isLoggedIn } = useUser();
@@ -23,7 +24,7 @@ const Courses = () => {
             <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 💡 <strong>Tip:</strong> For a better learning experience, visit your 
-                <a href="/learner/courses" className="ml-1 underline font-semibold">personal dashboard</a> 
+                <Link href="/learner/courses" className="ml-1 underline font-semibold">personal dashboard</Link> 
                 to track progress and access enrolled courses.
               </p>
             </div>
