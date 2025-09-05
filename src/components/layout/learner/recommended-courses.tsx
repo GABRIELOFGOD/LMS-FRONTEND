@@ -41,7 +41,7 @@ const RecommendedCourses = () => {
           .map((course) => (
             <Link
               key={course.id}
-              href={`/course/${course.id}`}
+              href={`/learner/courses/${course.id}`}
             >
               <CourseCard
                 course={course}

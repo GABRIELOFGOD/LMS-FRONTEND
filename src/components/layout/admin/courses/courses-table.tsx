@@ -67,6 +67,7 @@ const CoursesTable = () => {
             <AdminCourseCard
               key={i}
               course={course}
+              onCourseUpdate={gettingAllCourses} // Refresh the course list when a course is updated
             />
           ))}
         </div>

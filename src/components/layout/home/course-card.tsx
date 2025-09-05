@@ -73,7 +73,7 @@ const CourseCard = ({ course }: {
           </div>
         </div>
         <div className="mt-3 md:mt-5 w-full">
-          <Link href={`/course/${course.id}`} className="w-full">
+          <Link href={`/learner/courses/${course.id}`} className="w-full">
             <Button className="w-full text-sm md:text-base">
               Enroll
             </Button>

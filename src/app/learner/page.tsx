@@ -224,36 +224,43 @@ const LearnerHome = () => {
   // Use real progress data from API - progressData state contains the real course progress
 
   // Dynamic learner stats - use API data where available and accurate
-  const stats = userStats ? [
-    { 
-      title: "Courses Enrolled", 
-      value: userStats.coursesEnrolled?.length?.toString() || "0", 
-      icon: BookOpen, 
-      trend: userStats.trends?.coursesThisMonth || "+0 this month", 
-      color: "text-blue-600" 
-    },
-    { 
-      title: "Courses Completed", 
-      value: userStats.coursesCompleted?.length?.toString() || "0", 
-      icon: Award, 
-      trend: userStats.trends?.completedThisMonth || "+0 this month", 
-      color: "text-green-600" 
-    },
-    { 
-      title: "Current Streak", 
-      value: "0", // Real streak calculation requires activity tracking API
-      icon: Clock, 
-      trend: `Longest: ${userStats.longestStreak || 0} days`, 
-      color: "text-purple-600" 
-    },
-    { 
-      title: "Certificates", 
-      value: userStats.certificates?.length?.toString() || "0", 
-      icon: Target, 
-      trend: userStats.trends?.progressEncouragement || "Keep learning!", 
-      color: "text-orange-600" 
-    },
-  ] : [
+  const stats = userStats ? (() => {
+    // Use static streak values until backend provides real activity tracking API
+    // This avoids confusing users with random mock data
+    const currentStreak = 0;
+    const longestStreak = 0;
+    
+    return [
+      { 
+        title: "Courses Enrolled", 
+        value: userStats.coursesEnrolled?.length?.toString() || "0", 
+        icon: BookOpen, 
+        trend: userStats.trends?.coursesThisMonth || "+0 this month", 
+        color: "text-blue-600" 
+      },
+      { 
+        title: "Courses Completed", 
+        value: userStats.coursesCompleted?.length?.toString() || "0", 
+        icon: Award, 
+        trend: userStats.trends?.completedThisMonth || "+0 this month", 
+        color: "text-green-600" 
+      },
+      { 
+        title: "Current Streak", 
+        value: currentStreak.toString(),
+        icon: Clock, 
+        trend: `Longest: ${longestStreak} days`, 
+        color: "text-purple-600" 
+      },
+      { 
+        title: "Certificates", 
+        value: userStats.certificates?.length?.toString() || "0", 
+        icon: Target, 
+        trend: userStats.trends?.progressEncouragement || "Keep learning!", 
+        color: "text-orange-600" 
+      },
+    ];
+  })() : [
     // Show zeros for new users - no dummy data
     { title: "Courses Enrolled", value: "0", icon: BookOpen, trend: "Start your learning journey", color: "text-blue-600" },
     { title: "Courses Completed", value: "0", icon: Award, trend: "Complete your first course", color: "text-green-600" },
@@ -557,7 +564,7 @@ const LearnerHome = () => {
                 .slice(0, 3)
                 .filter(course => course && course.id && course.title) // Filter out invalid courses
                 .map((course) => (
-                <Link key={course.id} href={`/course/${course.id}`}>
+                <Link key={course.id} href={`/learner/courses/${course.id}`}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                     <CardContent className="p-4">
                       <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg mb-3 overflow-hidden">

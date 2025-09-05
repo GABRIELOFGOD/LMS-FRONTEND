@@ -152,22 +152,43 @@ export const useCourse = () => {
     }
   }
 
-  const publishCourse = async (id: string) => {
+  const publishCourse = async (id: string, shouldPublish: boolean = true) => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token");
-      const req = await fetch(`${BASEURL}/courses/${id}/published`, {
-        method: "PUT",
+      if (!token) throw new Error("No authentication token found");
+      
+      console.log(`publishCourse - ${shouldPublish ? 'Publishing' : 'Unpublishing'} course with ID:`, id);
+      
+      // Use the correct PATCH endpoint that works
+      const req = await fetch(`${BASEURL}/courses/${id}`, {
+        method: "PATCH",
         headers: {
-          "authorization": `Bearer ${token}`
-        }
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ publish: shouldPublish })
       });
 
+      console.log('publishCourse - Response status:', req.status);
+      
+      if (!req.ok) {
+        let errorMessage = `HTTP ${req.status}`;
+        try {
+          const errorRes = await req.json();
+          errorMessage = errorRes.message || errorRes.error || errorMessage;
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = req.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
       const res = await req.json();
-      if (!req.ok) throw new Error(res.message);
+      console.log('publishCourse - Success response:', res);
       return res;
 
     } catch (error) {
+      console.error('publishCourse - Error:', error);
       throw error;
     }
   }

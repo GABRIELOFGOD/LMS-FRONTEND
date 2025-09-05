@@ -59,7 +59,7 @@ const CoursePreview = () => {
             {slicedCourses.map((course, i) => (
               <Link
                 key={i}
-                href={`/course/${course.id}`}
+                href={`/learner/courses/${course.id}`}
               >
                 <CourseCard
                   course={course}

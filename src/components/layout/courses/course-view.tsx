@@ -46,7 +46,7 @@ const CourseView = ({id}: {id: string}) => {
     
     if (!isLoggedIn || !user) {
       toast.error("You must be logged in to enroll in a course");
-      router.push(`/login?to=/course/${course.id}`);
+      router.push(`/login?to=/learner/courses/${course.id}`);
       return;
     }
     
@@ -105,11 +105,11 @@ const CourseView = ({id}: {id: string}) => {
       <Crumb
         current={{
           title: course?.title || "",
-          link: `/course/${course?.id}`
+          link: `/learner/courses/${course?.id}`
         }}
         previous={[
           isLoggedIn ? {link: "/learner", title: "Dashboard"} : {link: "/", title: "Home"},
-          {link: "/courses", title: "Courses"},
+          {link: "/learner/courses", title: "Courses"},
         ]}
       />
 
@@ -169,7 +169,7 @@ const CourseView = ({id}: {id: string}) => {
             ) : (
               <Button 
                 size="lg" 
-                onClick={() => router.push(`/login?to=/course/${course.id}`)}
+                onClick={() => router.push(`/login?to=/learner/courses/${course.id}`)}
               >
                 Login to Enroll
               </Button>
@@ -254,7 +254,7 @@ const CourseView = ({id}: {id: string}) => {
               </Button>
             ) : (
               <Button 
-                onClick={() => router.push(`/login?to=/course/${course.id}`)}
+                onClick={() => router.push(`/login?to=/learner/courses/${course.id}`)}
                 size="lg"
               >
                 Login to Enroll
