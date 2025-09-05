@@ -67,16 +67,16 @@ const DescriptionForm = ({
   }
 
   return (
-    <div className="mt-6 border bg-slate-100 shadow-sm rounded-md p-4">
-      <div className="flex items-center justify-between font-medium">
-        Course Description
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-lg p-6">
+      <div className="flex items-center justify-between font-medium mb-4">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Course Description</h3>
         <Button
           variant="ghost"
           onClick={toggleEdit}
-          className="font-medium text-sm"
+          className="font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
         >
           {isEditing ? (
-            <p>Cancel</p>
+            <span className="text-slate-600 dark:text-slate-300">Cancel</span>
           ): (
             <>
               <Pencil className="h-4 w-4 mr-1" />
@@ -86,18 +86,22 @@ const DescriptionForm = ({
         </Button>
       </div>
       {!isEditing && (
-        <p className={cn(
-          "text-sm mt-2 ",
-          !initialData.description && "text-slate-500 italic"
-        )}>
-          {initialData.description || "No description"}
-        </p>
+        <div className="bg-slate-50 dark:bg-slate-700 rounded-md p-3 border border-slate-200 dark:border-slate-600 min-h-[80px]">
+          <p className={cn(
+            "text-sm whitespace-pre-wrap",
+            !initialData.description 
+              ? "text-slate-500 dark:text-slate-400 italic" 
+              : "text-slate-700 dark:text-slate-200"
+          )}>
+            {initialData.description || "No description set"}
+          </p>
+        </div>
       )}
       {isEditing && (
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4 mt-4"
+            className="space-y-4"
           >
             <FormField
               control={form.control}
@@ -106,7 +110,7 @@ const DescriptionForm = ({
                 <FormItem>
                   <FormControl>
                     <Textarea
-                      className="p-3 border-border focus::border-2 rounded-md focus::shadow-md"
+                      className="min-h-[120px] bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800"
                       disabled={isSubmitting}
                       placeholder="e.g This course is about..."
                       {...field}
@@ -120,8 +124,16 @@ const DescriptionForm = ({
               <Button
                 disabled={!isValid || isSubmitting}
                 type="submit"
+                size="sm"
               >
-                {isSubmitting ? <div className="flex gap-2"><Loader className="my-auto" /> <p className="my-auto">saving</p></div> : "Save"}
+                {isSubmitting ? (
+                  <div className="flex gap-2 items-center">
+                    <Loader className="h-4 w-4 animate-spin" /> 
+                    <span>Saving...</span>
+                  </div>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </div>
           </form>

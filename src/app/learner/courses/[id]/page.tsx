@@ -16,9 +16,85 @@ import {
   CheckCircle, 
   Clock, 
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  FileText,
+  Video
 } from "lucide-react";
 import { toast } from "sonner";
+
+// Course Media Component for rendering videos and PDFs
+interface CourseMediaProps {
+  mediaUrl: string;
+  title: string;
+}
+
+const CourseMedia = ({ mediaUrl, title }: CourseMediaProps) => {
+  if (!mediaUrl) return null;
+
+  const getMediaType = (url: string) => {
+    const lower = url.split('?')[0].toLowerCase();
+    
+    if (lower.endsWith('.pdf') || url.includes('application/pdf')) {
+      return 'pdf';
+    }
+    
+    if (/\.(mp4|webm|ogg|mov|avi)$/i.test(lower) || url.includes('video/')) {
+      return 'video';
+    }
+    
+    // Default to video for unknown types
+    return 'video';
+  };
+
+  const mediaType = getMediaType(mediaUrl);
+
+  if (mediaType === 'pdf') {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <FileText className="h-4 w-4" />
+          <span>PDF Document</span>
+        </div>
+        <div className="border rounded-lg overflow-hidden">
+          <iframe
+            src={mediaUrl}
+            title={title}
+            className="w-full h-96 md:h-[500px]"
+            loading="lazy"
+          />
+        </div>
+        <div className="text-center">
+          <Button variant="outline" size="sm" asChild>
+            <a href={mediaUrl} target="_blank" rel="noopener noreferrer">
+              Open PDF in New Tab
+            </a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Video className="h-4 w-4" />
+        <span>Video Content</span>
+      </div>
+      <div className="aspect-video bg-black rounded-lg overflow-hidden">
+        <video
+          controls
+          playsInline
+          preload="metadata"
+          className="w-full h-full"
+          src={mediaUrl}
+        >
+          <source src={mediaUrl} />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  );
+};
 
 const LearnerCourseDetails = () => {
   const params = useParams();
@@ -188,16 +264,23 @@ const LearnerCourseDetails = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Video Player Placeholder */}
-              <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
-                <div className="text-center text-white">
-                  <Play className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Video Player</p>
-                  <p className="text-sm opacity-70">
-                    {currentChapterData?.video ? 'Video content will be loaded here' : 'No video available for this chapter'}
-                  </p>
+              {/* Media Player */}
+              {currentChapterData?.video ? (
+                <CourseMedia 
+                  mediaUrl={currentChapterData.video} 
+                  title={currentChapterData.name}
+                />
+              ) : (
+                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <Play className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-medium">No Media Available</p>
+                    <p className="text-sm opacity-70">
+                      This chapter doesn&apos;t have any video or document content yet
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Chapter Description */}
               <div>

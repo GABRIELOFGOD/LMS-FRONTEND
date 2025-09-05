@@ -38,8 +38,16 @@ const Testimony = () => {
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: true,
     slides: {
-      perView: 2,
+      perView: 1,
       spacing: 15,
+    },
+    breakpoints: {
+      '(min-width: 640px)': {
+        slides: {
+          perView: 2,
+          spacing: 15,
+        },
+      },
     },
     created: (slider) => {
       slider.moveToIdx(0, true);
@@ -57,23 +65,23 @@ const Testimony = () => {
     <div>
       <div className="not-dark:bg-white py-10 md:py-20 px-3 container mx-auto">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-6 text-center">What Our Students Say</h2>
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 text-center">What Our Students Say</h2>
           <div ref={sliderRef} className="keen-slider">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="keen-slider__slide bg-muted rounded-md p-6 shadow-md">
-                <p className="text-lg italic not-dark:text-gray-800 dark:text-gray-200">&ldquo;{testimonial.text}&rdquo;</p>
+              <div key={index} className="keen-slider__slide bg-muted rounded-md p-4 md:p-6 shadow-md">
+                <p className="text-sm md:text-lg italic not-dark:text-gray-800 dark:text-gray-200">&ldquo;{testimonial.text}&rdquo;</p>
                 <div className="mt-4">
-                  <p className="font-semibold">{testimonial.name}</p>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                  <p className="font-semibold text-sm md:text-base">{testimonial.name}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{testimonial.role}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        <div className="w-full flex justify-end mt-5 px-3">
-          <Button>
+        <div className="w-full flex justify-center md:justify-end mt-5 px-3">
+          <Button className="w-full sm:w-auto flex items-center justify-center gap-2">
             <p>Enroll Now</p>
-            <ArrowRight />
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </div>

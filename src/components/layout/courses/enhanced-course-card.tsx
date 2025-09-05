@@ -9,7 +9,7 @@ import { useUser } from "@/context/user-context";
 import { useCourse } from "@/hooks/useCourse";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { CheckCircle, Play, Lock } from "lucide-react";
+import { CheckCircle, Play, Lock, Video, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface EnhancedCourseCardProps {
@@ -33,6 +33,24 @@ const EnhancedCourseCard = ({
   const [courseProgress, setCourseProgress] = useState(progress);
 
   const actualChapters = course.chapters.filter((cht) => cht.isPublished);
+
+  // Helper function to detect media types in course chapters
+  const getMediaTypes = () => {
+    const mediaTypes = new Set();
+    actualChapters.forEach(chapter => {
+      if (chapter.video) {
+        const lower = chapter.video.toLowerCase();
+        if (lower.includes('.pdf') || lower.includes('application/pdf')) {
+          mediaTypes.add('pdf');
+        } else {
+          mediaTypes.add('video');
+        }
+      }
+    });
+    return Array.from(mediaTypes) as string[];
+  };
+
+  const mediaTypes = getMediaTypes();
 
   // Sync local state with props when they change
   useEffect(() => {
@@ -174,10 +192,26 @@ const EnhancedCourseCard = ({
         )}
 
         <div className="mt-2 flex justify-between">
-          <div className="flex justify-between gap-3">
+          <div className="flex items-center gap-3">
             <p className="text-xs text-gray-600 font-bold">
               {actualChapters.length} Chapter{actualChapters.length !== 1 ? 's' : ''}
             </p>
+            {mediaTypes.length > 0 && (
+              <div className="flex items-center gap-1">
+                {mediaTypes.includes('video') && (
+                  <div className="flex items-center gap-1 text-xs text-blue-600">
+                    <Video className="h-3 w-3" />
+                    <span>Video</span>
+                  </div>
+                )}
+                {mediaTypes.includes('pdf') && (
+                  <div className="flex items-center gap-1 text-xs text-red-600">
+                    <FileText className="h-3 w-3" />
+                    <span>PDF</span>
+                  </div>
+                )}
+              </div>
+            )}
             {enrolled && (
               <p className="text-xs text-green-600 font-bold">
                 Enrolled

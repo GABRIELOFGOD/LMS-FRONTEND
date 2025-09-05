@@ -66,16 +66,16 @@ const TitleForm = ({
   }
 
   return (
-    <div className="mt-6 border bg-slate-100 shadow-sm rounded-md p-4">
-      <div className="flex items-center justify-between font-medium">
-        Course Title
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-lg p-6">
+      <div className="flex items-center justify-between font-medium mb-4">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Course Title</h3>
         <Button
           variant="ghost"
           onClick={toggleEdit}
-          className="font-medium text-sm"
+          className="font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
         >
           {isEditing ? (
-            <p>Cancel</p>
+            <span className="text-slate-600 dark:text-slate-300">Cancel</span>
           ): (
             <>
               <Pencil className="h-4 w-4 mr-1" />
@@ -85,13 +85,17 @@ const TitleForm = ({
         </Button>
       </div>
       {!isEditing && (
-        <p className="text-sm mt-2">{title}</p>
+        <div className="bg-slate-50 dark:bg-slate-700 rounded-md p-3 border border-slate-200 dark:border-slate-600">
+          <p className="text-sm text-slate-700 dark:text-slate-200 font-medium">
+            {title || "No title set"}
+          </p>
+        </div>
       )}
       {isEditing && (
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4 mt-4"
+            className="space-y-4"
           >
             <FormField
               control={form.control}
@@ -102,6 +106,7 @@ const TitleForm = ({
                     <Input
                       disabled={isSubmitting}
                       placeholder="e.g Digital Management"
+                      className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600"
                       {...field}
                     />
                   </FormControl>
@@ -113,8 +118,16 @@ const TitleForm = ({
               <Button
                 disabled={!isValid || isSubmitting}
                 type="submit"
+                size="sm"
               >
-                {isSubmitting ? <div className="flex gap-2"><Loader className="my-auto" /> <p className="my-auto">saving</p></div> : "Save"}
+                {isSubmitting ? (
+                  <div className="flex gap-2 items-center">
+                    <Loader className="h-4 w-4 animate-spin" /> 
+                    <span>Saving...</span>
+                  </div>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </div>
           </form>
