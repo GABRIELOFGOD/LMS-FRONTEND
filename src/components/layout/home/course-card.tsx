@@ -3,11 +3,30 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Course } from "@/types/course";
 import Link from "next/link";
+import { Video, FileText } from "lucide-react";
 
 const CourseCard = ({ course }: {
   course: Course;
 }) => {
   const actualChapters = course.chapters.filter((cht) => cht.isPublished);
+  
+  // Helper function to detect media types in course chapters
+  const getMediaTypes = () => {
+    const mediaTypes = new Set();
+    actualChapters.forEach(chapter => {
+      if (chapter.video) {
+        const lower = chapter.video.toLowerCase();
+        if (lower.includes('.pdf') || lower.includes('application/pdf')) {
+          mediaTypes.add('pdf');
+        } else {
+          mediaTypes.add('video');
+        }
+      }
+    });
+    return Array.from(mediaTypes) as string[];
+  };
+
+  const mediaTypes = getMediaTypes();
   
   return (
     <div className="rounded border-border border bg-muted overflow-hidden hover:shadow-lg transition-shadow duration-200">
@@ -35,8 +54,22 @@ const CourseCard = ({ course }: {
             />
           </div> */}
           {/* <div className="rounded bg-secondary text-white text-xs italic h-fit w-fit px-4 py-1 my-auto font-semibold">Free</div> */}
-          <div className="flex justify-between gap-3">
+          <div className="flex items-center gap-3">
             <p className="text-xs text-gray-600 font-bold">{actualChapters.length} Chapters</p>
+            {mediaTypes.length > 0 && (
+              <div className="flex items-center gap-1">
+                {mediaTypes.includes('video') && (
+                  <div className="flex items-center gap-1 text-xs text-blue-600">
+                    <Video className="h-3 w-3" />
+                  </div>
+                )}
+                {mediaTypes.includes('pdf') && (
+                  <div className="flex items-center gap-1 text-xs text-red-600">
+                    <FileText className="h-3 w-3" />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="mt-3 md:mt-5 w-full">

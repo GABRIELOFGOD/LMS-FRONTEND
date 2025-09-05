@@ -7,7 +7,7 @@ import { useUser } from "@/context/user-context";
 import { UserRole } from "@/types/user";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

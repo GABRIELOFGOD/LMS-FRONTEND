@@ -9,9 +9,7 @@ import {
   BookOpen, 
   Award, 
   TrendingUp, 
-  Settings, 
   Plus,
-  Eye,
   BarChart3,
   Activity,
   GraduationCap,
@@ -34,9 +32,9 @@ export default function DashboardPage() {
 
   const quickActions = [
     { title: "Create Course", icon: Plus, href: "/dashboard/create", description: "Add a new course to the platform" },
+    { title: "Manage Courses", icon: BookOpen, href: "/dashboard/courses", description: "View, edit, and manage all courses" },
     { title: "Manage Users", icon: Users, href: "/dashboard/users", description: "View and manage platform users" },
     { title: "View Analytics", icon: BarChart3, href: "/dashboard/analytics", description: "Check detailed platform analytics" },
-    { title: "System Settings", icon: Settings, href: "/dashboard/settings", description: "Configure system settings" },
   ];
 
   const recentActivity = [
@@ -56,9 +54,9 @@ export default function DashboardPage() {
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
           <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
-            <Link href="/dashboard/analytics">
-              <Eye className="mr-2 h-4 w-4" />
-              View Analytics
+            <Link href="/dashboard/courses">
+              <BookOpen className="mr-2 h-4 w-4" />
+              Manage Courses
             </Link>
           </Button>
           <Button asChild className="w-full sm:w-auto">

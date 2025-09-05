@@ -12,7 +12,7 @@ import {
 import { useUser } from "@/hooks/use-user";
 import { useEffect, useState } from "react";
 import { isError } from "../../../../services/helper";
-import { User, UserRole } from "@/types/user";
+import { User } from "@/types/user";
 import { toast } from "sonner";
 import { TbMoodEmpty } from "react-icons/tb";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ const UsersTable = () => {
   const [users, setUsers] = useState<User[]>([]);
   const router = useRouter();
   
-  const { getAllUsers, changeRole } = useUser();
+  const { getAllUsers } = useUser();
 
   const gettingAllUsers = async () => {
     try {

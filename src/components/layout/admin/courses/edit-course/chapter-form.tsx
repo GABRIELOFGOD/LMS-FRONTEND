@@ -18,7 +18,8 @@ import {
   // Upload,
   Video,
   X,
-  Play
+  Play,
+  BookOpen
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -364,16 +365,16 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
   };
 
   return (
-    <div className="mt-6 border bg-slate-100 shadow-sm rounded-md p-4">
-      <div className="flex items-center justify-between font-medium mb-4">
-        Course Chapters
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-lg p-6">
+      <div className="flex items-center justify-between font-medium mb-6">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Course Chapters</h3>
         <Button
           variant="ghost"
           onClick={toggleAddNew}
-          className="font-medium text-sm"
+          className="font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
         >
           {isAddingNew ? (
-            <p>Cancel</p>
+            <span className="text-slate-600 dark:text-slate-300">Cancel</span>
           ) : (
             <>
               <Plus className="h-4 w-4 mr-1" />
@@ -385,7 +386,8 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
 
       {/* Add New Chapter Form */}
       {isAddingNew && (
-        <div className="mb-4 p-4 bg-white border rounded-lg">
+        <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg">
+          <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-3">Add New Chapter</h4>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -393,11 +395,12 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Chapter Name</FormLabel>
+                    <FormLabel className="text-slate-700 dark:text-slate-300">Chapter Name</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isSubmitting}
                         placeholder="e.g. Introduction to the course"
+                        className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600"
                         {...field}
                       />
                     </FormControl>
@@ -411,7 +414,9 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
                 name="video"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Chapter Video (Create chapter title first, then come back to add video)</FormLabel>
+                    <FormLabel className="text-slate-700 dark:text-slate-300">
+                      Chapter Video <span className="text-xs text-slate-500">(Optional - can be added later)</span>
+                    </FormLabel>
                     <FormControl>
                       <VideoUpload
                         value={field.value}
@@ -428,9 +433,10 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
                 <Button
                   disabled={!isValid || isSubmitting}
                   type="submit"
+                  size="sm"
                 >
                   {isSubmitting ? (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                       <Loader className="h-4 w-4 animate-spin" />
                       <span>Creating...</span>
                     </div>
@@ -445,18 +451,20 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
       )}
 
       {/* Chapters List */}
-      <div className="space-y-2  h-fit max-h-[400px] overflow-y-auto">
+      <div className="space-y-3 max-h-[600px] overflow-y-auto">
         {chapters.length === 0 ? (
-          <p className="text-slate-500 text-sm italic text-center py-4">
-            No chapters created yet
-          </p>
+          <div className="text-center py-12 bg-slate-50 dark:bg-slate-700 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600">
+            <BookOpen className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+            <p className="text-slate-500 dark:text-slate-400 text-sm">No chapters created yet</p>
+            <p className="text-slate-400 dark:text-slate-500 text-xs">Click &quot;Add chapter&quot; to get started</p>
+          </div>
         ) : (
           chapters.map((chapter, index) => (
             <div
               key={chapter.id}
               className={cn(
-                "bg-white border rounded-lg p-4 transition-all",
-                editingId === chapter.id && "ring-2 ring-blue-500"
+                "bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-4 transition-all hover:shadow-md",
+                editingId === chapter.id && "ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50 dark:bg-blue-900/20"
               )}
               draggable={editingId !== chapter.id}
               onDragStart={(e) => handleDragStart(e, index)}

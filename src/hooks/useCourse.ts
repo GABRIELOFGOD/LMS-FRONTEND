@@ -73,10 +73,14 @@ export const useCourse = () => {
 
   const createCourse = async ({
     title,
-    description
+    description,
+    price,
+    isFree
   }: {
     title: string;
     description?: string;
+    price?: number;
+    isFree?: boolean;
   }) => {
     const token = localStorage.getItem("token");
     
@@ -89,13 +93,20 @@ export const useCourse = () => {
         },
         body: JSON.stringify({
           title,
-          description
+          description,
+          price: price || 0,
+          isFree: isFree !== undefined ? isFree : true
         })
       });
 
       const response = await request.json();
+      
+      if (!request.ok) {
+        throw new Error(response.message || 'Failed to create course');
+      }
 
       console.log("[RESPONSE]: ", response);
+      return response;
     } catch (error) {
       throw error;
     }
