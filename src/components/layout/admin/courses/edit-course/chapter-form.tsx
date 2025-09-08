@@ -19,7 +19,8 @@ import {
   Video,
   X,
   Play,
-  BookOpen
+  BookOpen,
+  FileText
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -41,26 +42,46 @@ const formSchema = z.object({
   video: z.any().optional()
 });
 
-// Video Upload Component
-interface VideoUploadProps {
+// Media Upload Component (supports both videos and PDFs)
+interface MediaUploadProps {
   value?: string | File;
   onChange: (file: File | null) => void;
   disabled?: boolean;
 }
 
-const VideoUpload = ({ value, onChange, disabled }: VideoUploadProps) => {
+const MediaUpload = ({ value, onChange, disabled }: MediaUploadProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [mediaType, setMediaType] = useState<'video' | 'pdf' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Set initial preview from existing video URL
+  // Determine media type from file or URL
+  const getMediaType = (source: string | File): 'video' | 'pdf' | null => {
+    let fileType = '';
+    if (typeof source === 'string') {
+      fileType = source.toLowerCase();
+    } else if (source instanceof File) {
+      fileType = source.type.toLowerCase();
+    }
+    
+    if (fileType.includes('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(fileType)) {
+      return 'video';
+    } else if (fileType.includes('application/pdf') || fileType.endsWith('.pdf')) {
+      return 'pdf';
+    }
+    return null;
+  };
+
+  // Set initial preview from existing media URL
   useEffect(() => {
     if (typeof value === 'string' && value) {
       setPreview(value);
+      setMediaType(getMediaType(value));
     } else if (value instanceof File) {
       const url = URL.createObjectURL(value);
       setPreview(url);
+      setMediaType(getMediaType(value));
       return () => URL.revokeObjectURL(url);
     }
   }, [value]);
@@ -82,12 +103,14 @@ const VideoUpload = ({ value, onChange, disabled }: VideoUploadProps) => {
     if (disabled) return;
     
     const files = Array.from(e.dataTransfer.files);
-    const videoFile = files.find(file => file.type.startsWith('video/'));
+    const mediaFile = files.find(file => 
+      file.type.startsWith('video/') || file.type === 'application/pdf'
+    );
     
-    if (videoFile) {
-      handleFileSelect(videoFile);
+    if (mediaFile) {
+      handleFileSelect(mediaFile);
     } else {
-      toast.error("Please select a valid video file");
+      toast.error("Please select a valid video or PDF file");
     }
   };
 
@@ -97,9 +120,16 @@ const VideoUpload = ({ value, onChange, disabled }: VideoUploadProps) => {
       return;
     }
 
+    const type = getMediaType(file);
+    if (!type) {
+      toast.error("Please select a valid video (MP4, MOV, AVI) or PDF file");
+      return;
+    }
+
     const url = URL.createObjectURL(file);
     setPreview(url);
     setSelectedFile(file);
+    setMediaType(type);
     onChange(file);
   };
 
@@ -108,9 +138,10 @@ const VideoUpload = ({ value, onChange, disabled }: VideoUploadProps) => {
     if (file) handleFileSelect(file);
   };
 
-  const removeVideo = () => {
+  const removeMedia = () => {
     setPreview(null);
     setSelectedFile(null);
+    setMediaType(null);
     onChange(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -122,11 +153,31 @@ const VideoUpload = ({ value, onChange, disabled }: VideoUploadProps) => {
       {preview ? (
         <div className="relative">
           <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden">
-            <video 
-              src={preview} 
-              className="w-full h-full object-cover"
-              controls
-            />
+            {mediaType === 'video' ? (
+              <video 
+                src={preview} 
+                className="w-full h-full object-cover"
+                controls
+              />
+            ) : mediaType === 'pdf' ? (
+              <div className="w-full h-full flex flex-col">
+                <iframe
+                  src={preview}
+                  className="w-full flex-1 border-0"
+                  title="PDF Preview"
+                />
+                <div className="p-2 bg-slate-200 text-center">
+                  <a 
+                    href={preview} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Open PDF in new tab
+                  </a>
+                </div>
+              </div>
+            ) : null}
           </div>
           {!disabled && (
             <Button
@@ -134,14 +185,19 @@ const VideoUpload = ({ value, onChange, disabled }: VideoUploadProps) => {
               variant="destructive"
               size="sm"
               className="absolute top-2 right-2"
-              onClick={removeVideo}
+              onClick={removeMedia}
             >
               <X className="h-4 w-4" />
             </Button>
           )}
           {selectedFile && (
-            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-              New video selected
+            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+              {mediaType === 'video' ? (
+                <Video className="h-3 w-3" />
+              ) : (
+                <FileText className="h-3 w-3" />
+              )}
+              New {mediaType} selected
             </div>
           )}
         </div>
@@ -157,12 +213,16 @@ const VideoUpload = ({ value, onChange, disabled }: VideoUploadProps) => {
           onDrop={handleDrop}
           onClick={() => !disabled && fileInputRef.current?.click()}
         >
-          <Video className="mx-auto h-12 w-12 text-slate-400 mb-2" />
+          <div className="flex items-center justify-center gap-4 mb-3">
+            <Video className="h-8 w-8 text-slate-400" />
+            <span className="text-slate-400">or</span>
+            <FileText className="h-8 w-8 text-slate-400" />
+          </div>
           <p className="text-sm text-slate-600 mb-1">
-            Drag and drop a video file here, or click to browse
+            Drag and drop a video or PDF file here, or click to browse
           </p>
           <p className="text-xs text-slate-500">
-            Supports MP4, MOV, AVI (Max 500MB)
+            Videos: MP4, MOV, AVI • PDFs: PDF files (Max 500MB each)
           </p>
         </div>
       )}
@@ -170,7 +230,7 @@ const VideoUpload = ({ value, onChange, disabled }: VideoUploadProps) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="video/*"
+        accept="video/*,application/pdf,.pdf"
         onChange={handleFileInput}
         className="hidden"
         disabled={disabled}
@@ -204,6 +264,18 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
 
   const router = useRouter();
+
+  // Helper function to determine media type from URL
+  const getChapterMediaType = (url: string): 'video' | 'pdf' | null => {
+    if (!url) return null;
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes('application/pdf') || lowerUrl.endsWith('.pdf')) {
+      return 'pdf';
+    } else if (lowerUrl.includes('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(lowerUrl)) {
+      return 'video';
+    }
+    return 'video'; // Default to video for backward compatibility
+  };
 
   const toggleAddNew = () => {
     setIsAddingNew(!isAddingNew);
@@ -303,7 +375,7 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
   const handlePublishToggle = async (chapter: Chapter) => {
     try {
       if (!chapter.video && !chapter.isPublished) {
-        toast.error("Cannot publish chapter without a video");
+        toast.error("Cannot publish chapter without media content (video or PDF)");
         return;
       }
 
@@ -415,10 +487,10 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-700 dark:text-slate-300">
-                      Chapter Video <span className="text-xs text-slate-500">(Optional - can be added later)</span>
+                      Chapter Media <span className="text-xs text-slate-500">(Video or PDF - Optional, can be added later)</span>
                     </FormLabel>
                     <FormControl>
-                      <VideoUpload
+                      <MediaUpload
                         value={field.value}
                         onChange={field.onChange}
                         disabled={isSubmitting}
@@ -498,9 +570,9 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
                       name="video"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Chapter Video</FormLabel>
+                          <FormLabel>Chapter Media (Video or PDF)</FormLabel>
                           <FormControl>
-                            <VideoUpload
+                            <MediaUpload
                               value={field.value || chapter.video}
                               onChange={field.onChange}
                               disabled={isSubmitting}
@@ -542,11 +614,20 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
                     <GripVertical className="h-4 w-4 text-slate-400 cursor-grab" />
                     <div className="flex items-center gap-2">
                       {chapter.video ? (
-                        <Play className="h-4 w-4 text-green-600" />
+                        getChapterMediaType(chapter.video) === 'pdf' ? (
+                          <FileText className="h-4 w-4 text-red-600" />
+                        ) : (
+                          <Play className="h-4 w-4 text-green-600" />
+                        )
                       ) : (
                         <Video className="h-4 w-4 text-slate-400" />
                       )}
                       <span className="font-medium">{chapter.name}</span>
+                      {chapter.video && (
+                        <span className="text-xs text-slate-500">
+                          ({getChapterMediaType(chapter.video) === 'pdf' ? 'PDF' : 'Video'})
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 ml-2">
                       {chapter.isPublished ? (
@@ -574,6 +655,7 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
                       size="sm"
                       onClick={() => handlePublishToggle(chapter)}
                       disabled={!chapter.video && !chapter.isPublished}
+                      title={!chapter.video && !chapter.isPublished ? "Add video or PDF content before publishing" : ""}
                     >
                       {chapter.isPublished ? (
                         <EyeOff className="h-4 w-4" />

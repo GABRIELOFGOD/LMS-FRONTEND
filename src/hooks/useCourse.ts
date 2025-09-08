@@ -159,7 +159,7 @@ export const useCourse = () => {
       
       console.log(`publishCourse - ${shouldPublish ? 'Publishing' : 'Unpublishing'} course with ID:`, id);
       
-      // Use the correct PATCH endpoint that works
+      // Use the working PATCH endpoint since PUT /courses/published returns 500 error
       const req = await fetch(`${BASEURL}/courses/${id}`, {
         method: "PATCH",
         headers: {
@@ -177,7 +177,6 @@ export const useCourse = () => {
           const errorRes = await req.json();
           errorMessage = errorRes.message || errorRes.error || errorMessage;
         } catch {
-          // If response is not JSON, use status text
           errorMessage = req.statusText || errorMessage;
         }
         throw new Error(errorMessage);
@@ -185,6 +184,7 @@ export const useCourse = () => {
 
       const res = await req.json();
       console.log('publishCourse - Success response:', res);
+      
       return res;
 
     } catch (error) {

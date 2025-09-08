@@ -26,21 +26,29 @@ const AdminCourseCard = ({
       const newPublishStatus = !course.publish; // Toggle the current status
       console.log('AdminCourseCard - Toggling course publish status:', course.id, 'From:', course.publish, 'To:', newPublishStatus);
       await publishCourse(course.id, newPublishStatus);
-      toast.success(newPublishStatus ? "Course published successfully!" : "Course unpublished successfully!");
       
-      // Better state management: refresh the parent component's course list
+      toast.success(`Course ${newPublishStatus ? 'published' : 'unpublished'} successfully!`);
+      
+      // Refresh the course list to show updated status
       if (onCourseUpdate) {
         onCourseUpdate();
       } else {
-        // Fallback to reload if no callback provided
         setTimeout(() => {
           window.location.reload();
-        }, 1000); // Give time for the toast to show
+        }, 1000);
       }
     } catch (error) {
       console.error("AdminCourseCard - Publish error:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      toast.error(`Failed to update course publish status: ${errorMessage}`);
+      
+      // Provide specific error messages based on common issues
+      if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
+        toast.error("Authentication failed. Please log in again.");
+      } else if (errorMessage.includes("404")) {
+        toast.error("Course not found or endpoint unavailable.");
+      } else {
+        toast.error(`Failed to update course: ${errorMessage}`);
+      }
     } finally {
       setIsPublishing(false);
     }

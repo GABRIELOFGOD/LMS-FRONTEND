@@ -330,12 +330,20 @@ const LearnerHome = () => {
             <div className="flex-1 text-center sm:text-left">
               <h2 className="text-lg md:text-xl font-semibold">{user?.fname} {user?.lname}</h2>
               <p className="text-muted-foreground text-sm md:text-base">
-                {user?.fname ? `${user.fname} - Aspiring Developer & Lifelong Learner` : "Aspiring Developer & Lifelong Learner"}
+                {user?.bio || `${user?.fname || 'User'} - Passionate learner exploring new technologies and building amazing projects!`}
               </p>
             </div>
             <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
               <CalendarDays className="h-3 w-3 md:h-4 md:w-4" />
-              <span>Learning since March 2024</span>
+              <span>
+                Learning since {user?.createdAt 
+                  ? new Date(user.createdAt).toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      year: 'numeric' 
+                    })
+                  : 'recently'
+                }
+              </span>
             </div>
           </div>
         </CardContent>

@@ -8,17 +8,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Edit, Camera } from "lucide-react";
-import { useState, useRef } from "react";
+import { Edit, Camera, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { toast } from "sonner";
+import { updateUserProfile } from "@/services/common";
 
 const UserProfile = () => {
-  const { user } = useUser();
+  const { user, refreshUser } = useUser();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [bio, setBio] = useState(user?.bio || "John - Aspiring Developer & Lifelong Learner");
+  const [isLoading, setIsLoading] = useState(false);
+  const [bio, setBio] = useState("");
   const [profileImage, setProfileImage] = useState("");
-  const [firstName, setFirstName] = useState(user?.fname || "");
-  const [lastName, setLastName] = useState(user?.lname || "");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize form data when user data is available
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.fname || "");
+      setLastName(user.lname || "");
+      // Set bio with a user-specific default if none exists
+      setBio(user.bio || `${user.fname || 'User'} - Passionate learner exploring new technologies and building amazing projects!`);
+    }
+  }, [user]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -31,16 +44,46 @@ const UserProfile = () => {
     }
   };
 
-  const handleSaveProfile = () => {
-    // TODO: Implement API call to save profile changes
-    console.log("Saving profile:", { firstName, lastName, bio, profileImage });
-    setIsEditingProfile(false);
-    // You can integrate with your backend API here
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const updateData = {
+        fname: firstName,
+        lname: lastName,
+        bio: bio
+      };
+
+      console.log("Updating profile with:", updateData);
+
+      const success = await updateUserProfile(updateData);
+
+      if (success) {
+        // Refresh user data to get latest profile
+        await refreshUser();
+        
+        setIsEditingProfile(false);
+        toast.success("Profile updated successfully!");
+      } else {
+        toast.error("Failed to update profile. Please try again.");
+      }
+    } catch (error) {
+      console.error("Profile update error:", error);
+      toast.error("An error occurred while updating your profile.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const triggerImageUpload = () => {
     fileInputRef.current?.click();
   };
+
+  // Get display bio - use current bio state during editing, otherwise user bio or default
+  const displayBio = isEditingProfile ? bio : (
+    user?.bio || `${user?.fname || 'User'} - Passionate learner exploring new technologies and building amazing projects!`
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -81,6 +124,7 @@ const UserProfile = () => {
                     variant="secondary"
                     className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0"
                     onClick={triggerImageUpload}
+                    disabled={isLoading}
                   >
                     <Camera className="w-4 h-4" />
                   </Button>
@@ -103,6 +147,7 @@ const UserProfile = () => {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="First name"
+                    disabled={isLoading}
                   />
                 </div>
                 <div>
@@ -111,6 +156,7 @@ const UserProfile = () => {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Last name"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -123,16 +169,31 @@ const UserProfile = () => {
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Tell us about yourself..."
                   rows={3}
+                  disabled={isLoading}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Share your interests, goals, or what you&apos;re learning!
+                </p>
               </div>
               
               {/* Action Buttons */}
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsEditingProfile(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditingProfile(false)}
+                  disabled={isLoading}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleSaveProfile}>
-                  Save Changes
+                <Button onClick={handleSaveProfile} disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </Button>
               </div>
             </div>
@@ -158,12 +219,19 @@ const UserProfile = () => {
           </div>
         </div>
         <div className="my-auto flex-1">
-          <p className="text-lg md:text-xl font-bold">{firstName || user?.fname} {lastName || user?.lname}</p>
-          <p className="text-sm text-gray-500 mb-2">Joined {yearJoined(user?.createdAt || "")}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-300 italic">{bio}</p>
+          <p className="text-lg md:text-xl font-bold">
+            {user?.fname} {user?.lname}
+          </p>
+          <p className="text-sm text-gray-500 mb-2">
+            Joined {yearJoined(user?.createdAt || "")}
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 italic">
+            {displayBio}
+          </p>
         </div>
       </div>
     </div>
   )
 }
+
 export default UserProfile;
