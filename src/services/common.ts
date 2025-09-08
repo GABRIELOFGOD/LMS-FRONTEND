@@ -242,3 +242,167 @@ export const getUserProfile = async () => {
     return null;
   }
 };
+
+// Admin Stats Interface - Matches actual backend API response structure
+export interface AdminStats {
+  totalUsers: number;
+  totalCourses: number;
+  publishedCourses: number;
+  totalEnrollments: number;
+  // Optional fields for backward compatibility
+  recentActivity?: Array<{
+    id: string;
+    user: string;
+    action: string;
+    course: string;
+    time: string;
+  }>;
+  trends?: {
+    usersThisMonth: number;
+    coursesThisMonth: number;
+    enrollmentsThisMonth: number;
+  };
+}
+
+// Backend API Response Structure (as returned from /users/admin-stats)
+export interface BackendAdminStatsResponse {
+  details: {
+    name: string;
+    bio: string | null;
+    avatar: string;
+    initials: string;
+    joinedAt: string;
+  };
+  stats: Array<{
+    title: string;
+    value: number;
+    icon: string;
+    trend: string;
+  }>;
+}
+
+// Get admin statistics from the backend
+export const getAdminStats = async (): Promise<AdminStats | null> => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("getAdminStats - No authentication token found");
+      return null;
+    }
+    
+    console.log('getAdminStats - Fetching admin statistics...');
+    const req = await fetch(`${BASEURL}/users/admin-stats`, {
+      method: "GET",
+      headers: {
+        "authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+    });
+
+    if (!req.ok) {
+      if (req.status === 401) {
+        console.warn("getAdminStats - Unauthorized, token may be expired");
+        return null;
+      }
+      if (req.status === 403) {
+        console.warn("getAdminStats - Forbidden, user may not have admin access");
+        return null;
+      }
+      const errorRes = await req.json().catch(() => ({}));
+      throw new Error(errorRes.message || `Failed to fetch admin stats (${req.status})`);
+    }
+
+    const res: BackendAdminStatsResponse = await req.json();
+    console.log('getAdminStats - Raw response:', res);
+    
+    // Transform backend response to our interface format
+    const statsMap = new Map(res.stats.map(stat => [stat.title, stat]));
+    
+    const adminStats: AdminStats = {
+      totalUsers: statsMap.get("Total Users")?.value || 0,
+      totalCourses: statsMap.get("Active Courses")?.value || 0,
+      publishedCourses: statsMap.get("Active Courses")?.value || 0, // Using same value as courses for now
+      totalEnrollments: statsMap.get("Certifications")?.value || 0, // Map to available data
+      // Generate mock recent activity for now since backend doesn't provide it
+      recentActivity: [],
+      // Generate trend data from backend trend strings
+      trends: {
+        usersThisMonth: extractTrendValue(statsMap.get("Total Users")?.trend || "0%"),
+        coursesThisMonth: extractTrendValue(statsMap.get("Active Courses")?.trend || "0%"),
+        enrollmentsThisMonth: extractTrendValue(statsMap.get("Certifications")?.trend || "0%")
+      }
+    };
+    
+    console.log('getAdminStats - Processed admin stats:', adminStats);
+    return adminStats;
+  } catch (error: unknown) {
+    if (isError(error)) {
+      console.error("Failed to fetch admin stats", error.message);
+    } else {
+      console.error("Unknown error fetching admin stats", error);
+    }
+    return null;
+  }
+};
+
+// Helper function to extract numeric trend values from strings like "↑ 100%" or "0%"
+const extractTrendValue = (trendString: string): number => {
+  const match = trendString.match(/(\d+)%/);
+  return match ? parseInt(match[1], 10) : 0;
+};
+
+// User profile update interface
+export interface UserProfileUpdate {
+  fname?: string;
+  lname?: string;
+  bio?: string;
+  phone?: string;
+  address?: string;
+}
+
+// Update user profile
+export const updateUserProfile = async (profileData: UserProfileUpdate): Promise<boolean> => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("updateUserProfile - No authentication token found");
+      return false;
+    }
+    
+    console.log('updateUserProfile - Updating profile with:', profileData);
+    const req = await fetch(`${BASEURL}/users/profile`, {
+      method: "PATCH",
+      headers: {
+        "authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    if (!req.ok) {
+      if (req.status === 401) {
+        console.warn("updateUserProfile - Unauthorized, token may be expired");
+        return false;
+      }
+      if (req.status === 403) {
+        console.warn("updateUserProfile - Forbidden, user may not have access");
+        return false;
+      }
+      const errorRes = await req.text();
+      throw new Error(errorRes || `Failed to update profile (${req.status})`);
+    }
+
+    // Backend returns text response for profile updates
+    const response = await req.text();
+    console.log('updateUserProfile - Profile update response:', response);
+    
+    return true;
+  } catch (error: unknown) {
+    if (isError(error)) {
+      console.error("Failed to update user profile", error.message);
+    } else {
+      console.error("Unknown error updating user profile", error);
+    }
+    return false;
+  }
+};

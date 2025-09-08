@@ -224,36 +224,43 @@ const LearnerHome = () => {
   // Use real progress data from API - progressData state contains the real course progress
 
   // Dynamic learner stats - use API data where available and accurate
-  const stats = userStats ? [
-    { 
-      title: "Courses Enrolled", 
-      value: userStats.coursesEnrolled?.length?.toString() || "0", 
-      icon: BookOpen, 
-      trend: userStats.trends?.coursesThisMonth || "+0 this month", 
-      color: "text-blue-600" 
-    },
-    { 
-      title: "Courses Completed", 
-      value: userStats.coursesCompleted?.length?.toString() || "0", 
-      icon: Award, 
-      trend: userStats.trends?.completedThisMonth || "+0 this month", 
-      color: "text-green-600" 
-    },
-    { 
-      title: "Current Streak", 
-      value: "0", // Real streak calculation requires activity tracking API
-      icon: Clock, 
-      trend: `Longest: ${userStats.longestStreak || 0} days`, 
-      color: "text-purple-600" 
-    },
-    { 
-      title: "Certificates", 
-      value: userStats.certificates?.length?.toString() || "0", 
-      icon: Target, 
-      trend: userStats.trends?.progressEncouragement || "Keep learning!", 
-      color: "text-orange-600" 
-    },
-  ] : [
+  const stats = userStats ? (() => {
+    // Use static streak values until backend provides real activity tracking API
+    // This avoids confusing users with random mock data
+    const currentStreak = 0;
+    const longestStreak = 0;
+    
+    return [
+      { 
+        title: "Courses Enrolled", 
+        value: userStats.coursesEnrolled?.length?.toString() || "0", 
+        icon: BookOpen, 
+        trend: userStats.trends?.coursesThisMonth || "+0 this month", 
+        color: "text-blue-600" 
+      },
+      { 
+        title: "Courses Completed", 
+        value: userStats.coursesCompleted?.length?.toString() || "0", 
+        icon: Award, 
+        trend: userStats.trends?.completedThisMonth || "+0 this month", 
+        color: "text-green-600" 
+      },
+      { 
+        title: "Current Streak", 
+        value: currentStreak.toString(),
+        icon: Clock, 
+        trend: `Longest: ${longestStreak} days`, 
+        color: "text-purple-600" 
+      },
+      { 
+        title: "Certificates", 
+        value: userStats.certificates?.length?.toString() || "0", 
+        icon: Target, 
+        trend: userStats.trends?.progressEncouragement || "Keep learning!", 
+        color: "text-orange-600" 
+      },
+    ];
+  })() : [
     // Show zeros for new users - no dummy data
     { title: "Courses Enrolled", value: "0", icon: BookOpen, trend: "Start your learning journey", color: "text-blue-600" },
     { title: "Courses Completed", value: "0", icon: Award, trend: "Complete your first course", color: "text-green-600" },
@@ -289,23 +296,24 @@ const LearnerHome = () => {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
+    <div className="flex flex-1 flex-col gap-4 md:gap-6 p-3 md:p-6">
       {/* Header Section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.fname || 'Learner'}!</h1>
-          <p className="text-muted-foreground">Continue your learning journey and achieve your goals.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Welcome back, {user?.fname || 'Learner'}!</h1>
+          <p className="text-muted-foreground text-sm md:text-base">Continue your learning journey and achieve your goals.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
           <Button 
             variant="outline" 
             onClick={fetchUserStats} 
             disabled={loading}
             size="sm"
+            className="w-full sm:w-auto"
           >
             {loading ? "Loading..." : "Refresh Stats"}
           </Button>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/learner/courses">Browse Courses</Link>
           </Button>
         </div>
@@ -313,39 +321,47 @@ const LearnerHome = () => {
 
       {/* User Profile Section */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <Avatar className="h-12 w-12 md:h-16 md:w-16">
               <AvatarImage src="" alt={user?.fname || 'User'} />
-              <AvatarFallback className="text-lg">{user?.fname?.[0] || 'L'}{user?.lname?.[0] || 'U'}</AvatarFallback>
+              <AvatarFallback className="text-sm md:text-lg">{user?.fname?.[0] || 'L'}{user?.lname?.[0] || 'U'}</AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold">{user?.fname} {user?.lname}</h2>
-              <p className="text-muted-foreground">
-                {user?.fname ? `${user.fname} - Aspiring Developer & Lifelong Learner` : "Aspiring Developer & Lifelong Learner"}
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-lg md:text-xl font-semibold">{user?.fname} {user?.lname}</h2>
+              <p className="text-muted-foreground text-sm md:text-base">
+                {user?.bio || `${user?.fname || 'User'} - Passionate learner exploring new technologies and building amazing projects!`}
               </p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="h-4 w-4" />
-              <span>Learning since March 2024</span>
+            <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+              <CalendarDays className="h-3 w-3 md:h-4 md:w-4" />
+              <span>
+                Learning since {user?.createdAt 
+                  ? new Date(user.createdAt).toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      year: 'numeric' 
+                    })
+                  : 'recently'
+                }
+              </span>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {loading ? (
           // Loading skeleton for stats
           Array.from({ length: 4 }).map((_, index) => (
             <Card key={index}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="h-4 w-24 bg-muted animate-pulse rounded"></div>
+                <div className="h-4 w-16 md:w-24 bg-muted animate-pulse rounded"></div>
                 <div className="h-4 w-4 bg-muted animate-pulse rounded"></div>
               </CardHeader>
               <CardContent>
-                <div className="h-8 w-16 bg-muted animate-pulse rounded mb-2"></div>
-                <div className="h-3 w-20 bg-muted animate-pulse rounded"></div>
+                <div className="h-6 md:h-8 w-12 md:w-16 bg-muted animate-pulse rounded mb-2"></div>
+                <div className="h-3 w-16 md:w-20 bg-muted animate-pulse rounded"></div>
               </CardContent>
             </Card>
           ))
@@ -353,14 +369,14 @@ const LearnerHome = () => {
           stats.map((stat, index) => (
             <Card key={index}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                <CardTitle className="text-xs md:text-sm font-medium truncate">{stat.title}</CardTitle>
+                <stat.icon className={`h-3 w-3 md:h-4 md:w-4 ${stat.color} flex-shrink-0`} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-xl md:text-2xl font-bold">{stat.value}</div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <TrendingUp className="h-3 w-3" />
-                  <span className="text-green-600">{stat.trend}</span>
+                  <TrendingUp className="h-2 w-2 md:h-3 md:w-3" />
+                  <span className="text-green-600 truncate">{stat.trend}</span>
                 </div>
               </CardContent>
             </Card>
@@ -368,23 +384,23 @@ const LearnerHome = () => {
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-4">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-4">
         {/* Overall Progress Summary */}
-        <Card>
+        <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Overall Progress</CardTitle>
+            <CardTitle className="text-sm md:text-base">Overall Progress</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4">
             <CircularProgress 
               percentage={userStats ? Math.round((userStats.coursesCompleted.length / Math.max(userStats.coursesEnrolled.length, 1)) * 100) : 0} 
-              size={120} 
-              strokeWidth={8}
+              size={100} 
+              strokeWidth={6}
               color="hsl(var(--primary))"
               completedLessons={userStats?.coursesCompleted?.length || 0}
               totalLessons={userStats?.coursesEnrolled?.length || 1}
             />
             <div className="text-center space-y-1">
-              <p className="text-sm font-medium">
+              <p className="text-xs md:text-sm font-medium">
                 {userStats?.coursesCompleted?.length || 0} of {userStats?.coursesEnrolled?.length || 0} courses completed
               </p>
               <p className="text-xs text-muted-foreground">
@@ -397,25 +413,25 @@ const LearnerHome = () => {
         {/* Course Progress Section */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Learning Progress</CardTitle>
+            <CardTitle className="text-sm md:text-base">Learning Progress</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 md:space-y-6">
             {progressData.length > 0 ? (
               progressData.map((course, index) => (
-                <div key={course.id || index} className="flex items-center gap-6">
-                  <div className="flex-shrink-0">
+                <div key={course.id || index} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                  <div className="flex-shrink-0 mx-auto sm:mx-0">
                     <CircularProgress 
                       percentage={course.progress} 
-                      size={80} 
-                      strokeWidth={6}
+                      size={60} 
+                      strokeWidth={4}
                       color={index === 0 ? "hsl(var(--primary))" : `hsl(${200 + index * 40}, 70%, 50%)`}
                       completedLessons={course.completedLessons}
                       totalLessons={course.lessons}
                     />
                   </div>
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium flex items-center gap-2">
+                  <div className="flex-1 space-y-2 text-center sm:text-left">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <h3 className="font-medium flex items-center justify-center sm:justify-start gap-2">
                         {course.name}
                         {course.progress === 100 && (
                           <Badge variant="default" className="text-xs bg-green-500">
@@ -425,12 +441,12 @@ const LearnerHome = () => {
                       </h3>
                       <span className="text-sm text-muted-foreground">{course.progress}% Complete</span>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-xs md:text-sm text-muted-foreground">
                       <span>📚 {course.completedLessons}/{course.lessons} Lessons Completed</span>
                       <span>🎯 {course.lessons - course.completedLessons} Remaining</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="w-full bg-muted rounded-full h-2 mr-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+                      <div className="w-full bg-muted rounded-full h-2 sm:mr-4">
                         <div 
                           className="h-2 rounded-full transition-all duration-1000 ease-out"
                           style={{ 
@@ -443,6 +459,7 @@ const LearnerHome = () => {
                         size="sm" 
                         variant="outline"
                         asChild
+                        className="w-full sm:w-auto"
                       >
                         <Link href={`/learner/courses/${course.id}`}>
                           Continue
@@ -454,15 +471,15 @@ const LearnerHome = () => {
               ))
             ) : (
               // Empty state for new users with no enrolled courses
-              <div className="text-center py-12">
-                <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
-                  <BookOpen className="w-12 h-12 text-muted-foreground" />
+              <div className="text-center py-8 md:py-12">
+                <div className="mx-auto w-16 h-16 md:w-24 md:h-24 bg-muted rounded-full flex items-center justify-center mb-4 md:mb-6">
+                  <BookOpen className="w-8 h-8 md:w-12 md:h-12 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-medium mb-2">No Courses Enrolled Yet</h3>
-                <p className="text-muted-foreground mb-6">
+                <h3 className="text-base md:text-lg font-medium mb-2">No Courses Enrolled Yet</h3>
+                <p className="text-muted-foreground text-sm md:text-base mb-4 md:mb-6">
                   Start your learning journey by enrolling in a course
                 </p>
-                <Button asChild>
+                <Button asChild className="w-full sm:w-auto">
                   <Link href="/learner/courses">
                     Browse Courses
                   </Link>
@@ -473,26 +490,26 @@ const LearnerHome = () => {
         </Card>
 
         {/* Quick Actions & Recent Activity */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle className="text-sm md:text-base">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button asChild className="w-full justify-start" variant="outline">
+              <Button asChild className="w-full justify-start text-sm" variant="outline">
                 <Link href="/learner/courses">
                   <BookOpen className="mr-2 h-4 w-4" />
                   My Courses
                 </Link>
               </Button>
-              <Button asChild className="w-full justify-start" variant="outline">
+              <Button asChild className="w-full justify-start text-sm" variant="outline">
                 <Link href="/learner/profile">
                   <Target className="mr-2 h-4 w-4" />
                   View Profile
                 </Link>
               </Button>
-              <Button asChild className="w-full justify-start" variant="outline">
+              <Button asChild className="w-full justify-start text-sm" variant="outline">
                 <Link href="/learner/notification">
                   <Clock className="mr-2 h-4 w-4" />
                   Notifications
@@ -504,13 +521,13 @@ const LearnerHome = () => {
           {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle className="text-sm md:text-base">Recent Activity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Empty state for recent activity - will be connected to real API later */}
-              <div className="text-center py-8">
-                <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                  <Clock className="w-8 h-8 text-muted-foreground" />
+              <div className="text-center py-6 md:py-8">
+                <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <Clock className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-sm font-medium mb-2">No Recent Activity</h3>
                 <p className="text-xs text-muted-foreground">
@@ -525,16 +542,16 @@ const LearnerHome = () => {
       {/* Recommended Courses Section */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Recommended for You</CardTitle>
-            <Button variant="outline" size="sm" asChild>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <CardTitle className="text-sm md:text-base">Recommended for You</CardTitle>
+            <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
               <Link href="/learner/courses">View All</Link>
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {coursesLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 3 }).map((_, index) => (
                 <Card key={index} className="animate-pulse">
                   <CardContent className="p-4">
@@ -550,13 +567,13 @@ const LearnerHome = () => {
               ))}
             </div>
           ) : courses && courses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {courses
                 .slice(0, 3)
                 .filter(course => course && course.id && course.title) // Filter out invalid courses
                 .map((course) => (
-                <Link key={course.id} href={`/course/${course.id}`}>
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <Link key={course.id} href={`/learner/courses/${course.id}`}>
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                     <CardContent className="p-4">
                       <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg mb-3 overflow-hidden">
                         <Image
@@ -567,11 +584,11 @@ const LearnerHome = () => {
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <h3 className="font-semibold mb-2 line-clamp-2">{course.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{course.description}</p>
+                      <h3 className="font-semibold mb-2 line-clamp-2 text-sm md:text-base">{course.title}</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-3 line-clamp-2">{course.description}</p>
                       <div className="flex items-center justify-between">
-                        <Badge variant="outline">{course.isFree ? 'Free' : 'Premium'}</Badge>
-                        <Button size="sm" variant="ghost">
+                        <Badge variant="outline" className="text-xs">{course.isFree ? 'Free' : 'Premium'}</Badge>
+                        <Button size="sm" variant="ghost" className="text-xs">
                           Start Learning
                         </Button>
                       </div>
@@ -582,8 +599,8 @@ const LearnerHome = () => {
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No courses available</p>
+              <BookOpen className="mx-auto h-8 w-8 md:h-12 md:w-12 mb-4 opacity-50" />
+              <p className="text-base md:text-lg font-medium mb-2">No courses available</p>
               <p className="text-sm">Check back later for new learning opportunities.</p>
             </div>
           )}

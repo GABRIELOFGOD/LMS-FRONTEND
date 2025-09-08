@@ -28,33 +28,41 @@ const Footer = () => {
   
   return (
     <div className='bg-muted'>
-      <div className="container mx-auto px-3 text-foreground/50 py-10 grid grid-cols-2 md:grid-cols-1 gap-5">
-        <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
-          {quickLinks.map((link) => (
-            <Link
-              key={link.id}
-              href={link.path}
-            >
-              <p className='capitalize'>{link.label}</p>
-            </Link>
-          ))}
-        </div>
+      <div className="container mx-auto px-3 text-foreground/50 py-6 md:py-10">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start">
+          {/* Quick Links */}
+          <div className="flex flex-col md:flex-row gap-4 md:gap-8 text-center md:text-left">
+            {quickLinks.map((link) => (
+              <Link
+                key={link.id}
+                href={link.path}
+                className="hover:text-primary transition-colors"
+              >
+                <p className='capitalize text-sm md:text-base'>{link.label}</p>
+              </Link>
+            ))}
+          </div>
 
-        <div className='flex gap-5 justify-center'>
-          {socials.map(({
-            icon: Icon, id, link
-          }) => (
-            <Link
-              key={id}
-              href={link}
-            >
-              <Icon />
-            </Link>
-          ))}
+          {/* Social Links */}
+          <div className='flex gap-4 md:gap-5 justify-center md:ml-auto'>
+            {socials.map(({
+              icon: Icon, id, link
+            }) => (
+              <Link
+                key={id}
+                href={link}
+                className="hover:text-primary transition-colors p-1"
+              >
+                <Icon className="h-5 w-5 md:h-6 md:w-6" />
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
-      <div className='pb-10 text-foreground/60'>
-        <p className="text-center">
+      
+      {/* Copyright */}
+      <div className='pb-6 md:pb-10 text-foreground/60 border-t border-border/20'>
+        <p className="text-center text-xs md:text-sm pt-4 md:pt-6">
           &copy; {new Date().getFullYear()} Fact-check Africa. All Rights Reserved
         </p>
       </div>

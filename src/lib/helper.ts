@@ -4,9 +4,9 @@
 // export const redirectUser = (user: User) => {
 //   const router = useRouter();
 //   if (user.role === UserRole.ADMIN) {
-//     router.push("/admin");
+//     router.push("/dashboard");
 //   } else if (user.role === UserRole.TEACHER) {
-//     router.push("/teacher");
+//     router.push("/dashboard");
 //   } else if (user.role === UserRole.STUDENT) {
 //     router.push("/learner");
 //   }

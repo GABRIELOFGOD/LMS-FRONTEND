@@ -169,7 +169,7 @@ const CourseMapper = ({ onStatsUpdate }: CourseMapperProps = {}) => {
                   onEnrollmentUpdate={handleEnrollmentUpdate}
                 />
               ) : (
-                <Link href={`/course/${course.id}`}>
+                <Link href={`/learner/courses/${course.id}`}>
                   <CourseCard course={course} />
                 </Link>
               )}
