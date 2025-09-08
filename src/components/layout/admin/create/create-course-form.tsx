@@ -64,7 +64,7 @@ const CreateCourseForm = () => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const { createCourse, addChapter: addChapterToBackend, updateCourseImage } = useCourse();
+  const { createCourse, addChapter: addChapterToBackend, updateCourseImage, publishCourse } = useCourse();
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -193,10 +193,28 @@ const CreateCourseForm = () => {
         }
       }
       
+      // Step 4: Publish the course after all content is ready
+      let publishSuccess = false;
+      try {
+        console.log('Attempting to publish course with ID:', courseId);
+        const publishResult = await publishCourse(courseId, true);
+        console.log('Course published successfully:', publishResult);
+        publishSuccess = true;
+      } catch (publishError) {
+        console.error('Failed to publish course:', publishError);
+        // Continue to show course creation success even if publish fails
+      }
+      
       form.reset();
       setSelectedImage(null);
       setChapters([]);
-      toast.success('Course created successfully!');
+      
+      if (publishSuccess) {
+        toast.success('Course created and published successfully! Students can now see and enroll in this course.');
+      } else {
+        toast.success('Course created successfully! Please publish it manually from the course edit page for students to see it.');
+      }
+      
       router.push("/dashboard/courses");
       
     } catch (error) {

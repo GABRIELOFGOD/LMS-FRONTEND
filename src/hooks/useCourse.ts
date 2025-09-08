@@ -158,10 +158,12 @@ export const useCourse = () => {
       if (!token) throw new Error("No authentication token found");
       
       console.log(`publishCourse - ${shouldPublish ? 'Publishing' : 'Unpublishing'} course with ID:`, id);
+      console.log('publishCourse - Token exists:', !!token);
+      console.log('publishCourse - BASEURL:', BASEURL);
       
       // Use the working PATCH endpoint since PUT /courses/published returns 500 error
-      const req = await fetch(`${BASEURL}/courses/${id}`, {
-        method: "PATCH",
+      const req = await fetch(`${BASEURL}/courses/${id}/published`, {
+        method: "PUT",
         headers: {
           "authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -170,11 +172,13 @@ export const useCourse = () => {
       });
 
       console.log('publishCourse - Response status:', req.status);
+      console.log('publishCourse - Response headers:', Object.fromEntries(req.headers.entries()));
       
       if (!req.ok) {
         let errorMessage = `HTTP ${req.status}`;
         try {
           const errorRes = await req.json();
+          console.log('publishCourse - Error response:', errorRes);
           errorMessage = errorRes.message || errorRes.error || errorMessage;
         } catch {
           errorMessage = req.statusText || errorMessage;
