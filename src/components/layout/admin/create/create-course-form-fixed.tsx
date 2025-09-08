@@ -40,7 +40,7 @@ const CreateCourseForm = () => {
 
   const onSubmit = async (data: CourseFormValues) => {
     setIsLoading(true);
-    const success = await submitCourse(data, chapters, selectedImage);
+    const success = await submitCourse(data, chapters);
     if (success) {
       resetForm();
     }

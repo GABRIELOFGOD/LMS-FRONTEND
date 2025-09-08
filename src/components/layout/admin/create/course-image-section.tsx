@@ -40,7 +40,10 @@ export const CourseImageSection = ({
     }
 
     setSelectedImage(file);
-    form.setValue('courseImage', [file] as any);
+    // Convert File to FileList
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    form.setValue('courseImage', dt.files);
   };
 
   const removeImage = () => {

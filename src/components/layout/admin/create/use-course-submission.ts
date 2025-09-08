@@ -11,8 +11,7 @@ export const useCourseSubmission = () => {
 
   const submitCourse = async (
     data: CourseFormValues, 
-    chapters: ChapterData[],
-    selectedImage: File | null
+    chapters: ChapterData[]
   ) => {
     try {
       // Step 1: Create the course with proper backend structure
