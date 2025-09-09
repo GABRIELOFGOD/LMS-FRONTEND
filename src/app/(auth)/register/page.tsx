@@ -4,10 +4,12 @@ import Footer from "@/components/layout/footer";
 
 const Register = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center py-12 px-4">
-        <RegistrationForm />
+      <div className="min-h-screen flex items-center justify-center py-8">
+        <div className="w-full px-2">
+          <RegistrationForm />
+        </div>
       </div>
       <Footer />
     </div>
