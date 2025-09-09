@@ -1,7 +1,7 @@
 import { socials } from '@/data/socials';
 import Link from 'next/link';
 import React from 'react';
-import { MapPin, Mail, Phone, Building } from 'lucide-react';
+import { MapPin, Mail, Building } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 
 const Footer = () => {
@@ -69,7 +69,7 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-blue-100 leading-relaxed mb-4 text-xs md:text-sm">
-              Nigeria's premier Learning Management System dedicated to building critical thinking skills and combating misinformation across Africa.
+              Nigeria&apos;s premier Learning Management System dedicated to building critical thinking skills and combating misinformation across Africa.
             </p>
             
             {/* Contact Info */}
