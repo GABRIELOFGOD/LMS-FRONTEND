@@ -255,7 +255,8 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
     publishChapter, 
     unpublishChapter,
     reorderChapters,
-    uploadVideo
+    uploadVideo,
+    uploadMedia
   } = useCourse();
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -324,12 +325,24 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
         if (response?.message) toast.success(response.message);
         
       } else if (editingId) {
-        // Handle update - separate video upload if needed
+        // Handle update - separate media upload if needed
         if (values.video instanceof File) {
-          // If there's a new video file, upload it separately
+          // If there's a new media file, upload it separately
           try {
-            const videoResponse = await uploadVideo(editingId, values.video);
-            if (videoResponse?.message) toast.success("Video uploaded successfully");
+            // Determine file type and use appropriate upload function
+            const isVideo = values.video.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(values.video.name);
+            const isPDF = values.video.type === 'application/pdf' || values.video.name.toLowerCase().endsWith('.pdf');
+            
+            let mediaResponse;
+            if (isVideo) {
+              mediaResponse = await uploadVideo(editingId, values.video);
+              if (mediaResponse?.message) toast.success("Video uploaded successfully");
+            } else if (isPDF) {
+              mediaResponse = await uploadMedia(editingId, values.video);
+              if (mediaResponse?.message) toast.success("PDF uploaded successfully");
+            } else {
+              throw new Error("Unsupported file type. Please upload a video or PDF file.");
+            }
             
             // Then update the chapter name if it changed
             const currentChapter = chapters.find(c => c.id === editingId);
@@ -338,7 +351,7 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
                 name: values.name
               });
             } else {
-              response = videoResponse;
+              response = mediaResponse;
             }
           } catch (error) {
             throw error;

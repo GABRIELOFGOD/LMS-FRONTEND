@@ -197,6 +197,87 @@ export const useCourse = () => {
     }
   }
 
+  const deleteCourse = async (id: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+      
+      console.log('deleteCourse - Deleting course with ID:', id);
+      console.log('deleteCourse - Token exists:', !!token);
+      console.log('deleteCourse - Full URL:', `${BASEURL}/courses/${id}`);
+      
+      // Try the primary delete endpoint
+      let req = await fetch(`${BASEURL}/courses/${id}`, {
+        method: "DELETE",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      console.log('deleteCourse - Response status:', req.status);
+      console.log('deleteCourse - Response headers:', Object.fromEntries(req.headers.entries()));
+      
+      // If 404 or 405, try alternative endpoints
+      if (req.status === 404 || req.status === 405) {
+        console.log('deleteCourse - Trying alternative endpoint: /courses/delete/{id}');
+        req = await fetch(`${BASEURL}/courses/delete/${id}`, {
+          method: "DELETE",
+          headers: {
+            "authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        
+        console.log('deleteCourse - Alternative endpoint response status:', req.status);
+      }
+      
+      // If still 405, try POST method (some APIs use POST for delete)
+      if (req.status === 405) {
+        console.log('deleteCourse - Trying POST method to /courses/{id}/delete');
+        req = await fetch(`${BASEURL}/courses/${id}/delete`, {
+          method: "POST",
+          headers: {
+            "authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        
+        console.log('deleteCourse - POST method response status:', req.status);
+      }
+      
+      if (!req.ok) {
+        let errorMessage = `HTTP ${req.status}`;
+        try {
+          const errorRes = await req.json();
+          console.log('deleteCourse - Error response:', errorRes);
+          errorMessage = errorRes.message || errorRes.error || errorMessage;
+        } catch {
+          const textResponse = await req.text();
+          console.log('deleteCourse - Text error response:', textResponse);
+          errorMessage = textResponse || req.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      let res;
+      try {
+        res = await req.json();
+        console.log('deleteCourse - Success response:', res);
+      } catch {
+        // Some APIs return empty response on successful delete
+        res = { message: 'Course deleted successfully' };
+        console.log('deleteCourse - Empty response, assuming success');
+      }
+      
+      return res;
+
+    } catch (error) {
+      console.error('deleteCourse - Error:', error);
+      throw error;
+    }
+  }
+
   const updateCourseImage = async ({ id, value }: {
       id: string;
       value: File;
@@ -237,7 +318,20 @@ export const useCourse = () => {
       formData.append("courseId", courseId);
       
       if (video) {
-        formData.append("video", video);
+        // Determine file type and use appropriate field name
+        const isVideo = video.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(video.name);
+        const isPDF = video.type === 'application/pdf' || video.name.toLowerCase().endsWith('.pdf');
+        
+        if (isVideo) {
+          formData.append("video", video);
+        } else if (isPDF) {
+          // Try multiple field names for PDF uploads
+          formData.append("pdf", video);
+          // Also add as video field as fallback for backends that expect 'video' field
+          formData.append("video", video);
+        } else {
+          throw new Error("Unsupported file type. Please upload a video (MP4, MOV, AVI) or PDF file.");
+        }
       }
       
       try {
@@ -250,7 +344,14 @@ export const useCourse = () => {
         });
 
         const res = await req.json();
-        if (!req.ok) throw new Error(res.message);
+        if (!req.ok) {
+          // Provide more helpful error messages
+          let errorMessage = res.message || 'Failed to create chapter';
+          if (video && errorMessage.toLowerCase().includes('video') && video.type === 'application/pdf') {
+            errorMessage += ' (Note: If uploading PDF, ensure your backend supports PDF files in chapters)';
+          }
+          throw new Error(errorMessage);
+        }
         return res as AddChapterResponse;
       } catch (error) {
         throw error;
@@ -266,9 +367,22 @@ export const useCourse = () => {
       const formData = new FormData();
       formData.append("name", name);
       
-      // Only append video if it exists and is a File
+      // Only append media if it exists and is a File
       if (video instanceof File) {
-        formData.append("video", video);
+        // Determine file type and use appropriate field name
+        const isVideo = video.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(video.name);
+        const isPDF = video.type === 'application/pdf' || video.name.toLowerCase().endsWith('.pdf');
+        
+        if (isVideo) {
+          formData.append("video", video);
+        } else if (isPDF) {
+          // Try multiple field names for PDF uploads
+          formData.append("pdf", video);
+          // Also add as video field as fallback for backends that expect 'video' field
+          formData.append("video", video);
+        } else {
+          throw new Error("Unsupported file type. Please upload a video (MP4, MOV, AVI) or PDF file.");
+        }
       }
       
       try {
@@ -281,7 +395,14 @@ export const useCourse = () => {
         });
 
         const res = await req.json();
-        if (!req.ok) throw new Error(res.message);
+        if (!req.ok) {
+          // Provide more helpful error messages
+          let errorMessage = res.message || 'Failed to update chapter';
+          if (video && errorMessage.toLowerCase().includes('video') && video.type === 'application/pdf') {
+            errorMessage += ' (Note: If uploading PDF, ensure your backend supports PDF files in chapters)';
+          }
+          throw new Error(errorMessage);
+        }
         return res as AddChapterResponse;
       } catch (error) {
         throw error;
@@ -310,6 +431,78 @@ export const useCourse = () => {
         if (!req.ok) throw new Error(res.message);
         return res as AddChapterResponse;
       } catch (error) {
+        throw error;
+      }
+    };
+
+    const uploadMedia = async (
+      chapterId: string,
+      file: File
+    ): Promise<AddChapterResponse> => {
+      const token = localStorage.getItem("token");
+
+      const formData = new FormData();
+      
+      // Determine if it's a video or PDF and use appropriate field name
+      const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(file.name);
+      const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      
+      if (isVideo) {
+        formData.append("video", file);
+      } else if (isPDF) {
+        formData.append("pdf", file); // Use 'pdf' field for PDF files
+      } else {
+        throw new Error("Unsupported file type. Please upload a video (MP4, MOV, AVI) or PDF file.");
+      }
+      
+      // Try the specific endpoint first, then fallback to generic media endpoint
+      let endpoint = `${BASEURL}/chapters/${chapterId}/${isVideo ? 'video' : 'media'}`;
+      
+      try {
+        let req = await fetch(endpoint, {
+          method: "PUT",
+          headers: {
+            "authorization": `Bearer ${token}`
+          },
+          body: formData,
+        });
+
+        // If video endpoint fails for PDF, try the generic media endpoint
+        if (!req.ok && isPDF && endpoint.includes('/video')) {
+          console.log('Video endpoint failed for PDF, trying media endpoint...');
+          endpoint = `${BASEURL}/chapters/${chapterId}/media`;
+          req = await fetch(endpoint, {
+            method: "PUT",
+            headers: {
+              "authorization": `Bearer ${token}`
+            },
+            body: formData,
+          });
+        }
+
+        // If PUT fails, try POST method
+        if (!req.ok && (req.status === 404 || req.status === 405)) {
+          console.log('PUT method failed, trying POST method...');
+          req = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "authorization": `Bearer ${token}`
+            },
+            body: formData,
+          });
+        }
+
+        const res = await req.json();
+        if (!req.ok) {
+          // Provide more specific error messages
+          if (res.message && res.message.includes('video')) {
+            throw new Error(`Upload failed: ${res.message}. Note: If uploading PDF, ensure your backend supports PDF uploads at the media endpoint.`);
+          }
+          throw new Error(res.message || `Failed to upload ${isVideo ? 'video' : 'PDF'}`);
+        }
+        return res as AddChapterResponse;
+      } catch (error) {
+        console.error('Media upload error:', error);
         throw error;
       }
     };
@@ -569,7 +762,9 @@ export const useCourse = () => {
     unpublishChapter,
     reorderChapters,
     uploadVideo,
+    uploadMedia,
     publishCourse,
+    deleteCourse,
 
     enrollCourse,
     getUserEnrollments,

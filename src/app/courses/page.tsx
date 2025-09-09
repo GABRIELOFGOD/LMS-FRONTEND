@@ -3,12 +3,15 @@
 import CourseMapper from "@/components/layout/courses/course-mapper";
 import { useUser } from "@/context/user-context";
 import Link from "next/link";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/footer";
 
 const Courses = () => {
   const { isLoggedIn } = useUser();
 
   return (
-    <div>
+    <div className="min-h-screen">
+      <Navbar />
       <div className="container mx-auto px-3 py-10">
         <div className="mb-8">
           <p className='text-2xl md:text-4xl font-bold'>
@@ -34,6 +37,7 @@ const Courses = () => {
           <CourseMapper />
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

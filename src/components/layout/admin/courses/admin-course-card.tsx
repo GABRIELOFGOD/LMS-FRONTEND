@@ -2,7 +2,17 @@
 
 import { Button } from "@/components/ui/button";
 import { Course } from "@/types/course";
-import { Edit, Eye, EyeOff, Users, ImageIcon } from "lucide-react";
+import { Edit, Eye, EyeOff, Users, ImageIcon, Trash2, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -18,7 +28,9 @@ const AdminCourseCard = ({
 }) => {
   const [showEdit, setShowEdit] = useState<boolean>(false);
   const [isPublishing, setIsPublishing] = useState<boolean>(false);
-  const { publishCourse } = useCourse();
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const { publishCourse, deleteCourse } = useCourse();
 
   const handlePublishToggle = async () => {
     setIsPublishing(true);
@@ -53,6 +65,54 @@ const AdminCourseCard = ({
       setIsPublishing(false);
     }
   };
+
+  const handleDeleteCourse = async () => {
+    setIsDeleting(true);
+    try {
+      console.log('AdminCourseCard - Deleting course:', course.id);
+      await deleteCourse(course.id);
+      
+      toast.success('Course deleted successfully!');
+      
+      // Refresh the course list to remove the deleted course
+      if (onCourseUpdate) {
+        onCourseUpdate();
+      } else {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("AdminCourseCard - Delete error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      
+      // Provide specific error messages based on common issues
+      if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
+        toast.error("Authentication failed. Please log in again.");
+      } else if (errorMessage.includes("404")) {
+        toast.error("Course not found or delete endpoint not available.");
+      } else if (errorMessage.includes("405")) {
+        toast.error("Delete method not supported. Please check the API documentation.");
+      } else if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
+        toast.error("You don't have permission to delete this course.");
+      } else if (errorMessage.includes("500")) {
+        toast.error("Server error occurred. Please try again later.");
+      } else {
+        toast.error(`Failed to delete course: ${errorMessage}`);
+      }
+      
+      // Log detailed error information for debugging
+      console.error("Detailed error information:", {
+        error,
+        courseId: course.id,
+        errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
   
   return (
     <div
@@ -75,9 +135,21 @@ const AdminCourseCard = ({
             onClick={handlePublishToggle}
             disabled={isPublishing}
           >
-            {course.publish ? <EyeOff size={12} /> : <Eye size={12} />}
+            {isPublishing ? <Loader2 size={12} className="animate-spin" /> : (course.publish ? <EyeOff size={12} /> : <Eye size={12} />)}
             <p className="my-auto">
               {isPublishing ? "..." : (course.publish ? "Unpublish" : "Publish")}
+            </p>
+          </Button>
+          <Button 
+            size={"sm"} 
+            variant="destructive"
+            className="flex gap-1 text-xs"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+            <p className="my-auto">
+              {isDeleting ? "..." : "Delete"}
             </p>
           </Button>
         </div>
@@ -117,6 +189,36 @@ const AdminCourseCard = ({
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the course
+              &quot;{course.title}&quot; and remove all associated data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCourse}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Course"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
