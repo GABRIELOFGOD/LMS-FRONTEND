@@ -30,8 +30,8 @@ const Navbar = () => {
   const userIsLoggedIn = isLoggedIn && user !== null;
   
   return (
-    <div className="shadow-sm bg-background relative">
-      <div className="w-full px-3 py-4 flex justify-between items-center container md:px-0 mx-auto">
+    <div className="shadow-sm bg-background relative w-full">
+      <div className="w-full px-3 py-4 flex justify-between items-center">
         <Logo />
         
         {/* Desktop Navigation */}
@@ -110,8 +110,8 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="absolute top-full left-0 right-0 bg-background border-b shadow-lg z-50 md:hidden">
-          <div className="container mx-auto px-3 py-4">
+        <div className="absolute top-full left-0 right-0 bg-background border-b shadow-lg z-50 md:hidden w-full">
+          <div className="w-full px-3 py-4">
             <div className="flex flex-col space-y-4">
               {/* Navigation Links */}
               {userIsLoggedIn ? (

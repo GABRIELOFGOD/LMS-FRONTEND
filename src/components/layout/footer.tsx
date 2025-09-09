@@ -54,8 +54,8 @@ const Footer = () => {
   return (
     <footer className='bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white w-full'>
       {/* Main Footer Content */}
-      <div className="w-full px-2 py-4 md:py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="w-full px-4 py-6 md:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           
           {/* Brand Section */}
           <div className="sm:col-span-2 lg:col-span-1 text-center sm:text-left">
@@ -161,7 +161,7 @@ const Footer = () => {
       
       {/* Bottom Bar */}
       <div className='border-t border-white/10 bg-black/20 w-full'>
-        <div className="w-full px-2 py-2">
+        <div className="w-full px-4 py-3">
           <div className="flex flex-col md:flex-row items-center justify-between gap-2">
             <div className="flex flex-col md:flex-row items-center gap-1 md:gap-4 text-blue-200 text-xs text-center">
               <p>&copy; {new Date().getFullYear()} FactCheck Africa. All Rights Reserved</p>
