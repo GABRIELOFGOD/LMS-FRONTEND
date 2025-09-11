@@ -5,15 +5,30 @@ import { useUser } from "@/context/user-context";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/footer";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { UserRole } from "@/types/user";
 
 const Courses = () => {
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, user } = useUser();
 
   return (
     <div className="min-h-screen">
       <Navbar />
       <div className="container mx-auto px-3 py-10">
         <div className="mb-8">
+          {/* Admin Dashboard Button */}
+          {user?.role === UserRole.ADMIN && (
+            <div className="mb-4">
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/courses">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Link>
+              </Button>
+            </div>
+          )}
+          
           <p className='text-2xl md:text-4xl font-bold'>
             {isLoggedIn ? `Browse All Courses` : 'Courses'}
           </p>

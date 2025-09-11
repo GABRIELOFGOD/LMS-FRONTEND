@@ -1,6 +1,6 @@
 import { BASEURL } from "@/lib/utils";
 import { isError } from "@/services/helper";
-import { AddChapterResponse } from "@/types/course";
+import { AddChapterResponse, Course, RestoreCourseResponse } from "@/types/course";
 import { toast } from "sonner";
 
 export const useCourse = () => {
@@ -53,7 +53,29 @@ export const useCourse = () => {
       console.log('getCourses - Raw response:', res);
       
       // Handle different response structures consistently
-      return res.value || res.data || res || [];
+      const allCourses = res.value || res.data || res || [];
+      
+      // Filter out deleted courses (courses with isDeleted: true)
+      // Also handle cases where backend might use different deletion indicators
+      const activeCourses = Array.isArray(allCourses) 
+        ? allCourses.filter(course => {
+            if (!course) return false;
+            
+            // Primary check: isDeleted flag
+            if (course.isDeleted === true) return false;
+            
+            // Secondary checks: other possible deletion indicators
+            if (course.deleted === true) return false;
+            if (course.status === 'deleted') return false;
+            if (course.deletedAt && course.deletedAt !== null) return false;
+            
+            return true;
+          })
+        : [];
+        
+      console.log('getCourses - Filtered active courses:', activeCourses.length, 'out of', Array.isArray(allCourses) ? allCourses.length : 0);
+      
+      return activeCourses;
     } catch (error) {
       console.error("Error fetching courses:", error);
       return [];
@@ -189,6 +211,18 @@ export const useCourse = () => {
       const res = await req.json();
       console.log('publishCourse - Success response:', res);
       
+      // If we're unpublishing a course, clean up enrollments (optional)
+      if (!shouldPublish) {
+        console.log('publishCourse - Course unpublished, considering enrollment cleanup');
+        try {
+          // Uncomment the next line if you want to remove enrollments when courses are unpublished
+          // await cleanupCourseEnrollments(id, 'unpublished');
+          console.log('publishCourse - Enrollment cleanup skipped for unpublished course (enrollments preserved)');
+        } catch (cleanupError) {
+          console.warn('publishCourse - Enrollment cleanup failed, but publish operation succeeded:', cleanupError);
+        }
+      }
+      
       return res;
 
     } catch (error) {
@@ -197,17 +231,17 @@ export const useCourse = () => {
     }
   }
 
+  // DELETE COURSE FUNCTION
+  // Uses standard REST endpoint: DELETE /courses/{courseId}
   const deleteCourse = async (id: string) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
       
-      console.log('deleteCourse - Deleting course with ID:', id);
-      console.log('deleteCourse - Token exists:', !!token);
-      console.log('deleteCourse - Full URL:', `${BASEURL}/courses/${id}`);
+      console.log('deleteCourse - Starting deletion process for course:', id);
       
-      // Try the primary delete endpoint
-      let req = await fetch(`${BASEURL}/courses/${id}`, {
+      // Use the standard REST endpoint: DELETE /courses/{courseId}
+      const req = await fetch(`${BASEURL}/courses/${id}`, {
         method: "DELETE",
         headers: {
           "authorization": `Bearer ${token}`,
@@ -215,47 +249,13 @@ export const useCourse = () => {
         }
       });
 
-      console.log('deleteCourse - Response status:', req.status);
-      console.log('deleteCourse - Response headers:', Object.fromEntries(req.headers.entries()));
-      
-      // If 404 or 405, try alternative endpoints
-      if (req.status === 404 || req.status === 405) {
-        console.log('deleteCourse - Trying alternative endpoint: /courses/delete/{id}');
-        req = await fetch(`${BASEURL}/courses/delete/${id}`, {
-          method: "DELETE",
-          headers: {
-            "authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
-        
-        console.log('deleteCourse - Alternative endpoint response status:', req.status);
-      }
-      
-      // If still 405, try POST method (some APIs use POST for delete)
-      if (req.status === 405) {
-        console.log('deleteCourse - Trying POST method to /courses/{id}/delete');
-        req = await fetch(`${BASEURL}/courses/${id}/delete`, {
-          method: "POST",
-          headers: {
-            "authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
-        
-        console.log('deleteCourse - POST method response status:', req.status);
-      }
-      
       if (!req.ok) {
-        let errorMessage = `HTTP ${req.status}`;
+        let errorMessage = `Failed to delete course`;
         try {
           const errorRes = await req.json();
-          console.log('deleteCourse - Error response:', errorRes);
           errorMessage = errorRes.message || errorRes.error || errorMessage;
         } catch {
-          const textResponse = await req.text();
-          console.log('deleteCourse - Text error response:', textResponse);
-          errorMessage = textResponse || req.statusText || errorMessage;
+          errorMessage = req.statusText || errorMessage;
         }
         throw new Error(errorMessage);
       }
@@ -263,17 +263,69 @@ export const useCourse = () => {
       let res;
       try {
         res = await req.json();
-        console.log('deleteCourse - Success response:', res);
       } catch {
         // Some APIs return empty response on successful delete
         res = { message: 'Course deleted successfully' };
-        console.log('deleteCourse - Empty response, assuming success');
+      }
+      
+      console.log('deleteCourse - Course deletion successful, initiating enrollment cleanup');
+      
+      // Clean up enrollments for this deleted course
+      try {
+        await cleanupCourseEnrollments(id, 'deleted');
+      } catch (cleanupError) {
+        console.warn('deleteCourse - Enrollment cleanup failed, but course deletion succeeded:', cleanupError);
+        // Don't throw error here as the main operation (course deletion) succeeded
       }
       
       return res;
 
     } catch (error) {
-      console.error('deleteCourse - Error:', error);
+      console.error('Delete course error:', error);
+      throw error;
+    }
+  }
+
+  // Clean up enrollments when a course is deleted or unpublished
+  const cleanupCourseEnrollments = async (courseId: string, action: 'deleted' | 'unpublished') => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn('cleanupCourseEnrollments - No token available, skipping cleanup');
+        return;
+      }
+
+      console.log(`cleanupCourseEnrollments - Cleaning up enrollments for ${action} course:`, courseId);
+
+      // Try to call a backend endpoint to remove enrollments for the course
+      // This is the ideal approach if your backend supports it
+      try {
+        const response = await fetch(`${BASEURL}/courses/${courseId}/enrollments`, {
+          method: "DELETE",
+          headers: {
+            "authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (response.ok) {
+          console.log(`cleanupCourseEnrollments - Successfully removed enrollments for ${action} course:`, courseId);
+          return;
+        } else if (response.status === 404) {
+          console.log('cleanupCourseEnrollments - Enrollment cleanup endpoint not available');
+        } else {
+          console.warn(`cleanupCourseEnrollments - Enrollment cleanup failed with status: ${response.status}`);
+        }
+      } catch (endpointError) {
+        console.warn('cleanupCourseEnrollments - Enrollment cleanup endpoint failed:', endpointError);
+      }
+
+      // Fallback: Since we can't remove enrollments server-side, 
+      // the filtering in getUserEnrollments will handle this client-side
+      console.log(`cleanupCourseEnrollments - Using client-side filtering for ${action} course:`, courseId);
+      
+    } catch (error) {
+      console.error('cleanupCourseEnrollments - Error during enrollment cleanup:', error);
       throw error;
     }
   }
@@ -307,265 +359,217 @@ export const useCourse = () => {
       }
     }
 
-    const addChapter = async (
-      courseId: string,
-      { name, video }: { name: string; video?: File | null }
-    ): Promise<AddChapterResponse> => {
-      const token = localStorage.getItem("token");
+// VIDEO AND PDF UPLOAD FUNCTIONS
+// Note: Backend only accepts /chapters/{id}/video endpoint for both videos and PDFs
+// Always use "video" field name in FormData regardless of file type (PDF or video)
 
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("courseId", courseId);
-      
-      if (video) {
-        // Determine file type and use appropriate field name
-        const isVideo = video.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(video.name);
-        const isPDF = video.type === 'application/pdf' || video.name.toLowerCase().endsWith('.pdf');
-        
-        if (isVideo) {
-          formData.append("video", video);
-        } else if (isPDF) {
-          // Try multiple field names for PDF uploads
-          formData.append("pdf", video);
-          // Also add as video field as fallback for backends that expect 'video' field
-          formData.append("video", video);
-        } else {
-          throw new Error("Unsupported file type. Please upload a video (MP4, MOV, AVI) or PDF file.");
-        }
-      }
-      
-      try {
-        const req = await fetch(`${BASEURL}/chapters`, {
-          method: "POST",
-          headers: {
-            "authorization": `Bearer ${token}`
-          },
-          body: formData,
-        });
+const addChapter = async (
+    courseId: string,
+    { name, video }: { name: string; video?: File | null }
+  ): Promise<AddChapterResponse> => {
+    const token = localStorage.getItem("token");
 
-        const res = await req.json();
-        if (!req.ok) {
-          // Provide more helpful error messages
-          let errorMessage = res.message || 'Failed to create chapter';
-          if (video && errorMessage.toLowerCase().includes('video') && video.type === 'application/pdf') {
-            errorMessage += ' (Note: If uploading PDF, ensure your backend supports PDF files in chapters)';
-          }
-          throw new Error(errorMessage);
-        }
-        return res as AddChapterResponse;
-      } catch (error) {
-        throw error;
-      }
-    };
-
-    const updateChapter = async (
-      chapterId: string,
-      { name, video }: { name: string; video?: File | null }
-    ): Promise<AddChapterResponse> => {
-      const token = localStorage.getItem("token");
-
-      const formData = new FormData();
-      formData.append("name", name);
-      
-      // Only append media if it exists and is a File
-      if (video instanceof File) {
-        // Determine file type and use appropriate field name
-        const isVideo = video.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(video.name);
-        const isPDF = video.type === 'application/pdf' || video.name.toLowerCase().endsWith('.pdf');
-        
-        if (isVideo) {
-          formData.append("video", video);
-        } else if (isPDF) {
-          // Try multiple field names for PDF uploads
-          formData.append("pdf", video);
-          // Also add as video field as fallback for backends that expect 'video' field
-          formData.append("video", video);
-        } else {
-          throw new Error("Unsupported file type. Please upload a video (MP4, MOV, AVI) or PDF file.");
-        }
-      }
-      
-      try {
-        const req = await fetch(`${BASEURL}/chapters/${chapterId}`, {
-          method: "PATCH",
-          headers: {
-            "authorization": `Bearer ${token}`
-          },
-          body: formData,
-        });
-
-        const res = await req.json();
-        if (!req.ok) {
-          // Provide more helpful error messages
-          let errorMessage = res.message || 'Failed to update chapter';
-          if (video && errorMessage.toLowerCase().includes('video') && video.type === 'application/pdf') {
-            errorMessage += ' (Note: If uploading PDF, ensure your backend supports PDF files in chapters)';
-          }
-          throw new Error(errorMessage);
-        }
-        return res as AddChapterResponse;
-      } catch (error) {
-        throw error;
-      }
-    };
-
-    const uploadVideo = async (
-      chapterId: string,
-      video: File
-    ): Promise<AddChapterResponse> => {
-      const token = localStorage.getItem("token");
-
-      const formData = new FormData();
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("courseId", courseId);
+    
+    if (video) {
+      // Always use "video" field name since backend expects this field
+      // The backend should handle both video and PDF files at this field
       formData.append("video", video);
-      
-      try {
-        const req = await fetch(`${BASEURL}/chapters/${chapterId}/video`, {
-          method: "PUT",
-          headers: {
-            "authorization": `Bearer ${token}`
-          },
-          body: formData,
-        });
+    }
+    
+    try {
+      const req = await fetch(`${BASEURL}/chapters`, {
+        method: "POST",
+        headers: {
+          "authorization": `Bearer ${token}`
+        },
+        body: formData,
+      });
 
-        const res = await req.json();
-        if (!req.ok) throw new Error(res.message);
-        return res as AddChapterResponse;
-      } catch (error) {
-        throw error;
-      }
-    };
-
-    const uploadMedia = async (
-      chapterId: string,
-      file: File
-    ): Promise<AddChapterResponse> => {
-      const token = localStorage.getItem("token");
-
-      const formData = new FormData();
-      
-      // Determine if it's a video or PDF and use appropriate field name
-      const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(file.name);
-      const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-      
-      if (isVideo) {
-        formData.append("video", file);
-      } else if (isPDF) {
-        formData.append("pdf", file); // Use 'pdf' field for PDF files
-      } else {
-        throw new Error("Unsupported file type. Please upload a video (MP4, MOV, AVI) or PDF file.");
-      }
-      
-      // Try the specific endpoint first, then fallback to generic media endpoint
-      let endpoint = `${BASEURL}/chapters/${chapterId}/${isVideo ? 'video' : 'media'}`;
-      
-      try {
-        let req = await fetch(endpoint, {
-          method: "PUT",
-          headers: {
-            "authorization": `Bearer ${token}`
-          },
-          body: formData,
-        });
-
-        // If video endpoint fails for PDF, try the generic media endpoint
-        if (!req.ok && isPDF && endpoint.includes('/video')) {
-          console.log('Video endpoint failed for PDF, trying media endpoint...');
-          endpoint = `${BASEURL}/chapters/${chapterId}/media`;
-          req = await fetch(endpoint, {
-            method: "PUT",
-            headers: {
-              "authorization": `Bearer ${token}`
-            },
-            body: formData,
-          });
+      const res = await req.json();
+      if (!req.ok) {
+        // Provide more helpful error messages
+        let errorMessage = res.message || 'Failed to create chapter';
+        if (video && video.type === 'application/pdf') {
+          errorMessage += ' (Note: Make sure your backend accepts PDF files in the "video" field)';
         }
+        throw new Error(errorMessage);
+      }
+      return res as AddChapterResponse;
+    } catch (error) {
+      throw error;
+    }
+  };
 
-        // If PUT fails, try POST method
-        if (!req.ok && (req.status === 404 || req.status === 405)) {
-          console.log('PUT method failed, trying POST method...');
-          req = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              "authorization": `Bearer ${token}`
-            },
-            body: formData,
-          });
+  const updateChapter = async (
+    chapterId: string,
+    { name, video }: { name: string; video?: File | null }
+  ): Promise<AddChapterResponse> => {
+    const token = localStorage.getItem("token");
+
+    const formData = new FormData();
+    formData.append("name", name);
+    
+    // Only append media if it exists and is a File
+    if (video instanceof File) {
+      // Always use "video" field name since backend expects this field
+      formData.append("video", video);
+    }
+    
+    try {
+      const req = await fetch(`${BASEURL}/chapters/${chapterId}`, {
+        method: "PATCH",
+        headers: {
+          "authorization": `Bearer ${token}`
+        },
+        body: formData,
+      });
+
+      const res = await req.json();
+      if (!req.ok) {
+        // Provide more helpful error messages
+        let errorMessage = res.message || 'Failed to update chapter';
+        if (video && video.type === 'application/pdf') {
+          errorMessage += ' (Note: Make sure your backend accepts PDF files in the "video" field)';
         }
+        throw new Error(errorMessage);
+      }
+      return res as AddChapterResponse;
+    } catch (error) {
+      throw error;
+    }
+  };
 
-        const res = await req.json();
-        if (!req.ok) {
-          // Provide more specific error messages
-          if (res.message && res.message.includes('video')) {
-            throw new Error(`Upload failed: ${res.message}. Note: If uploading PDF, ensure your backend supports PDF uploads at the media endpoint.`);
-          }
-          throw new Error(res.message || `Failed to upload ${isVideo ? 'video' : 'PDF'}`);
+  const uploadVideo = async (
+    chapterId: string,
+    video: File
+  ): Promise<AddChapterResponse> => {
+    const token = localStorage.getItem("token");
+
+    const formData = new FormData();
+    // Always use "video" field name since backend expects /chapters/{id}/video endpoint
+    formData.append("video", video);
+    
+    try {
+      const req = await fetch(`${BASEURL}/chapters/${chapterId}/video`, {
+        method: "PUT",
+        headers: {
+          "authorization": `Bearer ${token}`
+        },
+        body: formData,
+      });
+
+      const res = await req.json();
+      if (!req.ok) throw new Error(res.message);
+      return res as AddChapterResponse;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const uploadMedia = async (
+    chapterId: string,
+    file: File
+  ): Promise<AddChapterResponse> => {
+    const token = localStorage.getItem("token");
+
+    const formData = new FormData();
+    
+    // Always use "video" field name since backend only accepts /chapters/{id}/video endpoint
+    // This endpoint should handle both videos and PDFs
+    formData.append("video", file);
+    
+    try {
+      const req = await fetch(`${BASEURL}/chapters/${chapterId}/video`, {
+        method: "PUT",
+        headers: {
+          "authorization": `Bearer ${token}`
+        },
+        body: formData,
+      });
+
+      const res = await req.json();
+      if (!req.ok) {
+        // Provide more specific error messages
+        const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(file.name);
+        const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        
+        if (isPDF) {
+          throw new Error(`PDF upload failed: ${res.message}. Make sure your backend's /chapters/{id}/video endpoint accepts PDF files.`);
+        } else if (isVideo) {
+          throw new Error(`Video upload failed: ${res.message}`);
+        } else {
+          throw new Error(`Upload failed: ${res.message}`);
         }
-        return res as AddChapterResponse;
-      } catch (error) {
-        console.error('Media upload error:', error);
-        throw error;
       }
-    };
+      return res as AddChapterResponse;
+    } catch (error) {
+      console.error('Media upload error:', error);
+      throw error;
+    }
+  };
 
-    const deleteChapter = async (chapterId: string): Promise<{ message: string }> => {
-      const token = localStorage.getItem("token");
-      
-      try {
-        const req = await fetch(`${BASEURL}/chapters/${chapterId}`, {
-          method: "DELETE",
-          headers: {
-            "authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-        });
+  const deleteChapter = async (chapterId: string): Promise<{ message: string }> => {
+    const token = localStorage.getItem("token");
+    
+    try {
+      const req = await fetch(`${BASEURL}/chapters/${chapterId}`, {
+        method: "DELETE",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      });
 
-        const res = await req.json();
-        if (!req.ok) throw new Error(res.message);
-        return res;
-      } catch (error) {
-        throw error;
-      }
-    };
+      const res = await req.json();
+      if (!req.ok) throw new Error(res.message);
+      return res;
+    } catch (error) {
+      throw error;
+    }
+  };
 
-    const publishChapter = async (chapterId: string): Promise<AddChapterResponse> => {
-      const token = localStorage.getItem("token");
-      
-      try {
-        const req = await fetch(`${BASEURL}/chapters/${chapterId}/publish`, {
-          method: "PATCH",
-          headers: {
-            "authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-        });
+  const publishChapter = async (chapterId: string): Promise<AddChapterResponse> => {
+    const token = localStorage.getItem("token");
+    
+    try {
+      const req = await fetch(`${BASEURL}/chapters/${chapterId}/publish`, {
+        method: "PATCH",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      });
 
-        const res = await req.json();
-        if (!req.ok) throw new Error(res.message);
-        return res as AddChapterResponse;
-      } catch (error) {
-        throw error;
-      }
-    };
+      const res = await req.json();
+      if (!req.ok) throw new Error(res.message);
+      return res as AddChapterResponse;
+    } catch (error) {
+      throw error;
+    }
+  };
 
-    const unpublishChapter = async (chapterId: string): Promise<AddChapterResponse> => {
-      const token = localStorage.getItem("token");
-      
-      try {
-        const req = await fetch(`${BASEURL}/chapters/${chapterId}/unpublish`, {
-          method: "PATCH",
-          headers: {
-            "authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-        });
+  const unpublishChapter = async (chapterId: string): Promise<AddChapterResponse> => {
+    const token = localStorage.getItem("token");
+    
+    try {
+      const req = await fetch(`${BASEURL}/chapters/${chapterId}/unpublish`, {
+        method: "PATCH",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      });
 
-        const res = await req.json();
-        if (!req.ok) throw new Error(res.message);
-        return res as AddChapterResponse;
-      } catch (error) {
-        throw error;
-      }
-    };
+      const res = await req.json();
+      if (!req.ok) throw new Error(res.message);
+      return res as AddChapterResponse;
+    } catch (error) {
+      throw error;
+    }
+  };
 
   const reorderChapters = async (
     courseId: string, 
@@ -689,7 +693,9 @@ export const useCourse = () => {
         
         if (response.ok) {
           console.log('User enrollments fetched successfully:', res);
-          return res;
+          // Filter out enrollments for deleted or unpublished courses
+          const cleanedEnrollments = await filterValidEnrollments(res);
+          return cleanedEnrollments;
         }
       } catch {
         console.warn('Primary enrollments endpoint failed, trying fallback...');
@@ -710,7 +716,9 @@ export const useCourse = () => {
       }
       
       console.log('User enrollments fetched successfully:', res);
-      return res;
+      // Filter out enrollments for deleted or unpublished courses
+      const cleanedEnrollments = await filterValidEnrollments(res);
+      return cleanedEnrollments;
     } catch (error: unknown) {
       if (isError(error)) {
         console.error("Failed to get enrollments", error.message);
@@ -718,6 +726,68 @@ export const useCourse = () => {
         console.error("Unknown error", error);
       }
       return [];
+    }
+  }
+
+  // Filter out enrollments for courses that are deleted or unpublished
+  const filterValidEnrollments = async (enrollments: unknown[]) => {
+    if (!Array.isArray(enrollments) || enrollments.length === 0) {
+      return enrollments;
+    }
+
+    try {
+      console.log('filterValidEnrollments - Checking enrollment validity for', enrollments.length, 'courses');
+      const validEnrollments = [];
+      
+      for (const enrollment of enrollments) {
+        if (!enrollment || typeof enrollment !== 'object' || !('courseId' in enrollment)) {
+          console.warn('filterValidEnrollments - Invalid enrollment object:', enrollment);
+          continue;
+        }
+
+        const enrollmentObj = enrollment as { courseId: string };
+        
+        try {
+          // Check if the course still exists and is available
+          const course = await getACourse(enrollmentObj.courseId);
+          
+          if (!course) {
+            console.log(`filterValidEnrollments - Course ${enrollmentObj.courseId} not found, removing enrollment`);
+            continue;
+          }
+          
+          // Check if course is deleted
+          if (course.isDeleted === true || course.deleted === true || course.status === 'deleted' || course.deletedAt) {
+            console.log(`filterValidEnrollments - Course ${enrollmentObj.courseId} is deleted, removing enrollment`);
+            continue;
+          }
+          
+          // Check if course is unpublished (optional - you may want to keep these)
+          // Uncomment the next lines if you want to remove enrollments for unpublished courses too
+          // if (course.publish === false) {
+          //   console.log(`filterValidEnrollments - Course ${enrollmentObj.courseId} is unpublished, removing enrollment`);
+          //   continue;
+          // }
+          
+          // Course is valid, keep the enrollment
+          validEnrollments.push(enrollment);
+          
+        } catch (courseError) {
+          console.error(`filterValidEnrollments - Error checking course ${enrollmentObj.courseId}:`, courseError);
+          // If we can't verify the course, assume it's valid to avoid removing legitimate enrollments
+          validEnrollments.push(enrollment);
+        }
+      }
+      
+      if (validEnrollments.length !== enrollments.length) {
+        console.log(`filterValidEnrollments - Filtered enrollments: ${validEnrollments.length}/${enrollments.length} valid`);
+      }
+      
+      return validEnrollments;
+    } catch (error) {
+      console.error('filterValidEnrollments - Error filtering enrollments:', error);
+      // Return original enrollments if filtering fails
+      return enrollments;
     }
   }
 
@@ -745,6 +815,143 @@ export const useCourse = () => {
     }
   }
   
+  // RESTORE COURSE FUNCTION
+  // Uses PUT endpoint: PUT /courses/{courseId} to restore soft-deleted course
+  const restoreCourse = async (id: string): Promise<RestoreCourseResponse> => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+      
+      // Use PUT endpoint to restore the course
+      const req = await fetch(`${BASEURL}/courses/${id}`, {
+        method: "PUT",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          action: "restore" // Indicate this is a restore action
+        })
+      });
+
+      if (!req.ok) {
+        let errorMessage = `Failed to restore course`;
+        try {
+          const errorRes = await req.json();
+          errorMessage = errorRes.message || errorRes.error || errorMessage;
+        } catch {
+          errorMessage = req.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      let res;
+      try {
+        res = await req.json();
+      } catch {
+        // Some APIs return empty response on successful restore
+        res = { message: 'Course restored successfully' };
+      }
+      
+      return res;
+
+    } catch (error) {
+      console.error('Restore course error:', error);
+      throw error;
+    }
+  }
+
+  // GET DELETED COURSES FUNCTION
+  // Fetches courses that have been soft-deleted
+  const getDeletedCourses = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+      
+      console.log('getDeletedCourses - Fetching deleted courses...');
+      
+      // Try the dedicated deleted courses endpoint first
+      try {
+        const response = await fetch(`${BASEURL}/courses/deleted`, {
+          method: "GET",
+          headers: {
+            "authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        
+        if (response.ok) {
+          const res = await response.json();
+          console.log('getDeletedCourses - Deleted courses fetched from dedicated endpoint:', res);
+          return res.value || res.data || res || [];
+        } else if (response.status === 404) {
+          console.log('getDeletedCourses - Dedicated endpoint not found, falling back to filtering all courses');
+        } else {
+          throw new Error(`Failed to fetch deleted courses: ${response.status}`);
+        }
+      } catch (endpointError) {
+        console.log('getDeletedCourses - Dedicated endpoint failed, falling back to filtering all courses:', endpointError);
+      }
+      
+      // Fallback: Get all courses and filter for deleted ones
+      const allCourses = await getAllCoursesIncludingDeleted();
+      const deletedCourses = Array.isArray(allCourses) 
+        ? allCourses.filter(course => {
+            if (!course) return false;
+            
+            // Check various deletion indicators
+            if (course.isDeleted === true) return true;
+            if (course.deleted === true) return true;
+            if (course.status === 'deleted') return true;
+            if (course.deletedAt && course.deletedAt !== null) return true;
+            
+            return false;
+          })
+        : [];
+        
+      console.log('getDeletedCourses - Filtered deleted courses from all courses:', deletedCourses.length);
+      return deletedCourses;
+      
+    } catch (error: unknown) {
+      if (isError(error)) {
+        console.error("getDeletedCourses - Error:", error.message);
+        throw error;
+      } else {
+        console.error("getDeletedCourses - Unknown error:", error);
+        throw new Error("Failed to fetch deleted courses");
+      }
+    }
+  };
+
+  // GET ALL COURSES (including deleted) - for admin purposes
+  const getAllCoursesIncludingDeleted = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("No authentication token found for getAllCoursesIncludingDeleted");
+        return [];
+      }
+      const response = await fetch(`${BASEURL}/courses`, {
+        headers: {
+          "authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch all courses: ${response.status}`);
+      }
+      
+      const res = await response.json();
+      console.log('getAllCoursesIncludingDeleted - Raw response:', res);
+      
+      // Return all courses without filtering
+      return res.value || res.data || res || [];
+    } catch (error) {
+      console.error("Error fetching all courses:", error);
+      return [];
+    }
+  };
+
   return {
     getCourses,
     getACourse,
@@ -768,6 +975,11 @@ export const useCourse = () => {
 
     enrollCourse,
     getUserEnrollments,
-    getCourseProgress
+    getCourseProgress,
+    cleanupCourseEnrollments,
+
+    restoreCourse,
+    getDeletedCourses,
+    getAllCoursesIncludingDeleted
   }
 }

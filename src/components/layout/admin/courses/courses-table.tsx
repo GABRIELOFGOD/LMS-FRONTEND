@@ -18,12 +18,22 @@ const CoursesTable = () => {
   const gettingAllCourses = async () => {
     try {
       const gottenCourse = await getCourses();
-      if (gottenCourse.message) throw new Error(gottenCourse.message);
+      
+      // Check if the response is an error object with a message
+      if (gottenCourse && typeof gottenCourse === 'object' && 'message' in gottenCourse && !Array.isArray(gottenCourse)) {
+        throw new Error((gottenCourse as any).message);
+      }
+      
+      console.log('CoursesTable - Raw courses from getCourses:', gottenCourse);
       
       // Ensure gottenCourse is an array and contains valid course objects
       if (Array.isArray(gottenCourse)) {
         const validCourses = gottenCourse
-          .filter(course => course && typeof course === 'object' && course.id && course.title);
+          .filter(course => course && typeof course === 'object' && course.id && course.title)
+          // Double-check: filter out any courses with isDeleted = true (safety net)
+          .filter(course => !course.isDeleted);
+        
+        console.log('CoursesTable - Final active courses:', validCourses.length, validCourses);
         setCourses(validCourses);
       } else {
         console.warn('CoursesTable - Courses is not an array:', gottenCourse);
@@ -41,6 +51,22 @@ const CoursesTable = () => {
       setIsLoading(false);
     }
   }
+
+  // Optimistic update: remove course from local state immediately
+  // This provides faster UI feedback without waiting for server response
+  const handleCourseDelete = (courseId: string) => {
+    try {
+      setCourses(prevCourses => {
+        const filtered = prevCourses.filter(course => course.id !== courseId);
+        console.log(`Course ${courseId} removed from local state. Remaining courses:`, filtered.length);
+        return filtered;
+      });
+    } catch (error) {
+      console.error('Error during optimistic course removal:', error);
+      // If optimistic update fails, refresh the whole list
+      gettingAllCourses();
+    }
+  };
 
   useEffect(() => {
     gettingAllCourses();
@@ -65,9 +91,10 @@ const CoursesTable = () => {
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           {courses.map((course, i) => (
             <AdminCourseCard
-              key={i}
+              key={course.id} // Use course.id instead of index for better React key
               course={course}
               onCourseUpdate={gettingAllCourses} // Refresh the course list when a course is updated
+              onCourseDelete={handleCourseDelete} // Optimistic delete from local state
             />
           ))}
         </div>

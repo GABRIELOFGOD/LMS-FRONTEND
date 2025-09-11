@@ -328,20 +328,23 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
         // Handle update - separate media upload if needed
         if (values.video instanceof File) {
           // If there's a new media file, upload it separately
+          // Note: Using uploadVideo for both videos and PDFs since backend only accepts /chapters/{id}/video endpoint
           try {
-            // Determine file type and use appropriate upload function
+            // Use uploadVideo for both videos and PDFs since backend only accepts /chapters/{id}/video
+            const mediaResponse = await uploadVideo(editingId, values.video);
+            
+            // Show appropriate success message
             const isVideo = values.video.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(values.video.name);
             const isPDF = values.video.type === 'application/pdf' || values.video.name.toLowerCase().endsWith('.pdf');
             
-            let mediaResponse;
-            if (isVideo) {
-              mediaResponse = await uploadVideo(editingId, values.video);
-              if (mediaResponse?.message) toast.success("Video uploaded successfully");
-            } else if (isPDF) {
-              mediaResponse = await uploadMedia(editingId, values.video);
-              if (mediaResponse?.message) toast.success("PDF uploaded successfully");
-            } else {
-              throw new Error("Unsupported file type. Please upload a video or PDF file.");
+            if (mediaResponse?.message) {
+              if (isPDF) {
+                toast.success("PDF uploaded successfully");
+              } else if (isVideo) {
+                toast.success("Video uploaded successfully");
+              } else {
+                toast.success("Media uploaded successfully");
+              }
             }
             
             // Then update the chapter name if it changed

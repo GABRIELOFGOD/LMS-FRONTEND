@@ -177,7 +177,7 @@ const LearnerHome = () => {
         setUserStats(stats);
         console.log('LearnerHome - Stats loaded successfully');
         
-        // Process course data for display (no API call needed)
+        // Process course data for display 
         fetchRealProgressData();
       } else {
         console.warn("No user stats received");
@@ -324,13 +324,13 @@ const LearnerHome = () => {
         <CardContent className="p-4 md:p-6">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <Avatar className="h-12 w-12 md:h-16 md:w-16">
-              <AvatarImage src="" alt={user?.fname || 'User'} />
+              <AvatarImage src={user?.avatar || user?.profileImage || ""} alt={user?.fname || 'User'} />
               <AvatarFallback className="text-sm md:text-lg">{user?.fname?.[0] || 'L'}{user?.lname?.[0] || 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex-1 text-center sm:text-left">
               <h2 className="text-lg md:text-xl font-semibold">{user?.fname} {user?.lname}</h2>
               <p className="text-muted-foreground text-sm md:text-base">
-                {user?.bio || `${user?.fname || 'User'} - Passionate learner exploring new technologies and building amazing projects!`}
+                {user?.bio || "Welcome to your learning dashboard!"}
               </p>
             </div>
             <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">

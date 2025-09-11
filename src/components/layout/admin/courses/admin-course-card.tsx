@@ -18,19 +18,23 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCourse } from "@/hooks/useCourse";
 import { toast } from "sonner";
+import { useStats } from "@/context/stats-context";
 
 const AdminCourseCard = ({
   course,
-  onCourseUpdate
+  onCourseUpdate,
+  onCourseDelete
 }: { 
   course: Course;
   onCourseUpdate?: () => void;
+  onCourseDelete?: (courseId: string) => void;
 }) => {
   const [showEdit, setShowEdit] = useState<boolean>(false);
   const [isPublishing, setIsPublishing] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const { publishCourse, deleteCourse } = useCourse();
+  const { refreshStats } = useStats();
 
   const handlePublishToggle = async () => {
     setIsPublishing(true);
@@ -72,16 +76,22 @@ const AdminCourseCard = ({
       console.log('AdminCourseCard - Deleting course:', course.id);
       await deleteCourse(course.id);
       
-      toast.success('Course deleted successfully!');
+      toast.success('Course moved to deleted items! All student enrollments will be automatically cleaned up.');
       
-      // Refresh the course list to remove the deleted course
-      if (onCourseUpdate) {
-        onCourseUpdate();
+      // Use optimistic update if available, otherwise refetch all courses
+      if (onCourseDelete) {
+        onCourseDelete(course.id); // Remove from local state immediately
+      } else if (onCourseUpdate) {
+        onCourseUpdate(); // Fallback to refetching all courses
       } else {
+        // Last resort: reload the page
         setTimeout(() => {
           window.location.reload();
         }, 1000);
       }
+      
+      // Refresh stats to update course counts and user statistics
+      refreshStats();
     } catch (error) {
       console.error("AdminCourseCard - Delete error:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
@@ -108,6 +118,12 @@ const AdminCourseCard = ({
         errorMessage,
         timestamp: new Date().toISOString()
       });
+      
+      // If optimistic delete was used, we might want to refetch to ensure consistency
+      if (onCourseDelete && onCourseUpdate) {
+        console.log("Delete failed after optimistic update, refetching courses...");
+        onCourseUpdate();
+      }
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -194,10 +210,10 @@ const AdminCourseCard = ({
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Move course to deleted items?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the course
-              &quot;{course.title}&quot; and remove all associated data from our servers.
+              This will move the course &quot;{course.title}&quot; to your deleted courses archive.
+              The course will no longer be visible to students, but you can restore it later if needed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -213,7 +229,7 @@ const AdminCourseCard = ({
                   Deleting...
                 </>
               ) : (
-                "Delete Course"
+                "Move to Deleted"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
