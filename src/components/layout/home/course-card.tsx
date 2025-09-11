@@ -32,7 +32,7 @@ const CourseCard = ({ course }: {
     <div className="rounded border-border border bg-muted overflow-hidden hover:shadow-lg transition-shadow duration-200">
       <div className="relative w-full h-[120px] md:h-[150px] shadow-sm">
         <Image
-          src={course.imageUrl || ""}
+          src={course.imageUrl || "/images/student-learning.jpg"}
           alt="course image"
           fill
           className="object-cover h-full w-full"

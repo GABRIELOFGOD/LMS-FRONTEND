@@ -154,7 +154,7 @@ const EnhancedCourseCard = ({
     <div className="rounded border-border border bg-muted overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative w-full h-[150px] shadow-sm">
         <Image
-          src={course.imageUrl || "/placeholder-course.jpg"}
+          src={course.imageUrl || "/images/student-learning.jpg"}
           alt="course image"
           fill
           className="object-cover h-full w-full"

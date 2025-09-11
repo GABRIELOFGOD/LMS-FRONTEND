@@ -137,11 +137,12 @@ const DeletedCourseCard = ({
             className="object-cover opacity-60" // Reduced opacity for deleted courses
           />
         ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-slate-400 text-xs text-center px-2">
-              No image
-            </div>
-          </div>
+          <Image
+            src="/images/student-learning.jpg"
+            alt={course.title}
+            fill
+            className="object-cover opacity-40" // Even more reduced opacity for deleted courses with fallback
+          />
         )}
         
         {/* Action Buttons */}

@@ -171,17 +171,20 @@ const AdminCourseCard = ({
         </div>
       )}
       <div className="h-[150px] md:h-[200px] w-full relative rounded-t-xl overflow-hidden">
-        {course.imageUrl ?
-        (<Image
-          src={course.imageUrl}
-          alt="Course image"
-          fill
-          className="object-fill w-full h-full absolute"
-        />) : 
-        (
-          <div className="h-full w-full justify-center items-center flex text-gray-300 animate-pulse">
-            <ImageIcon size={40} className="md:size-[50px]" />
-          </div>
+        {course.imageUrl ? (
+          <Image
+            src={course.imageUrl}
+            alt="Course image"
+            fill
+            className="object-fill w-full h-full absolute"
+          />
+        ) : (
+          <Image
+            src="/images/student-learning.jpg"
+            alt="Course image"
+            fill
+            className="object-fill w-full h-full absolute opacity-70"
+          />
         )}
       </div>
       <div className="p-2 md:p-3">
