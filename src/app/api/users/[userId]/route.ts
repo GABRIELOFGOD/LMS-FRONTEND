@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 // PATCH /api/users/{userId} - Update user bio and avatar
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
     const body = await request.json();
     
     console.log("PATCH /api/users/[userId] - Request:", {

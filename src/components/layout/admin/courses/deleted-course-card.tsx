@@ -12,9 +12,8 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, RotateCcw, Users, Trash2, Calendar } from "lucide-react";
+import { Loader2, RotateCcw, Trash2, Calendar } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 import { useCourse } from "@/hooks/useCourse";
 import { toast } from "sonner";

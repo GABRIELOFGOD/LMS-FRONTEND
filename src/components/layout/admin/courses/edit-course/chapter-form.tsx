@@ -255,8 +255,7 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
     publishChapter, 
     unpublishChapter,
     reorderChapters,
-    uploadVideo,
-    uploadMedia
+    uploadVideo
   } = useCourse();
 
   const [chapters, setChapters] = useState<Chapter[]>([]);

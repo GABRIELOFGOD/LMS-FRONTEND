@@ -51,6 +51,7 @@ export const useUser = () => {
         return res;
       } else {
         // No file upload, use regular JSON request
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { avatar, ...updateData } = profileData;
         
         const req = await fetch(`${BASEURL}/users/${userId}`, {

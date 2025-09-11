@@ -21,7 +21,7 @@ const CoursesTable = () => {
       
       // Check if the response is an error object with a message
       if (gottenCourse && typeof gottenCourse === 'object' && 'message' in gottenCourse && !Array.isArray(gottenCourse)) {
-        throw new Error((gottenCourse as any).message);
+        throw new Error((gottenCourse as { message: string }).message);
       }
       
       console.log('CoursesTable - Raw courses from getCourses:', gottenCourse);
@@ -89,7 +89,7 @@ const CoursesTable = () => {
         </div>) :
       (
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
-          {courses.map((course, i) => (
+          {courses.map((course) => (
             <AdminCourseCard
               key={course.id} // Use course.id instead of index for better React key
               course={course}

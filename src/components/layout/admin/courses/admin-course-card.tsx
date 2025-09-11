@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Course } from "@/types/course";
-import { Edit, Eye, EyeOff, Users, ImageIcon, Trash2, Loader2 } from "lucide-react";
+import { Edit, Eye, EyeOff, Users, Trash2, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,

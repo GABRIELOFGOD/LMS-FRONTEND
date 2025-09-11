@@ -1,6 +1,6 @@
 import { BASEURL } from "@/lib/utils";
 import { isError } from "@/services/helper";
-import { AddChapterResponse, Course, RestoreCourseResponse } from "@/types/course";
+import { AddChapterResponse, RestoreCourseResponse } from "@/types/course";
 import { toast } from "sonner";
 
 export const useCourse = () => {
