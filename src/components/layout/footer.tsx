@@ -63,10 +63,7 @@ const Footer = () => {
               <div className="bg-white rounded-lg p-1.5 shadow-lg">
                 <Logo />
               </div>
-              <div>
-                <h3 className="text-base md:text-lg font-bold text-white">FactCheck Africa</h3>
-                <p className="text-xs text-blue-200">Learning Platform</p>
-              </div>
+
             </div>
             <p className="text-blue-100 leading-relaxed mb-4 text-xs md:text-sm">
               Nigeria&apos;s premier Learning Management System dedicated to building critical thinking skills and combating misinformation across Africa.

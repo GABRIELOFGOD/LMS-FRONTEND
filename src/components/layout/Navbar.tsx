@@ -17,7 +17,9 @@ const Navbar = () => {
     return (
       <div className="shadow-sm bg-background">
         <div className="w-full px-3 py-4 flex justify-between container md:px-0 mx-auto">
-          <Logo />
+          <div className="bg-white rounded-lg p-1.5 shadow-lg">
+            <Logo />
+          </div>
           <div className="flex gap-4 my-auto">
             <ThemeToggle />
           </div>
@@ -32,7 +34,9 @@ const Navbar = () => {
   return (
     <div className="shadow-sm bg-background relative w-full">
       <div className="w-full px-3 py-4 flex justify-between items-center">
-        <Logo />
+        <div className="bg-white rounded-lg p-1.5 shadow-lg">
+          <Logo />
+        </div>
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-10 my-auto">
