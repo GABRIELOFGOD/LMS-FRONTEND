@@ -17,7 +17,9 @@ const Navbar = () => {
     return (
       <div className="shadow-sm bg-background">
         <div className="w-full px-3 py-4 flex justify-between container md:px-0 mx-auto">
-          <Logo />
+          <div className="bg-white rounded-lg p-1.5 shadow-lg">
+            <Logo />
+          </div>
           <div className="flex gap-4 my-auto">
             <ThemeToggle />
           </div>
@@ -30,9 +32,11 @@ const Navbar = () => {
   const userIsLoggedIn = isLoggedIn && user !== null;
   
   return (
-    <div className="shadow-sm bg-background relative">
-      <div className="w-full px-3 py-4 flex justify-between items-center container md:px-0 mx-auto">
-        <Logo />
+    <div className="shadow-sm bg-background relative w-full">
+      <div className="w-full px-3 py-4 flex justify-between items-center">
+        <div className="bg-white rounded-lg p-1.5 shadow-lg">
+          <Logo />
+        </div>
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-10 my-auto">
@@ -110,8 +114,8 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="absolute top-full left-0 right-0 bg-background border-b shadow-lg z-50 md:hidden">
-          <div className="container mx-auto px-3 py-4">
+        <div className="absolute top-full left-0 right-0 bg-background border-b shadow-lg z-50 md:hidden w-full">
+          <div className="w-full px-3 py-4">
             <div className="flex flex-col space-y-4">
               {/* Navigation Links */}
               {userIsLoggedIn ? (

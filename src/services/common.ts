@@ -121,11 +121,12 @@ export const getUserStats = async (): Promise<UserStats | null> => {
     console.log('getUserStats - longestStreak:', res.longestStreak, typeof res.longestStreak);
     
     // Ensure the response matches expected structure
+    const filteredEnrolledCourses = await filterValidCourses(res.coursesEnrolled || []);
     const userStats: UserStats = {
       progress: res.progress || [],
       certificates: res.certificates || [],
       coursesCompleted: res.coursesCompleted || [],
-      coursesEnrolled: res.coursesEnrolled || [],
+      coursesEnrolled: filteredEnrolledCourses as UserStats['coursesEnrolled'],
       currentStraek: res.currentStraek || 0,
       longestStreak: res.longestStreak || 0,
       trends: res.trends || {
@@ -136,7 +137,10 @@ export const getUserStats = async (): Promise<UserStats | null> => {
       }
     };
     
-    console.log('getUserStats - Processed stats:', userStats);
+    console.log('getUserStats - Processed stats with course filtering:', {
+      originalEnrolled: res.coursesEnrolled?.length || 0,
+      filteredEnrolled: filteredEnrolledCourses.length
+    });
     return userStats;
   } catch (error: unknown) {
     if (isError(error)) {
@@ -147,6 +151,81 @@ export const getUserStats = async (): Promise<UserStats | null> => {
     return null;
   }
 }
+
+// Filter valid courses (remove deleted/unavailable courses)
+export const filterValidCourses = async (courses: unknown[]): Promise<unknown[]> => {
+  if (!Array.isArray(courses) || courses.length === 0) {
+    return courses;
+  }
+
+  try {
+    console.log('filterValidCourses - Checking validity for', courses.length, 'courses');
+    const validCourses = [];
+    
+    for (const course of courses) {
+      if (!course || typeof course !== 'object' || !('id' in course)) {
+        console.warn('filterValidCourses - Invalid course object:', course);
+        continue;
+      }
+      
+      const courseObj = course as { id: string };
+      
+      try {
+        // Check if the course still exists and is available
+        const token = localStorage.getItem("token");
+        if (!token) {
+          // If no token, assume course is valid
+          validCourses.push(course);
+          continue;
+        }
+        
+        const response = await fetch(`${BASEURL}/courses/${courseObj.id}`, {
+          headers: { "authorization": `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            console.log(`filterValidCourses - Course ${courseObj.id} not found, removing from list`);
+            continue;
+          }
+          // For other errors, assume course is valid to avoid removing legitimate courses
+          validCourses.push(course);
+          continue;
+        }
+        
+        const courseData = await response.json();
+        
+        // Check if course is deleted
+        if (courseData.isDeleted === true || courseData.deleted === true || 
+            courseData.status === 'deleted' || courseData.deletedAt) {
+          console.log(`filterValidCourses - Course ${courseObj.id} is deleted, removing from list`);
+          continue;
+        }
+        
+        // For unpublished courses, you can choose to keep or remove them
+        // Currently keeping them as learners might want to see their enrolled courses even if unpublished
+        
+        // Course is valid, keep it
+        validCourses.push(course);
+        
+      } catch (courseError) {
+        console.error(`filterValidCourses - Error checking course ${courseObj.id}:`, courseError);
+        // If we can't verify the course, assume it's valid to avoid removing legitimate courses
+        validCourses.push(course);
+      }
+    }
+    
+    if (validCourses.length !== courses.length) {
+      console.log(`filterValidCourses - Filtered courses: ${validCourses.length}/${courses.length} valid`);
+    }
+    
+    return validCourses;
+  } catch (error) {
+    console.error('filterValidCourses - Error filtering courses:', error);
+    // Return original courses if filtering fails
+    return courses;
+  }
+};
 
 // Get user enrolled courses (in-progress and completed)
 export const getUserCourses = async (): Promise<UserCourseStats | null> => {
@@ -228,6 +307,9 @@ export const getUserProfile = async () => {
       email: userData.email,
       fname: userData.fname || userData.firstName || userData.first_name,
       lname: userData.lname || userData.lastName || userData.last_name,
+      bio: userData.bio || userData.biography || '',
+      avatar: userData.avatar || userData.profileImage || userData.profile_image || '',
+      profileImage: userData.profileImage || userData.avatar || userData.profile_image || '',
       createdAt: userData.createdAt || userData.created_at,
       updatedAt: userData.updatedAt || userData.updated_at
     };
@@ -358,10 +440,12 @@ export interface UserProfileUpdate {
   bio?: string;
   phone?: string;
   address?: string;
+  avatar?: File | string;
+  profileImage?: string;
 }
 
-// Update user profile
-export const updateUserProfile = async (profileData: UserProfileUpdate): Promise<boolean> => {
+// Update user profile - supports both /users/{userId} and /users/profile endpoints
+export const updateUserProfile = async (profileData: UserProfileUpdate, userId?: string): Promise<boolean> => {
   try {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -370,33 +454,87 @@ export const updateUserProfile = async (profileData: UserProfileUpdate): Promise
     }
     
     console.log('updateUserProfile - Updating profile with:', profileData);
-    const req = await fetch(`${BASEURL}/users/profile`, {
-      method: "PATCH",
-      headers: {
-        "authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(profileData)
-    });
-
-    if (!req.ok) {
-      if (req.status === 401) {
-        console.warn("updateUserProfile - Unauthorized, token may be expired");
-        return false;
-      }
-      if (req.status === 403) {
-        console.warn("updateUserProfile - Forbidden, user may not have access");
-        return false;
-      }
-      const errorRes = await req.text();
-      throw new Error(errorRes || `Failed to update profile (${req.status})`);
-    }
-
-    // Backend returns text response for profile updates
-    const response = await req.text();
-    console.log('updateUserProfile - Profile update response:', response);
     
-    return true;
+    // Use userId-specific endpoint if provided, otherwise use profile endpoint
+    const endpoint = userId ? `/users/${userId}` : '/users/profile';
+    
+    // Check if we have an avatar file to upload
+    if (profileData.avatar && profileData.avatar instanceof File) {
+      // Use FormData for file upload
+      const formData = new FormData();
+      
+      // Add text fields
+      if (profileData.fname) formData.append('fname', profileData.fname);
+      if (profileData.lname) formData.append('lname', profileData.lname);
+      if (profileData.bio) formData.append('bio', profileData.bio);
+      if (profileData.phone) formData.append('phone', profileData.phone);
+      if (profileData.address) formData.append('address', profileData.address);
+      
+      // Add avatar file
+      formData.append('avatar', profileData.avatar);
+      
+      console.log('updateUserProfile - Uploading with FormData including avatar');
+      
+      const req = await fetch(`${BASEURL}${endpoint}`, {
+        method: "PATCH",
+        headers: {
+          "authorization": `Bearer ${token}`
+          // Don't set Content-Type for FormData, browser will set it with boundary
+        },
+        body: formData
+      });
+
+      if (!req.ok) {
+        if (req.status === 401) {
+          console.warn("updateUserProfile - Unauthorized, token may be expired");
+          return false;
+        }
+        if (req.status === 403) {
+          console.warn("updateUserProfile - Forbidden, user may not have access");
+          return false;
+        }
+        const errorRes = await req.text();
+        throw new Error(errorRes || `Failed to update profile (${req.status})`);
+      }
+
+      // Backend may return text or JSON response
+      const response = await req.text();
+      console.log('updateUserProfile - Profile update response:', response);
+      
+      return true;
+    } else {
+      // No file upload, use regular JSON request  
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { avatar, ...updateData } = profileData;
+      
+      const req = await fetch(`${BASEURL}${endpoint}`, {
+        method: "PATCH",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!req.ok) {
+        if (req.status === 401) {
+          console.warn("updateUserProfile - Unauthorized, token may be expired");
+          return false;
+        }
+        if (req.status === 403) {
+          console.warn("updateUserProfile - Forbidden, user may not have access");
+          return false;
+        }
+        const errorRes = await req.text();
+        throw new Error(errorRes || `Failed to update profile (${req.status})`);
+      }
+
+      // Backend may return text or JSON response
+      const response = await req.text();
+      console.log('updateUserProfile - Profile update response:', response);
+      
+      return true;
+    }
   } catch (error: unknown) {
     if (isError(error)) {
       console.error("Failed to update user profile", error.message);

@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Edit, Camera, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { updateUserProfile } from "@/services/common";
+import { updateUserProfile, UserProfileUpdate } from "@/services/common";
 
 const UserProfile = () => {
   const { user, refreshUser } = useUser();
@@ -19,6 +19,7 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [bio, setBio] = useState("");
   const [profileImage, setProfileImage] = useState("");
+  const [profileFile, setProfileFile] = useState<File | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -28,14 +29,20 @@ const UserProfile = () => {
     if (user) {
       setFirstName(user.fname || "");
       setLastName(user.lname || "");
-      // Set bio with a user-specific default if none exists
-      setBio(user.bio || `${user.fname || 'User'} - Passionate learner exploring new technologies and building amazing projects!`);
+      // Set bio - use existing bio or leave empty for new users
+      setBio(user.bio || "");
+      // Set current avatar if available
+      setProfileImage(user.avatar || user.profileImage || "");
     }
   }, [user]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Store the file for upload
+      setProfileFile(file);
+      
+      // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         setProfileImage(e.target?.result as string);
@@ -49,21 +56,36 @@ const UserProfile = () => {
 
     setIsLoading(true);
     try {
-      const updateData = {
+      const updateData: UserProfileUpdate = {
         fname: firstName,
         lname: lastName,
         bio: bio
       };
 
-      console.log("Updating profile with:", updateData);
+      // Add avatar if user selected a new image
+      if (profileFile) {
+        updateData.avatar = profileFile;
+      }
 
-      const success = await updateUserProfile(updateData);
+      console.log("Updating profile with:", updateData);
+      console.log("Profile file to upload:", profileFile);
+
+      const success = await updateUserProfile(updateData, user.id);
+      console.log("Profile update result:", success);
 
       if (success) {
-        // Refresh user data to get latest profile
-        await refreshUser();
+        console.log("Profile update successful, refreshing user data...");
         
+        // Wait a moment for backend to process, then refresh user data
+        setTimeout(async () => {
+          await refreshUser();
+          console.log("User data refreshed after avatar upload");
+        }, 500);
+        
+        // Clear the local states immediately
         setIsEditingProfile(false);
+        setProfileFile(null); // Clear the file after successful upload
+        
         toast.success("Profile updated successfully!");
       } else {
         toast.error("Failed to update profile. Please try again.");
@@ -80,9 +102,9 @@ const UserProfile = () => {
     fileInputRef.current?.click();
   };
 
-  // Get display bio - use current bio state during editing, otherwise user bio or default
+  // Get display bio - use current bio state during editing, otherwise user bio or empty
   const displayBio = isEditingProfile ? bio : (
-    user?.bio || `${user?.fname || 'User'} - Passionate learner exploring new technologies and building amazing projects!`
+    user?.bio || "Tell us about yourself in your profile settings!"
   );
 
   return (

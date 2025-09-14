@@ -12,6 +12,8 @@ export interface User {
   role: UserRole;
   address?: string;
   bio?: string;
+  avatar?: string;
+  profileImage?: string;
   createdAt: string;
   updatedAt: string;
 }

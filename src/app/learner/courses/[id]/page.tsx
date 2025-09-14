@@ -18,7 +18,9 @@ import {
   ArrowLeft,
   ArrowRight,
   FileText,
-  Video
+  Video,
+  ExternalLink,
+  Download
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -52,23 +54,36 @@ const CourseMedia = ({ mediaUrl, title }: CourseMediaProps) => {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <FileText className="h-4 w-4" />
-          <span>PDF Document</span>
+          <FileText className="h-4 w-4 text-red-600" />
+          <span className="font-medium">PDF Document</span>
         </div>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
           <iframe
-            src={mediaUrl}
+            src={`${mediaUrl}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`}
             title={title}
-            className="w-full h-96 md:h-[500px]"
+            className="w-full h-96 md:h-[600px] border-0"
             loading="lazy"
           />
-        </div>
-        <div className="text-center">
-          <Button variant="outline" size="sm" asChild>
-            <a href={mediaUrl} target="_blank" rel="noopener noreferrer">
-              Open PDF in New Tab
-            </a>
-          </Button>
+          <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-red-600" />
+              <span className="text-sm font-medium text-slate-700">{title}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" asChild>
+                <a href={mediaUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4 mr-1" />
+                  Open in New Tab
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href={mediaUrl} download>
+                  <Download className="h-4 w-4 mr-1" />
+                  Download
+                </a>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );

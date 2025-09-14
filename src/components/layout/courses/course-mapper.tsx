@@ -18,6 +18,11 @@ interface EnrollmentData {
   progress: number;
 }
 
+interface Enrollment {
+  courseId: string;
+  // Add other properties as needed
+}
+
 interface CourseMapperProps {
   onStatsUpdate?: () => void; // New prop to trigger parent stats refresh
 }
@@ -75,7 +80,7 @@ const CourseMapper = ({ onStatsUpdate }: CourseMapperProps = {}) => {
       const enrollmentData: EnrollmentData[] = [];
       
       // Get progress for each enrolled course
-      for (const enrollment of userEnrollments) {
+      for (const enrollment of userEnrollments as Enrollment[]) {
         try {
           const progress = await getCourseProgress(enrollment.courseId);
           enrollmentData.push({

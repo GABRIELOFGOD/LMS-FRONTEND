@@ -160,21 +160,43 @@ const MediaUpload = ({ value, onChange, disabled }: MediaUploadProps) => {
                 controls
               />
             ) : mediaType === 'pdf' ? (
-              <div className="w-full h-full flex flex-col">
-                <iframe
-                  src={preview}
-                  className="w-full flex-1 border-0"
-                  title="PDF Preview"
-                />
-                <div className="p-2 bg-slate-200 text-center">
-                  <a 
-                    href={preview} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Open PDF in new tab
-                  </a>
+              <div className="w-full h-full flex flex-col bg-white">
+                <div className="flex-1 min-h-0">
+                  <iframe
+                    src={`${preview}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`}
+                    className="w-full h-full border-0"
+                    title="PDF Preview"
+                    style={{ minHeight: '400px' }}
+                  />
+                </div>
+                <div className="p-3 bg-slate-100 border-t border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-red-600" />
+                    <span className="text-sm font-medium text-slate-700">PDF Document</span>
+                    {selectedFile && (
+                      <span className="text-xs text-slate-500">
+                        ({(selectedFile.size / (1024 * 1024)).toFixed(1)} MB)
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a 
+                      href={preview} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                    >
+                      Open in new tab
+                    </a>
+                    <span className="text-slate-300">|</span>
+                    <a 
+                      href={preview} 
+                      download
+                      className="text-sm text-green-600 hover:text-green-800 font-medium hover:underline"
+                    >
+                      Download
+                    </a>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -213,16 +235,25 @@ const MediaUpload = ({ value, onChange, disabled }: MediaUploadProps) => {
           onDrop={handleDrop}
           onClick={() => !disabled && fileInputRef.current?.click()}
         >
-          <div className="flex items-center justify-center gap-4 mb-3">
-            <Video className="h-8 w-8 text-slate-400" />
-            <span className="text-slate-400">or</span>
-            <FileText className="h-8 w-8 text-slate-400" />
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="flex flex-col items-center gap-1">
+              <Video className="h-8 w-8 text-blue-500" />
+              <span className="text-xs text-slate-500">Video</span>
+            </div>
+            <span className="text-slate-400 font-semibold">or</span>
+            <div className="flex flex-col items-center gap-1">
+              <FileText className="h-8 w-8 text-red-500" />
+              <span className="text-xs text-slate-500">PDF</span>
+            </div>
           </div>
-          <p className="text-sm text-slate-600 mb-1">
+          <p className="text-sm text-slate-600 mb-2 font-medium">
             Drag and drop a video or PDF file here, or click to browse
           </p>
-          <p className="text-xs text-slate-500">
-            Videos: MP4, MOV, AVI • PDFs: PDF files (Max 500MB each)
+          <p className="text-xs text-slate-500 mb-1">
+            Videos: MP4, MOV, AVI, WebM • PDFs: PDF documents
+          </p>
+          <p className="text-xs text-slate-400">
+            Maximum file size: 500MB
           </p>
         </div>
       )}
@@ -324,12 +355,27 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
         if (response?.message) toast.success(response.message);
         
       } else if (editingId) {
-        // Handle update - separate video upload if needed
+        // Handle update - separate media upload if needed
         if (values.video instanceof File) {
-          // If there's a new video file, upload it separately
+          // If there's a new media file, upload it separately
+          // Note: Using uploadVideo for both videos and PDFs since backend only accepts /chapters/{id}/video endpoint
           try {
-            const videoResponse = await uploadVideo(editingId, values.video);
-            if (videoResponse?.message) toast.success("Video uploaded successfully");
+            // Use uploadVideo for both videos and PDFs since backend only accepts /chapters/{id}/video
+            const mediaResponse = await uploadVideo(editingId, values.video);
+            
+            // Show appropriate success message
+            const isVideo = values.video.type.startsWith('video/') || /\.(mp4|webm|ogg|mov|avi)$/i.test(values.video.name);
+            const isPDF = values.video.type === 'application/pdf' || values.video.name.toLowerCase().endsWith('.pdf');
+            
+            if (mediaResponse?.message) {
+              if (isPDF) {
+                toast.success("PDF uploaded successfully");
+              } else if (isVideo) {
+                toast.success("Video uploaded successfully");
+              } else {
+                toast.success("Media uploaded successfully");
+              }
+            }
             
             // Then update the chapter name if it changed
             const currentChapter = chapters.find(c => c.id === editingId);
@@ -338,7 +384,7 @@ const ChapterForm = ({ initialData, courseId }: ChapterFormProps) => {
                 name: values.name
               });
             } else {
-              response = videoResponse;
+              response = mediaResponse;
             }
           } catch (error) {
             throw error;

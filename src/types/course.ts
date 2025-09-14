@@ -55,6 +55,11 @@ export interface AddChapterResponse {
   chapter: Chapter;
 }
 
+export interface RestoreCourseResponse {
+  message: string;
+  course?: Course;
+}
+
 export interface Course {
   id: string;
   publish: boolean;
@@ -63,6 +68,7 @@ export interface Course {
   price?: number;
   imageUrl?: string;
   isFree?: boolean;
+  isDeleted?: boolean; // Add support for soft delete status
   createdAt: string;
   updatedAt: string;
   chapters: Chapter[];

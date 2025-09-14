@@ -2,23 +2,39 @@
 
 import { Button } from "@/components/ui/button";
 import { Course } from "@/types/course";
-import { Edit, Eye, EyeOff, Users, ImageIcon } from "lucide-react";
+import { Edit, Eye, EyeOff, Users, Trash2, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useCourse } from "@/hooks/useCourse";
 import { toast } from "sonner";
+import { useStats } from "@/context/stats-context";
 
 const AdminCourseCard = ({
   course,
-  onCourseUpdate
+  onCourseUpdate,
+  onCourseDelete
 }: { 
   course: Course;
   onCourseUpdate?: () => void;
+  onCourseDelete?: (courseId: string) => void;
 }) => {
   const [showEdit, setShowEdit] = useState<boolean>(false);
   const [isPublishing, setIsPublishing] = useState<boolean>(false);
-  const { publishCourse } = useCourse();
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const { publishCourse, deleteCourse } = useCourse();
+  const { refreshStats } = useStats();
 
   const handlePublishToggle = async () => {
     setIsPublishing(true);
@@ -53,6 +69,66 @@ const AdminCourseCard = ({
       setIsPublishing(false);
     }
   };
+
+  const handleDeleteCourse = async () => {
+    setIsDeleting(true);
+    try {
+      console.log('AdminCourseCard - Deleting course:', course.id);
+      await deleteCourse(course.id);
+      
+      toast.success('Course moved to deleted items! All student enrollments will be automatically cleaned up.');
+      
+      // Use optimistic update if available, otherwise refetch all courses
+      if (onCourseDelete) {
+        onCourseDelete(course.id); // Remove from local state immediately
+      } else if (onCourseUpdate) {
+        onCourseUpdate(); // Fallback to refetching all courses
+      } else {
+        // Last resort: reload the page
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+      
+      // Refresh stats to update course counts and user statistics
+      refreshStats();
+    } catch (error) {
+      console.error("AdminCourseCard - Delete error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      
+      // Provide specific error messages based on common issues
+      if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
+        toast.error("Authentication failed. Please log in again.");
+      } else if (errorMessage.includes("404")) {
+        toast.error("Course not found or delete endpoint not available.");
+      } else if (errorMessage.includes("405")) {
+        toast.error("Delete method not supported. Please check the API documentation.");
+      } else if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
+        toast.error("You don't have permission to delete this course.");
+      } else if (errorMessage.includes("500")) {
+        toast.error("Server error occurred. Please try again later.");
+      } else {
+        toast.error(`Failed to delete course: ${errorMessage}`);
+      }
+      
+      // Log detailed error information for debugging
+      console.error("Detailed error information:", {
+        error,
+        courseId: course.id,
+        errorMessage,
+        timestamp: new Date().toISOString()
+      });
+      
+      // If optimistic delete was used, we might want to refetch to ensure consistency
+      if (onCourseDelete && onCourseUpdate) {
+        console.log("Delete failed after optimistic update, refetching courses...");
+        onCourseUpdate();
+      }
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
   
   return (
     <div
@@ -75,25 +151,40 @@ const AdminCourseCard = ({
             onClick={handlePublishToggle}
             disabled={isPublishing}
           >
-            {course.publish ? <EyeOff size={12} /> : <Eye size={12} />}
+            {isPublishing ? <Loader2 size={12} className="animate-spin" /> : (course.publish ? <EyeOff size={12} /> : <Eye size={12} />)}
             <p className="my-auto">
               {isPublishing ? "..." : (course.publish ? "Unpublish" : "Publish")}
+            </p>
+          </Button>
+          <Button 
+            size={"sm"} 
+            variant="destructive"
+            className="flex gap-1 text-xs"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+            <p className="my-auto">
+              {isDeleting ? "..." : "Delete"}
             </p>
           </Button>
         </div>
       )}
       <div className="h-[150px] md:h-[200px] w-full relative rounded-t-xl overflow-hidden">
-        {course.imageUrl ?
-        (<Image
-          src={course.imageUrl}
-          alt="Course image"
-          fill
-          className="object-fill w-full h-full absolute"
-        />) : 
-        (
-          <div className="h-full w-full justify-center items-center flex text-gray-300 animate-pulse">
-            <ImageIcon size={40} className="md:size-[50px]" />
-          </div>
+        {course.imageUrl ? (
+          <Image
+            src={course.imageUrl}
+            alt="Course image"
+            fill
+            className="object-fill w-full h-full absolute"
+          />
+        ) : (
+          <Image
+            src="/images/student-learning.jpg"
+            alt="Course image"
+            fill
+            className="object-fill w-full h-full absolute opacity-70"
+          />
         )}
       </div>
       <div className="p-2 md:p-3">
@@ -117,6 +208,36 @@ const AdminCourseCard = ({
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move course to deleted items?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will move the course &quot;{course.title}&quot; to your deleted courses archive.
+              The course will no longer be visible to students, but you can restore it later if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCourse}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Move to Deleted"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

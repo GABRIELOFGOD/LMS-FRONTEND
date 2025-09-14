@@ -31,10 +31,11 @@ const MyCourseCard = ({
         <div className="flex-[1] flex flex-col gap-2">
           <div className={`h-full w-full bg-primary rounded-md ${isCompleted ? "bg-green-500" : ""}`}>
             <Image
-              src={ImagePlaceholder}
+              src={course.imageUrl || ImagePlaceholder}
               alt={course.title}
               width={100}
               height={100}
+              className="w-full h-full object-cover rounded-md"
             />
           </div>
         </div>

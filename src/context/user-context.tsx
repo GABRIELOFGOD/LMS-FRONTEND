@@ -67,6 +67,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       
       if (freshUserData && freshUserData.fname) {
         console.log('UserContext - Fresh user data retrieved:', freshUserData);
+        
+        // Clean up any dummy bio data from the backend
+        if (freshUserData.bio && (
+          freshUserData.bio.includes('Passionate learner exploring new technologies') ||
+          freshUserData.bio.includes('building amazing projects')
+        )) {
+          console.log('UserContext - Removing dummy bio data');
+          freshUserData.bio = '';
+        }
+        
         // Update localStorage with fresh data
         localStorage.setItem("user", JSON.stringify(freshUserData));
         setUser(freshUserData as User);
@@ -93,9 +103,22 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             email: userData.email || '',
             fname: userData.fname || userData.firstName || '', // Don't default to 'Learner' if we have stored data
             lname: userData.lname || userData.lastName || '',
+            bio: userData.bio || '',
+            avatar: userData.avatar || '',
+            profileImage: userData.profileImage || userData.avatar || '',
             createdAt: userData.createdAt || new Date().toISOString(),
             updatedAt: userData.updatedAt || new Date().toISOString()
           };
+          
+          // Clean up any dummy bio data from stored data
+          if (userData.bio && (
+            userData.bio.includes('Passionate learner exploring new technologies') ||
+            userData.bio.includes('building amazing projects')
+          )) {
+            console.log('UserContext - Removing dummy bio data from stored data');
+            userData.bio = '';
+            localStorage.setItem("user", JSON.stringify(userData)); // Update localStorage
+          }
           
           // Only default to 'Learner' if we have no first name at all
           if (!userData.fname && !originalData.firstName) {
@@ -111,6 +134,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             email: '',
             fname: 'Learner',
             lname: '',
+            bio: '',
+            avatar: '',
+            profileImage: '',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           };
@@ -118,11 +144,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       } else {
         console.log('UserContext - No stored user data, creating minimal user');
         userData = {
-          id: 'unknown', 
+          id: 'unknown',
           role: 'student',
           email: '',
           fname: 'Learner',
           lname: '',
+          bio: '',
+          avatar: '',
+          profileImage: '',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
