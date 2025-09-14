@@ -6,8 +6,7 @@ import {
   Users,
   BookOpen,
   Globe,
-  Shield,
-  GraduationCap
+  Shield
 } from 'lucide-react';
 
 const Benefits = () => {
@@ -16,43 +15,7 @@ const Benefits = () => {
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-16">
           <Badge className="mb-6 bg-blue-100 text-blue-800 hover:bg-blue-100">Why Online Learning</Badge>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-8">
-            Benefits of Our
-            <span className="text-blue-600"> Online Learning Platform</span>
-          </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Experience the transformative power of digital education designed specifically for fact-checking and media literacy.
-          </p>
-        </div>
-
-        <div className="space-y-20">
-          {/* Interactive Hub Diagram */}
-          <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl border border-gray-200 dark:border-gray-700 max-w-4xl mx-auto">
-            {/* Central Hub */}
-            <div className="text-center mb-12">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-8 text-white mx-auto max-w-md">
-                <GraduationCap className="h-16 w-16 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold mb-3">Benefits of Online Learning</h3>
-                <p className="text-blue-100">Central platform connecting all learning advantages</p>
-              </div>
-            </div>
-
-            {/* Benefit Nodes Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-3 text-white flex-shrink-0">
-                  <Users className="h-6 w-6" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Stronger Collaboration</h4>
-                  <p className="text-gray-600 dark:text-gray-300 text-xs">Between Teachers</p>
-                </div>
-              </div>
-
-              {/* Add more benefit nodes here */}
-              {/* ... */}
-            </div>
-          </div>
+          
 
           {/* Detailed Benefits with Research Image */}
           <div className="grid lg:grid-cols-2 gap-16 items-start mt-20">

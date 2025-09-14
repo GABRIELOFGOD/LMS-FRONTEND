@@ -170,7 +170,7 @@ const Footer = () => {
             
             <div className="flex flex-col md:flex-row items-center gap-1 text-blue-200 text-xs text-center">
               <span>Powered by</span>
-              <span className="font-semibold text-white">Brain Builders Youth Development Initiative</span>
+              <span className="font-semibold text-white">BBYDI TECH TEAM</span>
             </div>
           </div>
         </div>
