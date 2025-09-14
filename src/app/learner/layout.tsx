@@ -3,6 +3,7 @@
 import LearnerHeader from "@/components/layout/learner/learner-header";
 import LearnerSidebar from "@/components/layout/learner/learner-sidebar";
 import LearnerNavbar from "@/components/layout/learner/learner-navbar";
+import Footer from "@/components/layout/footer";
 import { ReactNode, useEffect, useState } from "react";
 import { useUser } from "@/context/user-context";
 import { UserRole } from "@/types/user";
@@ -130,6 +131,9 @@ const LearnerLayout = ({
           <div className="flex-1 overflow-auto px-3 md:px-5">
             {children}
           </div>
+          
+          {/* Footer */}
+          <Footer />
         </div>
       </div>
     </div>
