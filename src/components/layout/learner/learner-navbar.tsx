@@ -30,7 +30,9 @@ const LearnerNavbar = () => {
   return (
     <div className="shadow-sm bg-background border-b relative">
       <div className="w-full px-3 py-4 flex justify-between items-center container md:px-0 mx-auto">
-        <Logo />
+        <div className="bg-white rounded-lg p-1.5 shadow-lg">
+          <Logo />
+        </div>
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-10 my-auto">
