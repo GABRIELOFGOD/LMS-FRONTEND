@@ -66,13 +66,13 @@ const TitleForm = ({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-lg p-6">
-      <div className="flex items-center justify-between font-medium mb-4">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Course Title</h3>
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-lg p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 font-medium mb-4">
+        <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">Course Title</h3>
         <Button
           variant="ghost"
           onClick={toggleEdit}
-          className="font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+          className="font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700 w-full sm:w-auto"
         >
           {isEditing ? (
             <span className="text-slate-600 dark:text-slate-300">Cancel</span>
@@ -86,7 +86,7 @@ const TitleForm = ({
       </div>
       {!isEditing && (
         <div className="bg-slate-50 dark:bg-slate-700 rounded-md p-3 border border-slate-200 dark:border-slate-600">
-          <p className="text-sm text-slate-700 dark:text-slate-200 font-medium">
+          <p className="text-sm sm:text-base text-slate-700 dark:text-slate-200 font-medium break-words">
             {title || "No title set"}
           </p>
         </div>
@@ -106,7 +106,7 @@ const TitleForm = ({
                     <Input
                       disabled={isSubmitting}
                       placeholder="e.g Digital Management"
-                      className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600"
+                      className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-sm sm:text-base"
                       {...field}
                     />
                   </FormControl>
@@ -114,11 +114,12 @@ const TitleForm = ({
                 </FormItem>
               )}
             />
-            <div className="flex items-center gap-x-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2">
               <Button
                 disabled={!isValid || isSubmitting}
                 type="submit"
                 size="sm"
+                className="w-full sm:w-auto"
               >
                 {isSubmitting ? (
                   <div className="flex gap-2 items-center">

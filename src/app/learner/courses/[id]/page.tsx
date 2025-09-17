@@ -33,6 +33,64 @@ interface CourseMediaProps {
 const CourseMedia = ({ mediaUrl, title }: CourseMediaProps) => {
   if (!mediaUrl) return null;
 
+  // Convert URLs to embeddable format
+  const convertToEmbeddableUrl = (url: string): string => {
+    const trimmedUrl = url.trim();
+    
+    // If it's already an embed URL, return as-is
+    if (trimmedUrl.includes('/embed/') || trimmedUrl.includes('/preview') || trimmedUrl.includes('player.vimeo.com')) {
+      return trimmedUrl;
+    }
+    
+    // YouTube URLs
+    if (trimmedUrl.includes('youtube.com/watch')) {
+      const videoId = trimmedUrl.split('v=')[1]?.split('&')[0];
+      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+    } else if (trimmedUrl.includes('youtu.be/')) {
+      const videoId = trimmedUrl.split('youtu.be/')[1]?.split('?')[0];
+      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    // Vimeo URLs
+    else if (trimmedUrl.includes('vimeo.com/')) {
+      const videoId = trimmedUrl.split('vimeo.com/')[1]?.split('?')[0];
+      if (videoId) return `https://player.vimeo.com/video/${videoId}`;
+    }
+    
+    // Google Drive URLs - Use direct download format
+    else if (trimmedUrl.includes('drive.google.com')) {
+      if (trimmedUrl.includes('/file/d/')) {
+        const fileId = trimmedUrl.split('/file/d/')[1]?.split('/')[0];
+        if (fileId) return `https://drive.google.com/uc?export=download&id=${fileId}`;
+      } else if (trimmedUrl.includes('id=')) {
+        const fileId = trimmedUrl.split('id=')[1]?.split('&')[0];
+        if (fileId) return `https://drive.google.com/uc?export=download&id=${fileId}`;
+      }
+    }
+    
+    // Dropbox URLs
+    else if (trimmedUrl.includes('dropbox.com')) {
+      // Convert dropbox share link to embed format
+      if (trimmedUrl.includes('?dl=0')) {
+        return trimmedUrl.replace('?dl=0', '?raw=1');
+      } else if (!trimmedUrl.includes('raw=1')) {
+        const separator = trimmedUrl.includes('?') ? '&' : '?';
+        return `${trimmedUrl}${separator}raw=1`;
+      }
+    }
+    
+    // For direct video links or other URLs, return as-is
+    return trimmedUrl;
+  };
+
+  // Check if URL can be embedded in iframe
+  const canEmbedInIframe = (url: string): boolean => {
+    // Google Drive cannot be embedded due to CSP restrictions
+    if (url.includes('drive.google.com')) return false;
+    // Most other services allow embedding
+    return true;
+  };
+
   const getMediaType = (url: string) => {
     const lower = url.split('?')[0].toLowerCase();
     
@@ -41,14 +99,28 @@ const CourseMedia = ({ mediaUrl, title }: CourseMediaProps) => {
     }
     
     if (/\.(mp4|webm|ogg|mov|avi)$/i.test(lower) || url.includes('video/')) {
-      return 'video';
+      return 'video-file';
     }
     
-    // Default to video for unknown types
-    return 'video';
+    // Check if it's a video URL (YouTube, Vimeo, etc.)
+    if (url.includes('http') || url.includes('youtube.com') || url.includes('vimeo.com') || url.includes('drive.google.com') || url.includes('dropbox.com')) {
+      return 'video-url';
+    }
+    
+    // Default to video URL for unknown types
+    return 'video-url';
   };
 
+  const embeddableUrl = convertToEmbeddableUrl(mediaUrl);
   const mediaType = getMediaType(mediaUrl);
+
+  const getPlatformName = (url: string): string => {
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+    if (url.includes('vimeo.com')) return 'Vimeo';
+    if (url.includes('drive.google.com')) return 'Google Drive';
+    if (url.includes('dropbox.com')) return 'Dropbox';
+    return 'Video Content';
+  };
 
   if (mediaType === 'pdf') {
     return (
@@ -137,23 +209,90 @@ const CourseMedia = ({ mediaUrl, title }: CourseMediaProps) => {
     );
   }
 
+  // Handle video files vs video URLs
+  if (mediaType === 'video-file') {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Video className="h-4 w-4" />
+          <span>Video File</span>
+        </div>
+        <div className="aspect-video bg-black rounded-lg overflow-hidden">
+          <video
+            controls
+            playsInline
+            preload="metadata"
+            className="w-full h-full"
+            src={mediaUrl}
+          >
+            <source src={mediaUrl} />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle video URLs (YouTube, Vimeo, Google Drive, Dropbox, etc.)
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Video className="h-4 w-4" />
-        <span>Video Content</span>
+        <span>{getPlatformName(mediaUrl)}</span>
       </div>
-      <div className="aspect-video bg-black rounded-lg overflow-hidden">
-        <video
-          controls
-          playsInline
-          preload="metadata"
-          className="w-full h-full"
-          src={mediaUrl}
-        >
-          <source src={mediaUrl} />
-          Your browser does not support the video tag.
-        </video>
+      
+      {canEmbedInIframe(mediaUrl) ? (
+        <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden">
+          <iframe
+            src={embeddableUrl}
+            title={title}
+            className="w-full h-full border-0"
+            allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+            loading="lazy"
+          />
+        </div>
+      ) : (
+        // Special handling for Google Drive and other non-embeddable content
+        <div className="aspect-video bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="text-center p-6 max-w-md">
+            <div className="p-4 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Video className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {getPlatformName(mediaUrl)} Content
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {mediaUrl.includes('drive.google.com') 
+                ? 'This Google Drive content will open in a new tab for you to view.'
+                : 'This content will open in a new tab for viewing.'
+              }
+            </p>
+            <Button asChild className="inline-flex items-center gap-2">
+              <a href={mediaUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4" />
+                Open Content
+              </a>
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+        <div className="flex items-center gap-2">
+          <Video className="h-4 w-4 text-blue-600" />
+          <span className="text-sm font-medium text-slate-700">{getPlatformName(mediaUrl)}</span>
+          <span className="text-xs text-slate-500 max-w-xs truncate">
+            {mediaUrl}
+          </span>
+        </div>
+        <Button variant="outline" size="sm" asChild>
+          <a href={mediaUrl} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Open in new tab
+          </a>
+        </Button>
       </div>
     </div>
   );
