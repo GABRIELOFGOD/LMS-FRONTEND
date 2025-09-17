@@ -365,7 +365,7 @@ export const useCourse = () => {
 
 const addChapter = async (
     courseId: string,
-    { name, video }: { name: string; video?: File | null }
+    { name, video }: { name: string; video?: File | string | null }
   ): Promise<AddChapterResponse> => {
     const token = localStorage.getItem("token");
 
@@ -374,9 +374,13 @@ const addChapter = async (
     formData.append("courseId", courseId);
     
     if (video) {
-      // Always use "video" field name since backend expects this field
-      // The backend should handle both video and PDF files at this field
-      formData.append("video", video);
+      if (video instanceof File) {
+        // File upload - always use "video" field name since backend expects this field
+        formData.append("video", video);
+      } else if (typeof video === 'string') {
+        // Video URL - send as regular form field
+        formData.append("videoUrl", video);
+      }
     }
     
     try {
@@ -392,7 +396,7 @@ const addChapter = async (
       if (!req.ok) {
         // Provide more helpful error messages
         let errorMessage = res.message || 'Failed to create chapter';
-        if (video && video.type === 'application/pdf') {
+        if (video instanceof File && video.type === 'application/pdf') {
           errorMessage += ' (Note: Make sure your backend accepts PDF files in the "video" field)';
         }
         throw new Error(errorMessage);
@@ -405,40 +409,64 @@ const addChapter = async (
 
   const updateChapter = async (
     chapterId: string,
-    { name, video }: { name: string; video?: File | null }
+    { name, video }: { name: string; video?: File | string | null }
   ): Promise<AddChapterResponse> => {
     const token = localStorage.getItem("token");
 
-    const formData = new FormData();
-    formData.append("name", name);
-    
-    // Only append media if it exists and is a File
+    // Handle File uploads vs URL strings differently
     if (video instanceof File) {
-      // Always use "video" field name since backend expects this field
+      // Use FormData for file uploads
+      const formData = new FormData();
+      formData.append("name", name);
       formData.append("video", video);
-    }
-    
-    try {
-      const req = await fetch(`${BASEURL}/chapters/${chapterId}`, {
-        method: "PATCH",
-        headers: {
-          "authorization": `Bearer ${token}`
-        },
-        body: formData,
-      });
+      
+      try {
+        const req = await fetch(`${BASEURL}/chapters/${chapterId}`, {
+          method: "PATCH",
+          headers: {
+            "authorization": `Bearer ${token}`
+          },
+          body: formData,
+        });
 
-      const res = await req.json();
-      if (!req.ok) {
-        // Provide more helpful error messages
-        let errorMessage = res.message || 'Failed to update chapter';
-        if (video && video.type === 'application/pdf') {
-          errorMessage += ' (Note: Make sure your backend accepts PDF files in the "video" field)';
+        const res = await req.json();
+        if (!req.ok) {
+          let errorMessage = res.message || 'Failed to update chapter';
+          if (video.type === 'application/pdf') {
+            errorMessage += ' (Note: Make sure your backend accepts PDF files in the "video" field)';
+          }
+          throw new Error(errorMessage);
         }
-        throw new Error(errorMessage);
+        return res as AddChapterResponse;
+      } catch (error) {
+        throw error;
       }
-      return res as AddChapterResponse;
-    } catch (error) {
-      throw error;
+    } else {
+      // Use JSON for video URLs and name-only updates
+      const body = JSON.stringify({
+        name,
+        ...(typeof video === 'string' && { video })
+      });
+      
+      try {
+        const req = await fetch(`${BASEURL}/chapters/${chapterId}`, {
+          method: "PATCH",
+          headers: {
+            "authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: body,
+        });
+
+        const res = await req.json();
+        if (!req.ok) {
+          const errorMessage = res.message || 'Failed to update chapter';
+          throw new Error(errorMessage);
+        }
+        return res as AddChapterResponse;
+      } catch (error) {
+        throw error;
+      }
     }
   };
 
@@ -449,7 +477,7 @@ const addChapter = async (
     const token = localStorage.getItem("token");
 
     const formData = new FormData();
-    // Always use "video" field name since backend expects /chapters/{id}/video endpoint
+    
     formData.append("video", video);
     
     try {
@@ -796,14 +824,23 @@ const addChapter = async (
       const token = localStorage.getItem("token");
       if (!token) return null;
       
-      const response = await fetch(`${BASEURL}/progress/course/${courseId}`, {
+      // Use the correct endpoint for user progress
+      const response = await fetch(`${BASEURL}/users/progress/${courseId}`, {
         headers: {
           "authorization": `Bearer ${token}`
         }
       });
 
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Progress endpoint might not exist yet, return default progress
+          return { completionPercentage: 0 };
+        }
+        const res = await response.json();
+        throw new Error(res.message);
+      }
+
       const res = await response.json();
-      if (!response.ok) throw new Error(res.message);
       return res;
     } catch (error: unknown) {
       if (isError(error)) {
@@ -811,7 +848,8 @@ const addChapter = async (
       } else {
         console.error("Unknown error", error);
       }
-      return null;
+      // Return default progress instead of null to prevent breaking the UI
+      return { completionPercentage: 0 };
     }
   }
   
