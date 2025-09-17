@@ -4,7 +4,6 @@ import { toast } from "sonner";
 
 export const enrollCourse = async (courseId: string) => {
   try {
-    console.log('enrollCourse - Starting enrollment for course:', courseId);
     const token = localStorage.getItem("token");
     if (!token) {
       throw new Error("Please log in to enroll in courses");
@@ -30,7 +29,6 @@ export const enrollCourse = async (courseId: string) => {
     }
 
     const res = await req.json();
-    console.log('enrollCourse - Enrollment successful:', res);
     toast.success("Successfully enrolled in course!");
     return res;
   } catch (error: unknown) {

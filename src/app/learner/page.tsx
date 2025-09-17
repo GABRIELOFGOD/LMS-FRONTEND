@@ -104,9 +104,7 @@ const LearnerHome = () => {
   const gettingCourse = async () => {
     try {
       setCoursesLoading(true);
-      console.log('LearnerHome - Fetching available courses...');
       const courses = await getAvailableCourses();
-      console.log('LearnerHome - Courses fetched:', courses);
       
       // Ensure courses is an array and contains valid course objects
       if (Array.isArray(courses)) {
@@ -137,8 +135,6 @@ const LearnerHome = () => {
     }
 
     try {
-      console.log('LearnerHome - Processing enrolled courses for display...');
-      
       // Since progress API is not available yet, create course entries with 0% progress
       // This will be updated when backend implements progress tracking
       const progressData = userStats.coursesEnrolled.map((course) => ({
@@ -150,7 +146,6 @@ const LearnerHome = () => {
       }));
 
       setProgressData(progressData);
-      console.log('LearnerHome - Course data prepared for display:', progressData);
     } catch (error) {
       console.error('Failed to prepare course data:', error);
       setProgressData([]);
@@ -165,17 +160,9 @@ const LearnerHome = () => {
 
     try {
       setLoading(true);
-      console.log('LearnerHome - Fetching user stats...');
       const stats = await getUserStats();
       if (stats) {
-        console.log('LearnerHome - Raw stats response:', stats);
-        console.log('LearnerHome - coursesEnrolled length:', stats.coursesEnrolled?.length);
-        console.log('LearnerHome - coursesCompleted length:', stats.coursesCompleted?.length);
-        console.log('LearnerHome - currentStraek:', stats.currentStraek);
-        console.log('LearnerHome - longestStreak:', stats.longestStreak);
-        
         setUserStats(stats);
-        console.log('LearnerHome - Stats loaded successfully');
         
         // Process course data for display 
         fetchRealProgressData();
@@ -196,7 +183,6 @@ const LearnerHome = () => {
   useEffect(() => {
     // Only fetch data when user context is loaded
     if (isLoaded) {
-      console.log('LearnerHome - User context loaded, isLoggedIn:', isLoggedIn);
       // Always fetch courses (public endpoint)
       gettingCourse();
       
@@ -204,7 +190,6 @@ const LearnerHome = () => {
       if (isLoggedIn) {
         fetchUserStats();
       } else {
-        console.log('LearnerHome - User not logged in, skipping stats fetch');
         setLoading(false);
         setProgressData([]); // Clear progress data when not logged in
       }
@@ -296,7 +281,7 @@ const LearnerHome = () => {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 md:gap-6 p-3 md:p-6">
+    <div className="space-y-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

@@ -1,6 +1,5 @@
 "use client";
 
-import LearnerHeader from "@/components/layout/learner/learner-header";
 import LearnerSidebar from "@/components/layout/learner/learner-sidebar";
 import LearnerNavbar from "@/components/layout/learner/learner-navbar";
 import Footer from "@/components/layout/footer";
@@ -23,13 +22,11 @@ const LearnerLayout = ({
   useEffect(() => {
     if (isLoaded) {
       if (!isLoggedIn) {
-        console.log('LearnerLayout - User not logged in, redirecting to login');
         router.push("/login");
         return;
       }
       
       if (user && user.role !== UserRole.STUDENT) {
-        console.log('LearnerLayout - User role mismatch, redirecting to appropriate dashboard');
         // Redirect based on actual role
         switch (user.role) {
           case UserRole.ADMIN:
@@ -70,73 +67,69 @@ const LearnerLayout = ({
   }
   
   return (
-    <div className="h-screen flex flex-col">
-      {/* Learner-specific Navbar at the top */}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top Navigation */}
       <LearnerNavbar />
       
-      {/* Main content area with sidebar and content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Desktop Sidebar */}
-        <div className="hidden md:flex">
-          <LearnerSidebar />
-        </div>
+      {/* Mobile Menu Button */}
+      <div className="md:hidden fixed top-20 left-4 z-40">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsSidebarOpen(true)}
+          className="bg-background shadow-lg border-2"
+        >
+          <Menu size={16} />
+        </Button>
+      </div>
 
-        {/* Mobile Sidebar */}
-        {isSidebarOpen && (
-          <div className="fixed inset-0 z-50 md:hidden">
-            {/* Backdrop */}
-            <div 
-              className="absolute inset-0 bg-black/50" 
-              onClick={() => setIsSidebarOpen(false)}
-            />
-            {/* Sidebar */}
-            <div className="relative w-72 h-full">
-              <LearnerSidebar />
-              {/* Close button */}
+      {/* Mobile Sidebar */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div 
+            className="absolute inset-0 bg-black/60" 
+            onClick={() => setIsSidebarOpen(false)}
+          />
+          <div className="relative w-72 h-full bg-background shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b bg-accent">
+              <h2 className="text-lg font-semibold">Navigation</h2>
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute top-4 right-4 z-10"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                <X size={20} />
+                <X size={18} />
               </Button>
             </div>
+            <LearnerSidebar />
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Mobile Sidebar Toggle + Header */}
-          <div className="md:hidden flex items-center gap-2 p-3 border-b bg-background">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2"
-            >
-              <Menu size={20} />
-            </Button>
-            <div className="flex-1">
-              <LearnerHeader />
+      {/* Main Layout */}
+      <div className="flex flex-1">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block w-72 flex-shrink-0 border-r">
+          <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+            <LearnerSidebar />
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Main Content */}
+          <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+            <div className="max-w-7xl mx-auto">
+              {children}
             </div>
-          </div>
-
-          {/* Desktop Header + Content */}
-          <div className="hidden md:block px-3 md:px-5">
-            <LearnerHeader />
-          </div>
-          
-          {/* Page Content */}
-          <div className="flex-1 overflow-auto px-3 md:px-5">
-            {children}
-          </div>
-          
-          {/* Footer */}
-          <Footer />
+          </main>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
-  )
+  );
 }
+
 export default LearnerLayout;

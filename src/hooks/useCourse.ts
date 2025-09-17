@@ -460,7 +460,7 @@ const addChapter = async (
 
         const res = await req.json();
         if (!req.ok) {
-          let errorMessage = res.message || 'Failed to update chapter';
+          const errorMessage = res.message || 'Failed to update chapter';
           throw new Error(errorMessage);
         }
         return res as AddChapterResponse;
@@ -824,14 +824,23 @@ const addChapter = async (
       const token = localStorage.getItem("token");
       if (!token) return null;
       
-      const response = await fetch(`${BASEURL}/progress/course/${courseId}`, {
+      // Use the correct endpoint for user progress
+      const response = await fetch(`${BASEURL}/users/progress/${courseId}`, {
         headers: {
           "authorization": `Bearer ${token}`
         }
       });
 
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Progress endpoint might not exist yet, return default progress
+          return { completionPercentage: 0 };
+        }
+        const res = await response.json();
+        throw new Error(res.message);
+      }
+
       const res = await response.json();
-      if (!response.ok) throw new Error(res.message);
       return res;
     } catch (error: unknown) {
       if (isError(error)) {
@@ -839,7 +848,8 @@ const addChapter = async (
       } else {
         console.error("Unknown error", error);
       }
-      return null;
+      // Return default progress instead of null to prevent breaking the UI
+      return { completionPercentage: 0 };
     }
   }
   
