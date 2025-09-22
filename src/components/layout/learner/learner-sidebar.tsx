@@ -42,6 +42,7 @@ const LearnerSidebar = () => {
   
   return (
     <div className="bg-accent text-accent-foreground h-full w-full flex flex-col pt-6 px-4 gap-8">
+      {/* Profile section - only visible on desktop */}
       <div className="flex gap-3 items-center">
         <div className="h-10 w-10 bg-border rounded-full overflow-hidden relative flex-shrink-0">
           <Image

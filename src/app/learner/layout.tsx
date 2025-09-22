@@ -3,12 +3,10 @@
 import LearnerSidebar from "@/components/layout/learner/learner-sidebar";
 import LearnerNavbar from "@/components/layout/learner/learner-navbar";
 import Footer from "@/components/layout/footer";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect } from "react";
 import { useUser } from "@/context/user-context";
 import { UserRole } from "@/types/user";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
 
 const LearnerLayout = ({
   children
@@ -17,7 +15,6 @@ const LearnerLayout = ({
 }) => {
   const { user, isLoggedIn, isLoaded } = useUser();
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (isLoaded) {
@@ -70,41 +67,6 @@ const LearnerLayout = ({
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Navigation */}
       <LearnerNavbar />
-      
-      {/* Mobile Menu Button */}
-      <div className="md:hidden fixed top-20 left-4 z-40">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsSidebarOpen(true)}
-          className="bg-background shadow-lg border-2"
-        >
-          <Menu size={16} />
-        </Button>
-      </div>
-
-      {/* Mobile Sidebar */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div 
-            className="absolute inset-0 bg-black/60" 
-            onClick={() => setIsSidebarOpen(false)}
-          />
-          <div className="relative w-72 h-full bg-background shadow-2xl">
-            <div className="flex items-center justify-between p-4 border-b bg-accent">
-              <h2 className="text-lg font-semibold">Navigation</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsSidebarOpen(false)}
-              >
-                <X size={18} />
-              </Button>
-            </div>
-            <LearnerSidebar />
-          </div>
-        </div>
-      )}
 
       {/* Main Layout */}
       <div className="flex flex-1">

@@ -13,9 +13,11 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import { useState } from "react";
+import Image from "next/image";
+import Instructor from "@/assets/hero-fc.png";
 
 const LearnerNavbar = () => {
-  const { refreshUser } = useUser();
+  const { user, refreshUser } = useUser();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -106,6 +108,29 @@ const LearnerNavbar = () => {
         <div className="absolute top-full left-0 right-0 bg-background border-b shadow-lg z-50 md:hidden">
           <div className="container mx-auto px-3 py-4">
             <div className="flex flex-col space-y-4">
+              {/* Mobile Profile Section */}
+              <div className="flex gap-3 items-center p-3 bg-accent rounded-lg border">
+                <div className="h-12 w-12 bg-border rounded-full overflow-hidden relative flex-shrink-0">
+                  <Image
+                    src={Instructor}
+                    alt="Profile Image"
+                    fill
+                    className="object-cover rounded-full"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-base truncate text-accent-foreground">
+                    {user?.fname || "Learner"}
+                  </p>
+                  <p className="text-accent-foreground/70 text-sm font-medium truncate">
+                    {user?.fname ? `${user.fname}'s Dashboard` : "Level 1 learner"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-border"></div>
+
               {/* Navigation Links */}
               <Link 
                 href="/learner" 
