@@ -17,11 +17,11 @@ const Hero = () => {
               Fact-check <span className='text-secondary'>Africa</span>
             </p>
             <p className='leading-tight text-2xl md:text-3xl lg:text-5xl font-extrabold text-white mt-4'>
-              Learn to fact-check information and Aid in the stop of <span className='text-secondary'>Rumor spread</span>
+             Learn to Fact-Check Information and Help Stop the <span className='text-secondary'>Spread of Rumors</span>
             </p>
           </div>
           <p className='text-sm md:text-lg text-white'>
-            Information spread like wild fire, without proper check we can be part of the spread of mis-information, take our free course and learn how to fact-check information before spreading or joining in the spread.
+            Information spreads like wildfire. Equip yourself with the skills to discern fact from fiction and become a guardian of truth in your community.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 md:gap-5 mt-5">
             <Button className="w-full sm:w-auto" asChild>

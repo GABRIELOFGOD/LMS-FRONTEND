@@ -123,11 +123,11 @@ const AboutHero = () => {
             {/* Statistics Row */}
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="text-center">
-                <Counter end={1500} suffix="+" color="text-secondary" />
+                <Counter end={7} suffix="+" color="text-secondary" />
                 <div className="text-white/80 text-xs md:text-sm">Students</div>
               </div>
               <div className="text-center">
-                <Counter end={50} suffix="+" color="text-yellow-400" />
+                <Counter end={4} suffix="+" color="text-yellow-400" />
                 <div className="text-white/80 text-xs md:text-sm">Courses</div>
               </div>
               <div className="text-center">
