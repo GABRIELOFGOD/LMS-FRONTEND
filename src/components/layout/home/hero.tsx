@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 
 import HeroImage from "@/assets/hero-fc.png";
@@ -23,13 +24,18 @@ const Hero = () => {
             Information spread like wild fire, without proper check we can be part of the spread of mis-information, take our free course and learn how to fact-check information before spreading or joining in the spread.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 md:gap-5 mt-5">
-            <Button className="w-full sm:w-auto">Get Started</Button>
+            <Button className="w-full sm:w-auto" asChild>
+              <Link href="/register">Get Started</Link>
+            </Button>
             <Button
               variant={"outline"}
               className="w-full sm:w-auto flex items-center justify-center gap-2"
+              asChild
             >
-              <p>Learn more</p>
-              <ArrowRight className="h-4 w-4" />
+              <Link href="/about">
+                <p>Learn more</p>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
