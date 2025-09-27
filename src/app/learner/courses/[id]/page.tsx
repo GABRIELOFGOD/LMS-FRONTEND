@@ -555,22 +555,31 @@ const LearnerCourseDetails = () => {
 
     try {
       const publishedChapters = course.chapters.filter(ch => ch.isPublished);
+      
+      // Show loading state
+      toast.loading("Marking chapter as complete...", { id: 'chapter-complete' });
+      
       await updateChapterProgress(courseId, currentChapterData.id, publishedChapters.length);
       
-      // Update local progress immediately
+      // Update local progress immediately after API success
       const updatedProgress = getContextProgress(courseId);
       if (updatedProgress) {
         setProgress(updatedProgress.progress);
         
         if (updatedProgress.isCompleted) {
-          toast.success("🎉 Congratulations! You've completed this course!");
+          toast.success("🎉 Congratulations! You've completed this course!", { id: 'chapter-complete' });
         } else {
-          toast.success("Chapter marked as complete!");
+          toast.success("Chapter marked as complete!", { id: 'chapter-complete' });
         }
+      } else {
+        toast.success("Chapter marked as complete!", { id: 'chapter-complete' });
       }
     } catch (error) {
-      console.error("Failed to update progress:", error);
-      toast.error("Failed to update progress");
+      console.error('Failed to mark chapter as complete:', error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to mark chapter as complete. Please try again.",
+        { id: 'chapter-complete' }
+      );
     }
   };
 
