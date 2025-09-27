@@ -1,0 +1,10 @@
+export { CircularProgress } from './circular-progress';
+export { LearnerHeader } from './learner-header';
+export { UserProfile } from './user-profile';
+export { StatsGrid } from './stats-grid';
+export { OverallProgress } from './overall-progress';
+export { LearningProgress } from './learning-progress';
+export { QuickActions } from './quick-actions';
+export { RecentActivity } from './recent-activity';
+export { RecommendedCourses } from './recommended-courses';
+export { AuthenticationRequired } from './authentication-required';

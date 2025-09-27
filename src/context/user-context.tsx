@@ -5,11 +5,33 @@ import { User } from "@/types/user";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { getUserProfile } from "@/services/common";
 
+// interface ChapterProgress {
+//   chapterId: string;
+//   courseId: string;
+//   completed: boolean;
+//   completedAt?: string;
+// }
+
+interface CourseProgress {
+  courseId: string;
+  completedChapters: string[];
+  totalChapters: number;
+  progress: number;
+  isCompleted: boolean;
+  completedAt?: string;
+}
+
 interface userContextType {
   user: User | null;
   isLoaded: boolean;
   isLoggedIn: boolean;
   refreshUser: () => void;
+  // Progress tracking
+  courseProgress: Map<string, CourseProgress>;
+  updateChapterProgress: (courseId: string, chapterId: string, totalChapters: number) => Promise<void>;
+  getCourseProgress: (courseId: string) => CourseProgress | null;
+  refreshProgress: () => void;
+  syncAllProgressToAPI: () => Promise<void>;
 }
 
 const UserContext = createContext<userContextType | undefined>(undefined);
@@ -18,6 +40,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isloaded, setIsLoaded] = useState<boolean>(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [courseProgress, setCourseProgress] = useState<Map<string, CourseProgress>>(new Map());
 
   const getUser = async (retryCount = 0) => {
     const maxRetries = 3;
@@ -192,8 +215,171 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     getUser();
   }
 
+  // Progress tracking functions
+  const updateChapterProgress = async (courseId: string, chapterId: string, totalChapters: number) => {
+    try {
+      console.log('updateChapterProgress - Updating progress:', { courseId, chapterId, totalChapters });
+
+      let updatedProgress: Map<string, CourseProgress>;
+
+      setCourseProgress(prev => {
+        const newProgress = new Map(prev);
+        const existing = newProgress.get(courseId) || {
+          courseId,
+          completedChapters: [],
+          totalChapters,
+          progress: 0,
+          isCompleted: false
+        };
+
+        // Add chapter to completed list if not already there
+        if (!existing.completedChapters.includes(chapterId)) {
+          existing.completedChapters.push(chapterId);
+        }
+
+        // Calculate new progress
+        existing.progress = (existing.completedChapters.length / totalChapters) * 100;
+        existing.isCompleted = existing.completedChapters.length === totalChapters;
+
+        if (existing.isCompleted && !existing.completedAt) {
+          existing.completedAt = new Date().toISOString();
+        }
+
+        newProgress.set(courseId, existing);
+        updatedProgress = newProgress;
+        
+        // Store in localStorage for persistence
+        const progressData = Object.fromEntries(newProgress);
+        localStorage.setItem('courseProgress', JSON.stringify(progressData));
+        
+        return newProgress;
+      });
+
+      // Sync to backend API (single course update)
+      await syncCourseProgressToAPI(courseId, updatedProgress!.get(courseId)!);
+      
+    } catch (error) {
+      console.error('Failed to update chapter progress:', error);
+    }
+  };
+
+  // Single API call to sync course progress
+  const syncCourseProgressToAPI = async (courseId: string, courseProgress: CourseProgress) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      await fetch(`${BASEURL}/users/progress/${courseId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          completedChapters: courseProgress.completedChapters,
+          totalChapters: courseProgress.totalChapters,
+          progress: courseProgress.progress,
+          isCompleted: courseProgress.isCompleted,
+          completedAt: courseProgress.completedAt
+        })
+      });
+
+      console.log('syncCourseProgressToAPI - Progress synced successfully for course:', courseId);
+    } catch (error) {
+      console.error('syncCourseProgressToAPI - Failed to sync progress:', error);
+      // Don't throw - keep local state even if API fails
+    }
+  };
+
+  // Bulk sync all progress to API (useful for initial load or periodic sync)
+  const syncAllProgressToAPI = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || courseProgress.size === 0) return;
+
+      const progressArray = Array.from(courseProgress.values());
+
+      await fetch(`${BASEURL}/users/progress/bulk`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          courseProgress: progressArray
+        })
+      });
+
+      console.log('syncAllProgressToAPI - All progress synced successfully');
+    } catch (error) {
+      console.error('syncAllProgressToAPI - Failed to sync all progress:', error);
+    }
+  };
+
+  const getCourseProgress = (courseId: string): CourseProgress | null => {
+    return courseProgress.get(courseId) || null;
+  };
+
+  const refreshProgress = async () => {
+    try {
+      // Try to load from API first
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await fetch(`${BASEURL}/users/progress`, {
+            headers: {
+              'authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const apiProgressData = await response.json();
+            const progressMap = new Map<string, CourseProgress>();
+            
+            // Convert API response to Map
+            if (Array.isArray(apiProgressData.courseProgress)) {
+              apiProgressData.courseProgress.forEach((course: CourseProgress) => {
+                progressMap.set(course.courseId, course);
+              });
+              
+              setCourseProgress(progressMap);
+              
+              // Update localStorage with API data
+              const progressData = Object.fromEntries(progressMap);
+              localStorage.setItem('courseProgress', JSON.stringify(progressData));
+              
+              console.log('refreshProgress - Loaded progress from API');
+              return;
+            }
+          }
+        } catch (apiError) {
+          console.log('refreshProgress - API unavailable, falling back to localStorage');
+        }
+      }
+
+      // Fallback to localStorage
+      const stored = localStorage.getItem('courseProgress');
+      if (stored) {
+        const progressData = JSON.parse(stored);
+        const progressMap = new Map<string, CourseProgress>();
+        
+        // Properly type the entries
+        Object.entries(progressData).forEach(([key, value]) => {
+          progressMap.set(key, value as CourseProgress);
+        });
+        
+        setCourseProgress(progressMap);
+        console.log('refreshProgress - Loaded progress from localStorage');
+      }
+    } catch (error) {
+      console.error('Failed to load stored progress:', error);
+    }
+  };
+
   useEffect(() => {
     getUser();
+    refreshProgress(); // Load stored progress on mount
   }, []);
   
   return (
@@ -201,7 +387,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       user, 
       isLoaded: isloaded, 
       isLoggedIn,
-      refreshUser 
+      refreshUser,
+      courseProgress,
+      updateChapterProgress,
+      getCourseProgress,
+      refreshProgress,
+      syncAllProgressToAPI
     }}>
       {children}
     </UserContext.Provider>

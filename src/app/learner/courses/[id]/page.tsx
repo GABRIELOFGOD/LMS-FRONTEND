@@ -512,7 +512,7 @@ const LearnerCourseDetails = () => {
   const [progress, setProgress] = useState(0);
 
   const { getACourse, getCourseProgress } = useCourse();
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, updateChapterProgress, getCourseProgress: getContextProgress } = useUser();
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -534,12 +534,43 @@ const LearnerCourseDetails = () => {
       ]);
       
       setCourse(courseData);
-      setProgress(progressData?.completionPercentage || 0);
+      
+      // Check for local progress first, then fallback to API
+      const localProgress = getContextProgress(courseId);
+      if (localProgress) {
+        setProgress(localProgress.progress);
+      } else {
+        setProgress(progressData?.completionPercentage || 0);
+      }
     } catch (error) {
       console.error("Failed to load course data:", error);
       toast.error("Failed to load course details");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleChapterComplete = async () => {
+    if (!course || !currentChapterData) return;
+
+    try {
+      const publishedChapters = course.chapters.filter(ch => ch.isPublished);
+      await updateChapterProgress(courseId, currentChapterData.id, publishedChapters.length);
+      
+      // Update local progress immediately
+      const updatedProgress = getContextProgress(courseId);
+      if (updatedProgress) {
+        setProgress(updatedProgress.progress);
+        
+        if (updatedProgress.isCompleted) {
+          toast.success("🎉 Congratulations! You've completed this course!");
+        } else {
+          toast.success("Chapter marked as complete!");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to update progress:", error);
+      toast.error("Failed to update progress");
     }
   };
 
@@ -575,6 +606,18 @@ const LearnerCourseDetails = () => {
 
   const publishedChapters = course.chapters.filter(ch => ch.isPublished);
   const currentChapterData = publishedChapters[currentChapter];
+  
+  // Helper functions for progress tracking
+  const isChapterCompleted = (chapterId: string): boolean => {
+    const courseProgressData = getContextProgress(courseId);
+    return courseProgressData?.completedChapters.includes(chapterId) || false;
+  };
+
+  const isLastChapter = currentChapter === publishedChapters.length - 1;
+  const isCourseCompleted = () => {
+    const courseProgressData = getContextProgress(courseId);
+    return courseProgressData?.isCompleted || false;
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -649,7 +692,7 @@ const LearnerCourseDetails = () => {
                       <p className="font-medium truncate text-sm">{chapter.name}</p>
                       <p className="text-xs opacity-70">Chapter {index + 1}</p>
                     </div>
-                    {progress > (index / publishedChapters.length) * 100 && (
+                    {isChapterCompleted(chapter.id) && (
                       <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
                     )}
                   </div>
@@ -703,29 +746,79 @@ const LearnerCourseDetails = () => {
               </div>
 
               {/* Navigation - Mobile Optimized */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentChapter(Math.max(0, currentChapter - 1))}
-                  disabled={currentChapter === 0}
-                  className="flex items-center gap-2 w-full sm:w-auto"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Previous Chapter
-                </Button>
-
-                <div className="text-sm text-muted-foreground text-center sm:order-none order-first">
-                  Chapter {currentChapter + 1} of {publishedChapters.length}
+              <div className="space-y-4 pt-4 border-t">
+                {/* Progress Tracking */}
+                <div className="flex items-center justify-center">
+                  {currentChapterData && (
+                    <div className="flex items-center gap-3">
+                      {isLastChapter ? (
+                        // Last chapter - Complete Course button
+                        <Button
+                          onClick={handleChapterComplete}
+                          disabled={isCourseCompleted()}
+                          className={`flex items-center gap-2 ${
+                            isCourseCompleted() 
+                              ? 'bg-green-600 hover:bg-green-600' 
+                              : 'bg-blue-600 hover:bg-blue-700'
+                          }`}
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          {isCourseCompleted() ? 'Course Completed' : 'Complete Course'}
+                        </Button>
+                      ) : (
+                        // Regular chapter - Mark as Complete toggle
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            id={`chapter-${currentChapterData.id}`}
+                            checked={isChapterCompleted(currentChapterData.id)}
+                            onChange={handleChapterComplete}
+                            className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                          />
+                          <label
+                            htmlFor={`chapter-${currentChapterData.id}`}
+                            className={`text-sm font-medium cursor-pointer ${
+                              isChapterCompleted(currentChapterData.id)
+                                ? 'text-green-600'
+                                : 'text-gray-700'
+                            }`}
+                          >
+                            {isChapterCompleted(currentChapterData.id) 
+                              ? '✓ Completed' 
+                              : 'Mark as Complete'
+                            }
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <Button
-                  onClick={() => setCurrentChapter(Math.min(publishedChapters.length - 1, currentChapter + 1))}
-                  disabled={currentChapter === publishedChapters.length - 1}
-                  className="flex items-center gap-2 w-full sm:w-auto"
-                >
-                  Next Chapter
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                {/* Chapter Navigation */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentChapter(Math.max(0, currentChapter - 1))}
+                    disabled={currentChapter === 0}
+                    className="flex items-center gap-2 w-full sm:w-auto"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Previous Chapter
+                  </Button>
+
+                  <div className="text-sm text-muted-foreground text-center sm:order-none order-first">
+                    Chapter {currentChapter + 1} of {publishedChapters.length}
+                  </div>
+
+                  <Button
+                    onClick={() => setCurrentChapter(Math.min(publishedChapters.length - 1, currentChapter + 1))}
+                    disabled={currentChapter === publishedChapters.length - 1}
+                    className="flex items-center gap-2 w-full sm:w-auto"
+                  >
+                    Next Chapter
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

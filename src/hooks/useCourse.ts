@@ -791,11 +791,10 @@ const addChapter = async (
           }
           
           // Check if course is unpublished (optional - you may want to keep these)
-          // Uncomment the next lines if you want to remove enrollments for unpublished courses too
-          // if (course.publish === false) {
-          //   console.log(`filterValidEnrollments - Course ${enrollmentObj.courseId} is unpublished, removing enrollment`);
-          //   continue;
-          // }
+           if (course.publish === false) {
+           console.log(`filterValidEnrollments - Course ${enrollmentObj.courseId} is unpublished, removing enrollment`);
+            continue;
+          }
           
           // Course is valid, keep the enrollment
           validEnrollments.push(enrollment);
@@ -834,7 +833,7 @@ const addChapter = async (
       if (!response.ok) {
         if (response.status === 404) {
           // Progress endpoint might not exist yet, return default progress
-          return { completionPercentage: 0 };
+          return { completionPercentage: 0, completedChapters: [] };
         }
         const res = await response.json();
         throw new Error(res.message);
@@ -849,7 +848,195 @@ const addChapter = async (
         console.error("Unknown error", error);
       }
       // Return default progress instead of null to prevent breaking the UI
-      return { completionPercentage: 0 };
+      return { completionPercentage: 0, completedChapters: [] };
+    }
+  }
+
+  // Mark chapter as complete
+  const markChapterComplete = async (courseId: string, chapterId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+      
+      console.log('markChapterComplete - Marking chapter as complete:', { courseId, chapterId });
+      
+      const response = await fetch(`${BASEURL}/users/progress/${courseId}/chapters/${chapterId}`, {
+        method: "POST",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ completed: true })
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // If endpoint doesn't exist, use fallback approach
+          console.log('markChapterComplete - Progress endpoint not available, using fallback');
+          return await markChapterCompleteFallback(courseId, chapterId);
+        }
+        const res = await response.json().catch(() => ({}));
+        throw new Error(res.message || `Failed to mark chapter as complete (${response.status})`);
+      }
+
+      const res = await response.json();
+      console.log('markChapterComplete - Chapter marked as complete:', res);
+      
+      // Show success message
+      toast.success("Chapter marked as complete!");
+      
+      return res;
+
+    } catch (error: unknown) {
+      if (isError(error)) {
+        console.error("Failed to mark chapter as complete", error.message);
+        toast.error(error.message);
+      } else {
+        console.error("Unknown error marking chapter as complete", error);
+        toast.error("Failed to mark chapter as complete");
+      }
+      throw error;
+    }
+  }
+
+  // Fallback method for chapter completion when backend doesn't have progress API
+  const markChapterCompleteFallback = async (courseId: string, chapterId: string) => {
+    try {
+      // Store completion in localStorage as fallback
+      const storageKey = `chapter_progress_${courseId}`;
+      const existingProgress = JSON.parse(localStorage.getItem(storageKey) || '{"completedChapters": []}');
+      
+      if (!existingProgress.completedChapters.includes(chapterId)) {
+        existingProgress.completedChapters.push(chapterId);
+        existingProgress.lastUpdated = new Date().toISOString();
+        localStorage.setItem(storageKey, JSON.stringify(existingProgress));
+        
+        toast.success("Chapter marked as complete!");
+        console.log('markChapterCompleteFallback - Stored completion locally:', { courseId, chapterId });
+      } else {
+        toast.info("Chapter already marked as complete");
+      }
+      
+      return { 
+        success: true, 
+        completedChapters: existingProgress.completedChapters,
+        message: "Chapter completion stored locally"
+      };
+    } catch (error) {
+      console.error('markChapterCompleteFallback - Error:', error);
+      throw new Error("Failed to store chapter completion");
+    }
+  }
+
+  // Mark course as complete
+  const markCourseComplete = async (courseId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+      
+      console.log('markCourseComplete - Marking course as complete:', courseId);
+      
+      const response = await fetch(`${BASEURL}/users/progress/${courseId}/complete`, {
+        method: "POST",
+        headers: {
+          "authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ completed: true })
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // If endpoint doesn't exist, use fallback approach
+          console.log('markCourseComplete - Course completion endpoint not available, using fallback');
+          return await markCourseCompleteFallback(courseId);
+        }
+        const res = await response.json().catch(() => ({}));
+        throw new Error(res.message || `Failed to mark course as complete (${response.status})`);
+      }
+
+      const res = await response.json();
+      console.log('markCourseComplete - Course marked as complete:', res);
+      
+      // Show success message
+      toast.success("🎉 Congratulations! Course completed!");
+      
+      return res;
+
+    } catch (error: unknown) {
+      if (isError(error)) {
+        console.error("Failed to mark course as complete", error.message);
+        toast.error(error.message);
+      } else {
+        console.error("Unknown error marking course as complete", error);
+        toast.error("Failed to mark course as complete");
+      }
+      throw error;
+    }
+  }
+
+  // Fallback method for course completion when backend doesn't have progress API
+  const markCourseCompleteFallback = async (courseId: string) => {
+    try {
+      // Store completion in localStorage as fallback
+      const storageKey = `course_progress_${courseId}`;
+      const courseProgress = {
+        courseId,
+        completed: true,
+        completionDate: new Date().toISOString(),
+        completionPercentage: 100
+      };
+      localStorage.setItem(storageKey, JSON.stringify(courseProgress));
+      
+      // Also update the general completed courses list
+      const completedCoursesKey = 'completed_courses';
+      const completedCourses = JSON.parse(localStorage.getItem(completedCoursesKey) || '[]');
+      if (!completedCourses.includes(courseId)) {
+        completedCourses.push(courseId);
+        localStorage.setItem(completedCoursesKey, JSON.stringify(completedCourses));
+      }
+      
+      toast.success("🎉 Congratulations! Course completed!");
+      console.log('markCourseCompleteFallback - Stored completion locally:', courseId);
+      
+      return { 
+        success: true, 
+        completed: true,
+        completionPercentage: 100,
+        message: "Course completion stored locally"
+      };
+    } catch (error) {
+      console.error('markCourseCompleteFallback - Error:', error);
+      throw new Error("Failed to store course completion");
+    }
+  }
+
+  // Get chapter completion status (for fallback when no backend API)
+  const getChapterCompletion = async (courseId: string, chapterId: string) => {
+    try {
+      // Try to get from backend first
+      const token = localStorage.getItem("token");
+      if (token) {
+        const response = await fetch(`${BASEURL}/users/progress/${courseId}/chapters/${chapterId}`, {
+          headers: {
+            "authorization": `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const res = await response.json();
+          return res.completed || false;
+        }
+      }
+      
+      // Fallback to localStorage
+      const storageKey = `chapter_progress_${courseId}`;
+      const progress = JSON.parse(localStorage.getItem(storageKey) || '{"completedChapters": []}');
+      return progress.completedChapters.includes(chapterId);
+      
+    } catch (error) {
+      console.error('getChapterCompletion - Error:', error);
+      return false;
     }
   }
   
@@ -1015,6 +1202,11 @@ const addChapter = async (
     getUserEnrollments,
     getCourseProgress,
     cleanupCourseEnrollments,
+
+    // Chapter and course completion tracking
+    markChapterComplete,
+    markCourseComplete,
+    getChapterCompletion,
 
     restoreCourse,
     getDeletedCourses,
