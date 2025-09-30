@@ -22,7 +22,7 @@ import {
 
 const LearnerHome = () => {
   const { user, isLoggedIn, isLoaded, courseProgress } = useUser();
-  const { getAvailableCourses } = useCourse();
+  const { getAvailableCourses, getACourse } = useCourse();
   const [courses, setCourses] = useState<Course[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,8 +70,6 @@ const LearnerHome = () => {
 
     try {
       // Fetch detailed course data to get actual chapter counts
-      const { getACourse } = useCourse();
-      
       const progressDataPromises = userStats.coursesEnrolled.map(async (course) => {
         try {
           // Fetch full course details to get chapters

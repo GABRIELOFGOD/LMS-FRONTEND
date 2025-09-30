@@ -26,11 +26,10 @@ interface userContextType {
   isLoaded: boolean;
   isLoggedIn: boolean;
   refreshUser: () => void;
-  // Progress tracking - API-only
+  // Simple progress tracking
   courseProgress: Map<string, CourseProgress>;
   updateChapterProgress: (courseId: string, chapterId: string, totalChapters: number) => Promise<void>;
   getCourseProgress: (courseId: string) => CourseProgress | null;
-  refreshProgress: () => Promise<void>;
 }
 
 const UserContext = createContext<userContextType | undefined>(undefined);
@@ -214,17 +213,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     getUser();
   }
 
-  // Progress tracking functions - API-only implementation
+  // Simple chapter completion - just call the API
   const updateChapterProgress = async (courseId: string, chapterId: string, totalChapters: number) => {
     try {
-      console.log('updateChapterProgress - Updating progress via API:', { courseId, chapterId, totalChapters });
+      console.log('updateChapterProgress - Completing chapter:', { courseId, chapterId });
 
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Authentication required');
       }
 
-      // Call the PATCH API endpoint to mark chapter as completed
+      // Call the API to mark chapter as completed
       const response = await fetch(`${BASEURL}/users/complete/chapter/${courseId}/${chapterId}`, {
         method: 'PATCH',
         headers: {
@@ -235,87 +234,55 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to update progress: ${response.status}`);
+        throw new Error(errorData.message || `Failed to complete chapter: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('updateChapterProgress - API response:', result);
+      console.log('updateChapterProgress - Chapter completed successfully:', result);
 
-      // Refresh progress data from API to get updated state
-      await refreshProgress();
+      // Update local progress for immediate UI feedback
+      const currentProgress = courseProgress.get(courseId) || {
+        courseId,
+        completedChapters: [],
+        totalChapters,
+        progress: 0,
+        isCompleted: false,
+        completedAt: undefined
+      };
+
+      // Add chapter to completed list if not already there
+      const updatedChapters = currentProgress.completedChapters.includes(chapterId)
+        ? currentProgress.completedChapters
+        : [...currentProgress.completedChapters, chapterId];
+
+      const updatedProgress: CourseProgress = {
+        ...currentProgress,
+        completedChapters: updatedChapters,
+        progress: result.progress || Math.round((updatedChapters.length / totalChapters) * 100),
+        isCompleted: result.completed || updatedChapters.length >= totalChapters,
+        completedAt: result.completed ? new Date().toISOString() : currentProgress.completedAt
+      };
+
+      // Update local state
+      const newMap = new Map(courseProgress);
+      newMap.set(courseId, updatedProgress);
+      setCourseProgress(newMap);
+
+      console.log('updateChapterProgress - Local progress updated:', updatedProgress);
       
     } catch (error) {
-      console.error('Failed to update chapter progress:', error);
-      throw error; // Re-throw to let calling components handle the error
+      console.error('updateChapterProgress - Failed:', error);
+      throw error;
     }
   };
-
-
 
   const getCourseProgress = (courseId: string): CourseProgress | null => {
     return courseProgress.get(courseId) || null;
   };
 
-  const refreshProgress = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.log('refreshProgress - No token available, clearing progress');
-        setCourseProgress(new Map());
-        return;
-      }
-
-      console.log('refreshProgress - Loading progress from API...');
-      const response = await fetch(`${BASEURL}/users/progress`, {
-        headers: {
-          'authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.log('refreshProgress - Unauthorized, clearing progress');
-          setCourseProgress(new Map());
-          return;
-        }
-        throw new Error(`Failed to fetch progress: ${response.status}`);
-      }
-
-      const apiProgressData = await response.json();
-      const progressMap = new Map<string, CourseProgress>();
-      
-      // Convert API response to Map
-      if (Array.isArray(apiProgressData.courseProgress)) {
-        apiProgressData.courseProgress.forEach((course: CourseProgress) => {
-          progressMap.set(course.courseId, course);
-        });
-        
-        setCourseProgress(progressMap);
-        console.log('refreshProgress - Successfully loaded progress from API:', progressMap.size, 'courses');
-      } else if (apiProgressData.courseProgress) {
-        // Handle single course object response
-        const course = apiProgressData.courseProgress as CourseProgress;
-        progressMap.set(course.courseId, course);
-        setCourseProgress(progressMap);
-        console.log('refreshProgress - Loaded single course progress from API');
-      } else {
-        // No progress data available
-        setCourseProgress(new Map());
-        console.log('refreshProgress - No progress data available from API');
-      }
-      
-    } catch (error) {
-      console.error('refreshProgress - Failed to load progress from API:', error);
-      // Clear progress on API error to prevent stale data
-      setCourseProgress(new Map());
-    }
-  };
-
   useEffect(() => {
     getUser();
-    refreshProgress(); // Load stored progress on mount
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   return (
     <UserContext.Provider value={{ 
@@ -325,8 +292,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       refreshUser,
       courseProgress,
       updateChapterProgress,
-      getCourseProgress,
-      refreshProgress
+      getCourseProgress
     }}>
       {children}
     </UserContext.Provider>
