@@ -1,13 +1,16 @@
+"use client";
+
 import Image from "next/image";
 // import Rating from "@/components/ui/rating";
 import { Button } from "@/components/ui/button";
 import { Course } from "@/types/course";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Video, FileText } from "lucide-react";
 
 const CourseCard = ({ course }: {
   course: Course;
 }) => {
+  const router = useRouter();
   const actualChapters = course.chapters.filter((cht) => cht.isPublished);
   
   // Helper function to detect media types in course chapters
@@ -73,11 +76,15 @@ const CourseCard = ({ course }: {
           </div>
         </div>
         <div className="mt-3 md:mt-5 w-full">
-          <Link href={`/learner/courses/${course.id}`} className="w-full">
-            <Button className="w-full text-sm md:text-base">
-              Enroll
-            </Button>
-          </Link>
+          <Button 
+            className="w-full text-sm md:text-base"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/learner/courses/${course.id}`);
+            }}
+          >
+            Enroll
+          </Button>
         </div>
       </div>
     </div>
