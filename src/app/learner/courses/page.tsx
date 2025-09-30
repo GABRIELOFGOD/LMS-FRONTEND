@@ -6,22 +6,31 @@ import InProgressCourses from "@/components/layout/learner/in-progress-courses";
 import { useUser } from "@/context/user-context";
 import { useStats } from "@/context/stats-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BookOpen, Award, Clock, Target } from "lucide-react";
+import Link from "next/link";
 
 const LearnerCourses = () => {
-  const { user } = useUser();
+  const { user, courseProgress } = useUser();
   const { stats, isLoading: loading, refreshStats } = useStats();
 
+  // Calculate real-time completed courses from context
+  const completedFromContext = Array.from(courseProgress.values()).filter(course => course.isCompleted).length;
+  
+  // Calculate in-progress courses (enrolled but not completed)
+  const totalEnrolled = stats?.coursesEnrolled?.length || 0;
+  const inProgressCount = totalEnrolled - completedFromContext;
+  
   const statsCards = stats ? [
     {
-      title: "Enrolled Courses",
-      value: stats.coursesEnrolled?.length?.toString() || "0",
+      title: "In Progress",
+      value: inProgressCount.toString(),
       icon: BookOpen,
       color: "text-blue-600"
     },
     {
       title: "Completed",
-      value: stats.coursesCompleted?.length?.toString() || "0",
+      value: (completedFromContext || stats.coursesCompleted?.length || 0).toString(),
       icon: Award,
       color: "text-green-600"
     },
@@ -98,6 +107,49 @@ const LearnerCourses = () => {
 
       <div className="mt-5">
         <InProgressCourses />
+        
+        {/* Completed Courses Section */}
+        {Array.from(courseProgress.values()).filter(course => course.isCompleted).length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Award className="h-5 w-5 text-green-600" />
+              Completed Courses ({Array.from(courseProgress.values()).filter(course => course.isCompleted).length})
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from(courseProgress.values())
+                .filter(course => course.isCompleted)
+                .map(courseProgressData => {
+                  // Find the course data from stats
+                  const courseData = stats?.coursesEnrolled?.find(c => c.id === courseProgressData.courseId);
+                  if (!courseData) return null;
+                  
+                  return (
+                    <Card key={courseProgressData.courseId} className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Award className="h-4 w-4 text-green-600" />
+                          <span className="text-xs font-medium text-green-700 dark:text-green-300">Completed</span>
+                        </div>
+                        <h3 className="font-semibold text-sm mb-2 line-clamp-2">{courseData.title}</h3>
+                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{courseData.description}</p>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          asChild 
+                          className="w-full border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-300"
+                        >
+                          <Link href={`/learner/courses/${courseData.id}`}>
+                            Review Course
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+                .filter(Boolean)}
+            </div>
+          </div>
+        )}
         
         {/* All Available Courses with Enrollment */}
         <div className="mt-8">

@@ -201,7 +201,7 @@ export const filterValidCourses = async (courses: unknown[]): Promise<unknown[]>
         }
         
         // For unpublished courses, you can choose to keep or remove them
-        // Currently keeping them as learners might want to see their enrolled courses even if unpublished
+        
         
         // Course is valid, keep it
         validCourses.push(course);
@@ -261,7 +261,7 @@ export const getUserProfile = async () => {
     
     console.log('getUserProfile - Fetching user profile...');
     
-    // Try /users/profile first, fallback to /users/me if available
+    //  /users/profile first
     let req = await fetch(`${BASEURL}/users/profile`, {
       method: "GET",
       headers: {
@@ -270,17 +270,7 @@ export const getUserProfile = async () => {
       },
     });
 
-    // If profile endpoint doesn't exist, try /users/me
-    if (req.status === 404) {
-      console.log('getUserProfile - /users/profile not found, trying /users/me...');
-      req = await fetch(`${BASEURL}/users/me`, {
-        method: "GET",
-        headers: {
-          "authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-      });
-    }
+  
 
     if (!req.ok) {
       if (req.status === 401) {

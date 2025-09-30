@@ -18,7 +18,7 @@ const Story = () => {
               <p>
                 Our comprehensive <strong className="text-gray-900 dark:text-white">Learning Management System</strong> is specifically 
                 designed to address the critical need for media literacy and fact-checking skills across Africa. 
-                Built under the <strong>FactCheck Africa initiative</strong>, we combine cutting-edge technology 
+                Built under the <strong>FactCheck Africa</strong>, we combine cutting-edge technology 
                 with proven educational methodologies.
               </p>
               <p>
@@ -36,7 +36,7 @@ const Story = () => {
             
             <div className="mt-8 grid grid-cols-2 gap-6">
               <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="text-3xl font-bold text-blue-600 mb-2">1,500+</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">11+</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Active Learners</div>
               </div>
               <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">

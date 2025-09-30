@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import { getUserStats } from "@/services/common";
 import MyCourseCard from "./my-course-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUser } from "@/context/user-context";
 
 const InProgressCourses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const { courseProgress } = useUser();
 
   const fetchInProgressCourses = async () => {
     try {
@@ -81,22 +83,41 @@ const InProgressCourses = () => {
     );
   }
 
+  // Filter out completed courses - they should only show in the dedicated completed section
+  const inProgressCourses = courses.filter(course => {
+    const courseProgressData = courseProgress.get(course.id);
+    return !courseProgressData?.isCompleted; // Only show non-completed courses
+  });
+
   return (
     <div>
-      <p className="font-bold text-xl mt-5">My Enrolled Courses ({courses.length})</p>
+      <p className="font-bold text-xl mt-5">My Enrolled Courses ({inProgressCourses.length})</p>
       <div className="mt-5 flex flex-col gap-5">
-        {courses.length > 0 ? (
-          courses.map((course) => (
-            <MyCourseCard
-              key={course.id}
-              course={course}
-              isCompleted={false}
-            />
-          ))
+        {inProgressCourses.length > 0 ? (
+          inProgressCourses.map((course) => {
+            // Check if course is completed from context
+            const courseProgressData = courseProgress.get(course.id);
+            const isCompleted = courseProgressData?.isCompleted || false;
+            
+            return (
+              <MyCourseCard
+                key={course.id}
+                course={course}
+                isCompleted={isCompleted}
+              />
+            );
+          })
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            <p className="text-lg font-medium mb-2">No enrolled courses yet</p>
-            <p className="text-sm">Enroll in a course to start your learning journey.</p>
+            <p className="text-lg font-medium mb-2">
+              {courses.length > 0 ? "All courses completed!" : "No enrolled courses yet"}
+            </p>
+            <p className="text-sm">
+              {courses.length > 0 
+                ? "Great job! Check your completed courses above." 
+                : "Enroll in a course to start your learning journey."
+              }
+            </p>
           </div>
         )}
       </div>

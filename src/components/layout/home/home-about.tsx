@@ -11,10 +11,10 @@ const About = () => {
             <GraduationCap className="h-8 w-8 text-blue-600 dark:text-blue-400" />
           </div>
           <h2 className='text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6'>
-            About fcalearn
+            About FCA Learn
           </h2>
           <p className='text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8'>
-            fcalearn is a comprehensive Learning Management System designed to empower individuals 
+            FCA Learn is a comprehensive Learning Management System designed to empower individuals 
             with practical skills and knowledge for the digital age. Our courses are crafted to address 
             real-world challenges and provide accessible, high-quality education for everyone.
           </p>

@@ -8,7 +8,7 @@ import { useUser } from "@/context/user-context";
 const LearnerProgress = () => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useUser();
+  const { user, courseProgress } = useUser();
 
   useEffect(() => {
     const fetchUserStats = async () => {
@@ -53,7 +53,9 @@ const LearnerProgress = () => {
 
   // Calculate overall progress based on enrolled vs completed courses
   const enrolledCount = userStats.coursesEnrolled?.length || 0;
-  const completedCount = userStats.coursesCompleted?.length || 0;
+  // Use real-time completed count from context
+  const completedFromContext = Array.from(courseProgress.values()).filter(course => course.isCompleted).length;
+  const completedCount = completedFromContext || userStats.coursesCompleted?.length || 0;
   const overallProgress = enrolledCount > 0 ? Math.round((completedCount / enrolledCount) * 100) : 0;
 
   // Use static streak values until backend provides real activity tracking API

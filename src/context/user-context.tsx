@@ -5,11 +5,31 @@ import { User } from "@/types/user";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { getUserProfile } from "@/services/common";
 
+// interface ChapterProgress {
+//   chapterId: string;
+//   courseId: string;
+//   completed: boolean;
+//   completedAt?: string;
+// }
+
+interface CourseProgress {
+  courseId: string;
+  completedChapters: string[];
+  totalChapters: number;
+  progress: number;
+  isCompleted: boolean;
+  completedAt?: string;
+}
+
 interface userContextType {
   user: User | null;
   isLoaded: boolean;
   isLoggedIn: boolean;
   refreshUser: () => void;
+  // Simple progress tracking
+  courseProgress: Map<string, CourseProgress>;
+  updateChapterProgress: (courseId: string, chapterId: string, totalChapters: number) => Promise<void>;
+  getCourseProgress: (courseId: string) => CourseProgress | null;
 }
 
 const UserContext = createContext<userContextType | undefined>(undefined);
@@ -18,6 +38,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isloaded, setIsLoaded] = useState<boolean>(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [courseProgress, setCourseProgress] = useState<Map<string, CourseProgress>>(new Map());
 
   const getUser = async (retryCount = 0) => {
     const maxRetries = 3;
@@ -192,16 +213,86 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     getUser();
   }
 
+  // Simple chapter completion - just call the API
+  const updateChapterProgress = async (courseId: string, chapterId: string, totalChapters: number) => {
+    try {
+      console.log('updateChapterProgress - Completing chapter:', { courseId, chapterId });
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      // Call the API to mark chapter as completed
+      const response = await fetch(`${BASEURL}/users/complete/chapter/${courseId}/${chapterId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to complete chapter: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('updateChapterProgress - Chapter completed successfully:', result);
+
+      // Update local progress for immediate UI feedback
+      const currentProgress = courseProgress.get(courseId) || {
+        courseId,
+        completedChapters: [],
+        totalChapters,
+        progress: 0,
+        isCompleted: false,
+        completedAt: undefined
+      };
+
+      // Add chapter to completed list if not already there
+      const updatedChapters = currentProgress.completedChapters.includes(chapterId)
+        ? currentProgress.completedChapters
+        : [...currentProgress.completedChapters, chapterId];
+
+      const updatedProgress: CourseProgress = {
+        ...currentProgress,
+        completedChapters: updatedChapters,
+        progress: result.progress || Math.round((updatedChapters.length / totalChapters) * 100),
+        isCompleted: result.completed || updatedChapters.length >= totalChapters,
+        completedAt: result.completed ? new Date().toISOString() : currentProgress.completedAt
+      };
+
+      // Update local state
+      const newMap = new Map(courseProgress);
+      newMap.set(courseId, updatedProgress);
+      setCourseProgress(newMap);
+
+      console.log('updateChapterProgress - Local progress updated:', updatedProgress);
+      
+    } catch (error) {
+      console.error('updateChapterProgress - Failed:', error);
+      throw error;
+    }
+  };
+
+  const getCourseProgress = (courseId: string): CourseProgress | null => {
+    return courseProgress.get(courseId) || null;
+  };
+
   useEffect(() => {
     getUser();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   return (
     <UserContext.Provider value={{ 
       user, 
       isLoaded: isloaded, 
       isLoggedIn,
-      refreshUser 
+      refreshUser,
+      courseProgress,
+      updateChapterProgress,
+      getCourseProgress
     }}>
       {children}
     </UserContext.Provider>
