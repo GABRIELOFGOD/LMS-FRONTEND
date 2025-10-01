@@ -262,7 +262,7 @@ export const getUserProfile = async () => {
     console.log('getUserProfile - Fetching user profile...');
     
     //  /users/profile first
-    let req = await fetch(`${BASEURL}/users/profile`, {
+    const req = await fetch(`${BASEURL}/users/profile`, {
       method: "GET",
       headers: {
         "authorization": `Bearer ${token}`,
