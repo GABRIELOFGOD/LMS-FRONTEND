@@ -216,7 +216,7 @@ export const useCourse = () => {
         console.log('publishCourse - Course unpublished, considering enrollment cleanup');
         try {
           // Uncomment the next line if you want to remove enrollments when courses are unpublished
-          // await cleanupCourseEnrollments(id, 'unpublished');
+          await cleanupCourseEnrollments(id, 'unpublished');
           console.log('publishCourse - Enrollment cleanup skipped for unpublished course (enrollments preserved)');
         } catch (cleanupError) {
           console.warn('publishCourse - Enrollment cleanup failed, but publish operation succeeded:', cleanupError);

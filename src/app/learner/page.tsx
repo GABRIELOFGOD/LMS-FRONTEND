@@ -3,7 +3,7 @@
 import { BookOpen, Award, Target, Clock } from "lucide-react";
 import { useUser } from "@/context/user-context";
 import { Course } from "@/types/course";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useCourse } from "@/hooks/useCourse";
 import { getUserStats, UserStats } from "@/services/common";
 import {
@@ -35,7 +35,7 @@ const LearnerHome = () => {
     completedLessons: number;
   }>>([]);
 
-  const gettingCourse = async () => {
+  const gettingCourse = useCallback(async () => {
     try {
       setCoursesLoading(true);
       const courses = await getAvailableCourses();
@@ -60,9 +60,9 @@ const LearnerHome = () => {
     } finally {
       setCoursesLoading(false);
     }
-  }
+  }, [getAvailableCourses])
 
-  const fetchRealProgressData = async () => {
+  const fetchRealProgressData = useCallback(async () => {
     if (!userStats?.coursesEnrolled?.length) {
       setProgressData([]);
       return;
@@ -110,9 +110,9 @@ const LearnerHome = () => {
       console.error('Failed to prepare course data:', error);
       setProgressData([]);
     }
-  };
+  }, [userStats?.coursesEnrolled, getACourse, courseProgress]);
 
-  const fetchUserStats = async () => {
+  const fetchUserStats = useCallback(async () => {
     if (!isLoggedIn) {
       setLoading(false);
       return;
@@ -138,7 +138,7 @@ const LearnerHome = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isLoggedIn, fetchRealProgressData]);
 
   useEffect(() => {
     // Only fetch data when user context is loaded
@@ -154,14 +154,14 @@ const LearnerHome = () => {
         setProgressData([]); // Clear progress data when not logged in
       }
     }
-  }, [isLoaded, isLoggedIn]);
+  }, [isLoaded, isLoggedIn, fetchUserStats, gettingCourse]);
 
   // Separate effect to fetch progress data when userStats changes
   useEffect(() => {
     if (userStats?.coursesEnrolled?.length) {
       fetchRealProgressData();
     }
-  }, [userStats]);
+  }, [userStats, fetchRealProgressData]);
 
   // Function to fetch real progress data (moved up and now called from fetchUserStats)
   // This function is kept for future use when backend provides lesson completion API
