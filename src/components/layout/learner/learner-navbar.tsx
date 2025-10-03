@@ -17,14 +17,12 @@ import Image from "next/image";
 import Instructor from "@/assets/hero-fc.png";
 
 const LearnerNavbar = () => {
-  const { user, refreshUser } = useUser();
+  const { user, logout } = useUser();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    // Clear token from localStorage
-    localStorage.removeItem("token");
-    // Refresh user context to update state
-    refreshUser();
+    // Use the proper logout function that clears all data
+    logout();
     // Redirect to home page
     window.location.href = "/";
   };

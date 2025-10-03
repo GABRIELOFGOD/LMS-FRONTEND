@@ -37,7 +37,7 @@ const CoursePreview = () => {
 
   useEffect(() => {
     gettingCourse();
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   if (loadingCourses) {
     return (

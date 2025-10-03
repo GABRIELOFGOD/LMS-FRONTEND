@@ -3,19 +3,17 @@
 import { Course } from "@/types/course";
 import MyCourseCard from "./my-course-card";
 import { useEffect, useState } from "react";
-import { getUserStats } from "@/services/common";
+import { useStats } from "@/context/stats-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Award } from "lucide-react";
 
 const LearnerCourseMapper = () => {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { stats: userStats, isLoading: statsLoading } = useStats();
 
-  const fetchCompletedCourses = async () => {
+  const processCompletedCourses = () => {
     try {
-      setLoading(true);
-      console.log('LearnerCourseMapper - Fetching user stats...');
-      const userStats = await getUserStats();
+      console.log('LearnerCourseMapper - Processing completed courses from stats...');
       console.log('LearnerCourseMapper - Raw stats data:', userStats);
       
       if (userStats && userStats.coursesCompleted) {
@@ -71,18 +69,18 @@ const LearnerCourseMapper = () => {
         setCourses([]);
       }
     } catch (error) {
-      console.error("Error fetching completed courses:", error);
+      console.error("Error processing completed courses:", error);
       setCourses([]);
-    } finally {
-      setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchCompletedCourses();
-  }, []);
+    if (userStats) {
+      processCompletedCourses();
+    }
+  }, [userStats]);
 
-  if (loading) {
+  if (statsLoading) {
     return (
       <div>
         <p className="font-bold text-xl mt-5">Completed Courses</p>

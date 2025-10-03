@@ -1,32 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
-import { getUserStats, UserStats } from "@/services/common";
 import { useUser } from "@/context/user-context";
+import { useStats } from "@/context/stats-context";
 
 const LearnerProgress = () => {
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user, courseProgress } = useUser();
-
-  useEffect(() => {
-    const fetchUserStats = async () => {
-      if (!user) return;
-      
-      setIsLoading(true);
-      try {
-        const stats = await getUserStats();
-        setUserStats(stats);
-      } catch (error) {
-        console.error('Error fetching user stats:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserStats();
-  }, [user]);
+  const { courseProgress } = useUser();
+  const { stats: userStats, isLoading } = useStats();
 
   if (isLoading) {
     return (

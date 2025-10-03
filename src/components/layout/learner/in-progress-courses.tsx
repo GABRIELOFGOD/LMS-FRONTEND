@@ -2,21 +2,19 @@
 
 import { Course } from "@/types/course";
 import { useEffect, useState } from "react";
-import { getUserStats } from "@/services/common";
+import { useStats } from "@/context/stats-context";
 import MyCourseCard from "./my-course-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/context/user-context";
 
 const InProgressCourses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
   const { courseProgress } = useUser();
+  const { stats: userStats, isLoading: statsLoading } = useStats();
 
-  const fetchInProgressCourses = async () => {
+  const processInProgressCourses = () => {
     try {
-      setLoading(true);
-      console.log('InProgressCourses - Fetching user stats...');
-      const userStats = await getUserStats();
+      console.log('InProgressCourses - Processing enrolled courses from stats...');
       console.log('InProgressCourses - Raw stats data:', userStats);
       
       if (userStats && userStats.coursesEnrolled) {
@@ -59,18 +57,18 @@ const InProgressCourses = () => {
         setCourses([]);
       }
     } catch (error) {
-      console.error("Error fetching enrolled courses:", error);
+      console.error("Error processing enrolled courses:", error);
       setCourses([]);
-    } finally {
-      setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchInProgressCourses();
-  }, []);
+    if (userStats) {
+      processInProgressCourses();
+    }
+  }, [userStats]);
 
-  if (loading) {
+  if (statsLoading) {
     return (
       <div>
         <p className="font-bold text-xl mt-5">My Enrolled Courses</p>

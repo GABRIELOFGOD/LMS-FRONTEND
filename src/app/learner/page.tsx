@@ -5,7 +5,8 @@ import { useUser } from "@/context/user-context";
 import { Course } from "@/types/course";
 import { useCallback, useEffect, useState } from "react";
 import { useCourse } from "@/hooks/useCourse";
-import { getUserStats, UserStats } from "@/services/common";
+import { UserStats } from "@/services/common";
+import { useStats } from "@/context/stats-context";
 import {
   LearnerHeader,
   UserProfile,
@@ -23,8 +24,8 @@ import {
 const LearnerHome = () => {
   const { user, isLoggedIn, isLoaded, courseProgress } = useUser();
   const { getAvailableCourses, getACourse } = useCourse();
+  const { stats: userStats, isLoading: statsLoading, refreshStats } = useStats();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [progressData, setProgressData] = useState<Array<{
@@ -60,7 +61,7 @@ const LearnerHome = () => {
     } finally {
       setCoursesLoading(false);
     }
-  }, [getAvailableCourses])
+  }, []) // Remove getAvailableCourses from dependencies to prevent infinite loop
 
   const fetchRealProgressData = useCallback(async () => {
     if (!userStats?.coursesEnrolled?.length) {
@@ -112,56 +113,33 @@ const LearnerHome = () => {
     }
   }, [userStats?.coursesEnrolled, getACourse, courseProgress]);
 
-  const fetchUserStats = useCallback(async () => {
-    if (!isLoggedIn) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const stats = await getUserStats();
-      if (stats) {
-        setUserStats(stats);
-        
-        // Process course data for display 
-        fetchRealProgressData();
-      } else {
-        console.warn("No user stats received");
-        setUserStats(null);
-        setProgressData([]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch user stats:", error);
-      setUserStats(null);
-      setProgressData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [isLoggedIn, fetchRealProgressData]);
-
   useEffect(() => {
     // Only fetch data when user context is loaded
     if (isLoaded) {
       // Always fetch courses (public endpoint)
       gettingCourse();
       
-      // Only fetch user-specific data if logged in
-      if (isLoggedIn) {
-        fetchUserStats();
-      } else {
+      // Set loading state based on login status
+      if (!isLoggedIn) {
         setLoading(false);
         setProgressData([]); // Clear progress data when not logged in
       }
     }
-  }, [isLoaded, isLoggedIn, fetchUserStats, gettingCourse]);
+  }, [isLoaded, isLoggedIn, gettingCourse]);
 
-  // Separate effect to fetch progress data when userStats changes
+  // Update loading state and progress data when stats are available
   useEffect(() => {
-    if (userStats?.coursesEnrolled?.length) {
-      fetchRealProgressData();
+    if (isLoggedIn) {
+      setLoading(statsLoading);
+      
+      // Process course data for display when stats are available
+      if (userStats?.coursesEnrolled?.length) {
+        fetchRealProgressData();
+      } else if (userStats && !userStats.coursesEnrolled?.length) {
+        setProgressData([]);
+      }
     }
-  }, [userStats, fetchRealProgressData]);
+  }, [userStats, statsLoading, isLoggedIn, fetchRealProgressData]);
 
   // Function to fetch real progress data (moved up and now called from fetchUserStats)
   // This function is kept for future use when backend provides lesson completion API
@@ -229,7 +207,7 @@ const LearnerHome = () => {
       {/* Header Section */}
       <LearnerHeader 
         userName={user?.fname || 'Learner'}
-        onRefreshStats={fetchUserStats}
+        onRefreshStats={refreshStats}
         loading={loading}
       />
 

@@ -26,10 +26,12 @@ interface userContextType {
   isLoaded: boolean;
   isLoggedIn: boolean;
   refreshUser: () => void;
+  logout: () => void;
   // Simple progress tracking
   courseProgress: Map<string, CourseProgress>;
   updateChapterProgress: (courseId: string, chapterId: string, totalChapters: number) => Promise<void>;
   getCourseProgress: (courseId: string) => CourseProgress | null;
+  refreshCourseProgress: (courseId: string) => Promise<CourseProgress | null>;
 }
 
 const UserContext = createContext<userContextType | undefined>(undefined);
@@ -40,6 +42,39 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [courseProgress, setCourseProgress] = useState<Map<string, CourseProgress>>(new Map());
 
+  // Clear progress data when user logs out
+  const clearUserData = () => {
+    setUser(null);
+    setIsLoggedIn(false);
+    setCourseProgress(new Map()); // Clear progress data
+    // Clear any cached progress from localStorage
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('course_progress_') || key.startsWith('chapter_progress_')) {
+        localStorage.removeItem(key);
+      }
+    });
+  };
+
+  // Load progress data from backend when user logs in
+  const loadUserProgressData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // Try to load user's course progress from backend
+      // This is a placeholder - you would implement the actual API call here
+      console.log('UserContext - Loading user progress data (placeholder)');
+      
+      // For now, just clear the local progress to ensure fresh state
+      setCourseProgress(new Map());
+    } catch (error) {
+      console.error('UserContext - Failed to load progress data:', error);
+      // On error, just clear the progress
+      setCourseProgress(new Map());
+    }
+  };
+
   const getUser = async (retryCount = 0) => {
     const maxRetries = 3;
     
@@ -49,8 +84,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       
       if (!token) {
         console.log('UserContext - No token, setting as logged out');
-        setIsLoggedIn(false);
-        setUser(null);
+        clearUserData();
         setIsLoaded(true);
         return;
       }
@@ -71,11 +105,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         if (req.status === 401) {
           console.log('UserContext - Token expired or invalid, clearing token');
           localStorage.removeItem("token");
+          clearUserData();
           throw new Error('Authentication token expired');
         }
         if (req.status === 403) {
           console.log('UserContext - Access forbidden, clearing token');
           localStorage.removeItem("token");
+          clearUserData();
           throw new Error('Access forbidden - please login again');
         }
         const res = await req.json().catch(() => ({}));
@@ -178,11 +214,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         };
       }
       
-      console.log('UserContext - User authenticated successfully:', userData);
-      setUser(userData as User);
-      setIsLoggedIn(true);
-
-    } catch (error: unknown) {
+        console.log('UserContext - User authenticated successfully:', userData);
+        setUser(userData as User);
+        setIsLoggedIn(true);
+        
+        // Load user's progress data after successful authentication
+        await loadUserProgressData();    } catch (error: unknown) {
       console.error("UserContext - Authentication error:", error);
       
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -194,13 +231,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      setUser(null);
-      setIsLoggedIn(false);
-      
       // Clear invalid token only if it's an authentication error
       if (errorMessage.includes('401') || errorMessage.includes('unauthorized') || errorMessage.includes('token') || errorMessage.includes('expired')) {
         console.log('UserContext - Clearing invalid token');
         localStorage.removeItem("token");
+        clearUserData();
+      } else {
+        setUser(null);
+        setIsLoggedIn(false);
       }
     } finally {
       console.log('UserContext - Setting loaded to true');
@@ -211,6 +249,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const refreshUser = () => {
     setIsLoaded(false);
     getUser();
+  }
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    clearUserData();
+    setIsLoaded(true);
   }
 
   // Simple chapter completion - just call the API
@@ -240,7 +285,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const result = await response.json();
       console.log('updateChapterProgress - Chapter completed successfully:', result);
 
-      // Update local progress for immediate UI feedback
+      // Get current progress or create new one
       const currentProgress = courseProgress.get(courseId) || {
         courseId,
         completedChapters: [],
@@ -255,15 +300,21 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         ? currentProgress.completedChapters
         : [...currentProgress.completedChapters, chapterId];
 
+      // Calculate progress based on completed chapters
+      const progressPercentage = Math.round((updatedChapters.length / totalChapters) * 100);
+      const isCompleted = updatedChapters.length >= totalChapters;
+
+      // Create updated progress (prefer backend data if available, fallback to calculated)
       const updatedProgress: CourseProgress = {
-        ...currentProgress,
-        completedChapters: updatedChapters,
-        progress: result.progress || Math.round((updatedChapters.length / totalChapters) * 100),
-        isCompleted: result.completed || updatedChapters.length >= totalChapters,
-        completedAt: result.completed ? new Date().toISOString() : currentProgress.completedAt
+        courseId,
+        completedChapters: result.completedChapters || updatedChapters,
+        totalChapters: result.totalChapters || totalChapters,
+        progress: result.progress || progressPercentage,
+        isCompleted: result.completed !== undefined ? result.completed : isCompleted,
+        completedAt: result.completedAt || (isCompleted ? new Date().toISOString() : currentProgress.completedAt)
       };
 
-      // Update local state
+      // Update local state with new Map instance to trigger re-renders
       const newMap = new Map(courseProgress);
       newMap.set(courseId, updatedProgress);
       setCourseProgress(newMap);
@@ -280,6 +331,29 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return courseProgress.get(courseId) || null;
   };
 
+  // Refresh specific course progress from backend
+  const refreshCourseProgress = async (courseId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return null;
+
+      // Since we don't have a specific progress endpoint, we'll refresh by clearing
+      // the local cache for this course. The next API call will fetch fresh data.
+      console.log('UserContext - Refreshing progress cache for course:', courseId);
+      
+      // Clear the cached progress for this course to force fresh data
+      const newMap = new Map(courseProgress);
+      newMap.delete(courseId);
+      setCourseProgress(newMap);
+      
+      // Return null to indicate that fresh data should be fetched
+      return null;
+    } catch (error) {
+      console.error('UserContext - Failed to refresh course progress:', error);
+    }
+    return null;
+  };
+
   useEffect(() => {
     getUser();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -290,9 +364,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       isLoaded: isloaded, 
       isLoggedIn,
       refreshUser,
+      logout,
       courseProgress,
       updateChapterProgress,
-      getCourseProgress
+      getCourseProgress,
+      refreshCourseProgress
     }}>
       {children}
     </UserContext.Provider>

@@ -18,15 +18,12 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const DashboardLayoutContent = ({ children }: { children: ReactNode }) => {
-  const { user, isLoggedIn, isLoaded, refreshUser } = useUser();
+  const { user, isLoggedIn, isLoaded, logout } = useUser();
   const router = useRouter();
 
   const handleLogout = () => {
-    // Clear token from localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    // Refresh user context to update state
-    refreshUser();
+    // Use the proper logout function that clears all data
+    logout();
     // Redirect to home page
     window.location.href = "/";
   };

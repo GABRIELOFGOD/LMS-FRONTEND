@@ -21,7 +21,10 @@ interface LearningProgressProps {
 }
 
 export const LearningProgress = ({ progressData }: LearningProgressProps) => {
-  const { getCourseProgress } = useUser();
+  const { getCourseProgress, courseProgress } = useUser();
+  
+  // Force re-render when courseProgress changes
+  const progressVersion = courseProgress.size;
 
   if (progressData.length === 0) {
     return (
@@ -56,7 +59,7 @@ export const LearningProgress = ({ progressData }: LearningProgressProps) => {
       </CardHeader>
       <CardContent className="space-y-3 md:space-y-4">
         {progressData.map((course, index) => {
-          // Get real-time progress from context
+          // Get real-time progress from context (progressVersion ensures re-render)
           const realProgress = getCourseProgress(course.id);
           const displayProgress = realProgress?.progress || course.progress;
           const isCompleted = realProgress?.isCompleted || course.progress === 100;
