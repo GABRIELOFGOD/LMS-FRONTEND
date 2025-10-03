@@ -5,7 +5,7 @@ import { useUser } from "@/context/user-context";
 import { Course } from "@/types/course";
 import { useCallback, useEffect, useState } from "react";
 import { useCourse } from "@/hooks/useCourse";
-import { UserStats } from "@/services/common";
+
 import { useStats } from "@/context/stats-context";
 import {
   LearnerHeader,
