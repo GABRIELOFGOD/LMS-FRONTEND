@@ -24,6 +24,7 @@ export const LearningProgress = ({ progressData }: LearningProgressProps) => {
   const { getCourseProgress, courseProgress } = useUser();
   
   // Force re-render when courseProgress changes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const progressVersion = courseProgress.size;
 
   if (progressData.length === 0) {

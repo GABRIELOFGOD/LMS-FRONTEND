@@ -69,6 +69,7 @@ export const CourseImageSection = ({
                 {selectedImage ? (
                   <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div className="flex items-center gap-3">
+                      {/* eslint-disable-next-line jsx-a11y/alt-text */}
                       <Image className="h-8 w-8 text-green-500" />
                       <div>
                         <p className="font-medium">{selectedImage.name}</p>
@@ -92,6 +93,7 @@ export const CourseImageSection = ({
                     className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => imageInputRef.current?.click()}
                   >
+                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
                     <Image className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                     <p className="text-sm font-medium mb-2">
                       Click to upload course thumbnail
