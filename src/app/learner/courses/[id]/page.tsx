@@ -30,34 +30,10 @@ const LearnerCourseDetails = () => {
   const [currentChapter, setCurrentChapter] = useState(0);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Force re-render trigger
 
   const { getACourse, getCourseProgress } = useCourse();
   const { isLoggedIn, updateChapterProgress, getCourseProgress: getContextProgress } = useUser();
-
-  const loadCourseData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [courseData, progressData] = await Promise.all([
-        getACourse(courseId),
-        getCourseProgress(courseId)
-      ]);
-      
-      setCourse(courseData);
-      
-      // Check for local progress first, then fallback to API
-      const localProgress = getContextProgress(courseId);
-      if (localProgress) {
-        setProgress(localProgress.progress);
-      } else {
-        setProgress(progressData?.completionPercentage || 0);
-      }
-    } catch (error) {
-      console.error("Failed to load course data:", error);
-      toast.error("Failed to load course details");
-    } finally {
-      setLoading(false);
-    }
-  }, [courseId, getACourse, getCourseProgress, getContextProgress]);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -65,10 +41,51 @@ const LearnerCourseDetails = () => {
       return;
     }
 
-    if (courseId) {
-      loadCourseData();
+    if (!courseId) {
+      toast.error("Invalid course ID");
+      setLoading(false);
+      return;
     }
-  }, [courseId, isLoggedIn, loadCourseData, router]);
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load course data first (this is critical)
+        const courseData = await getACourse(courseId);
+        
+        if (courseData) {
+          setCourse(courseData);
+        } else {
+          throw new Error("No course data received");
+        }
+        
+        // Load progress data separately (this is optional)
+        try {
+          // Check for local progress first, then fallback to API
+          const localProgress = getContextProgress(courseId);
+          if (localProgress && localProgress.progress !== undefined) {
+            setProgress(localProgress.progress);
+          } else {
+            // Try to get progress from the existing API
+            const progressData = await getCourseProgress(courseId);
+            setProgress(progressData?.completionPercentage || 0);
+          }
+        } catch {
+          setProgress(0); // Default progress if API fails
+        }
+        
+      } catch (error) {
+        console.error("Failed to load course data:", error);
+        toast.error("Failed to load course details");
+        setCourse(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [courseId, isLoggedIn]); // Minimal dependencies
 
   const handleChapterComplete = async () => {
     if (!course || !currentChapterData) return;
@@ -80,6 +97,9 @@ const LearnerCourseDetails = () => {
       toast.loading("Marking chapter as complete...", { id: 'chapter-complete' });
       
       await updateChapterProgress(courseId, currentChapterData.id, publishedChapters.length);
+      
+      // Force re-render to update UI
+      setRefreshTrigger(prev => prev + 1);
       
       // Update local progress immediately after API success
       const updatedProgress = getContextProgress(courseId);
@@ -94,6 +114,7 @@ const LearnerCourseDetails = () => {
       } else {
         toast.success("Chapter marked as complete!", { id: 'chapter-complete' });
       }
+      
     } catch (error) {
       console.error('Failed to mark chapter as complete:', error);
       toast.error(
@@ -138,8 +159,11 @@ const LearnerCourseDetails = () => {
   
   // Helper functions for progress tracking
   const isChapterCompleted = (chapterId: string): boolean => {
+    // Include refreshTrigger to ensure this function re-evaluates when progress changes
     const courseProgressData = getContextProgress(courseId);
-    return courseProgressData?.completedChapters.includes(chapterId) || false;
+    const isCompleted = courseProgressData?.completedChapters.includes(chapterId) || false;
+    // The refreshTrigger dependency ensures this updates when chapter completion changes
+    return refreshTrigger >= 0 ? isCompleted : isCompleted;
   };
 
   const isLastChapter = currentChapter === publishedChapters.length - 1;

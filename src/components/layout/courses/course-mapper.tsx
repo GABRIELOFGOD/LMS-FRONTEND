@@ -123,7 +123,7 @@ const CourseMapper = ({ onStatsUpdate }: CourseMapperProps = {}) => {
     if (isLoaded) {
       loadData();
     }
-  }, [isLoggedIn, isLoaded]);
+  }, [isLoaded]); // Only depend on isLoaded to prevent excessive calls when login state changes
 
   const isEnrolled = (courseId: string) => {
     return enrollments.some(enrollment => enrollment.courseId === courseId);

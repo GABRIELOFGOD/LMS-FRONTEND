@@ -84,12 +84,23 @@ export interface UserCourseStats {
 // Import Course type
 import { Course } from "@/types/course";
 
+// Cache for getUserStats to prevent excessive API calls
+let statsCache: { data: UserStats | null; timestamp: number } | null = null;
+const STATS_CACHE_DURATION = 30000; // 30 seconds
+
 export const getUserStats = async (): Promise<UserStats | null> => {
   try {
     const token = localStorage.getItem("token");
     if (!token) {
       console.warn("No authentication token found");
       return null;
+    }
+    
+    // Check if we have cached data that's still valid
+    const now = Date.now();
+    if (statsCache && (now - statsCache.timestamp) < STATS_CACHE_DURATION) {
+      console.log('getUserStats - Returning cached data');
+      return statsCache.data;
     }
     
     console.log('getUserStats - Fetching user statistics...');
@@ -104,6 +115,8 @@ export const getUserStats = async (): Promise<UserStats | null> => {
     if (!req.ok) {
       if (req.status === 401) {
         console.warn("getUserStats - Unauthorized, token may be expired");
+        // Clear cache on auth error
+        statsCache = null;
         return null;
       }
       const errorRes = await req.json().catch(() => ({}));
@@ -135,6 +148,12 @@ export const getUserStats = async (): Promise<UserStats | null> => {
       }
     };
     
+    // Cache the result
+    statsCache = {
+      data: userStats,
+      timestamp: now
+    };
+    
     console.log('getUserStats - Processed stats with course filtering:', {
       originalEnrolled: res.coursesEnrolled?.length || 0,
       filteredEnrolled: filteredEnrolledCourses.length
@@ -150,67 +169,59 @@ export const getUserStats = async (): Promise<UserStats | null> => {
   }
 }
 
+// Function to clear the stats cache (call this when user enrolls/unenrolls from courses)
+export const clearStatsCache = () => {
+  console.log('clearStatsCache - Clearing user stats cache');
+  statsCache = null;
+}
+
 // Filter valid courses (remove deleted/unavailable courses)
+// This function now uses client-side filtering based on course properties to avoid API loops
 export const filterValidCourses = async (courses: unknown[]): Promise<unknown[]> => {
   if (!Array.isArray(courses) || courses.length === 0) {
     return courses;
   }
 
   try {
-    console.log('filterValidCourses - Checking validity for', courses.length, 'courses');
+    console.log('filterValidCourses - Filtering', courses.length, 'courses client-side');
     const validCourses = [];
     
     for (const course of courses) {
-      if (!course || typeof course !== 'object' || !('id' in course)) {
+      if (!course || typeof course !== 'object') {
         console.warn('filterValidCourses - Invalid course object:', course);
         continue;
       }
       
-      const courseObj = course as { id: string };
+      const courseObj = course as { 
+        id?: string;
+        isDeleted?: boolean;
+        deleted?: boolean;
+        status?: string;
+        deletedAt?: string | null;
+        publish?: boolean;
+      };
       
-      try {
-        // Check if the course still exists and is available
-        const token = localStorage.getItem("token");
-        if (!token) {
-          // If no token, assume course is valid
-          validCourses.push(course);
-          continue;
-        }
-        
-        const response = await fetch(`${BASEURL}/courses/${courseObj.id}`, {
-          headers: { "authorization": `Bearer ${token}` }
-        });
-        
-        if (!response.ok) {
-          if (response.status === 404) {
-            console.log(`filterValidCourses - Course ${courseObj.id} not found, removing from list`);
-            continue;
-          }
-          // For other errors, assume course is valid to avoid removing legitimate courses
-          validCourses.push(course);
-          continue;
-        }
-        
-        const courseData = await response.json();
-        
-        // Check if course is deleted
-        if (courseData.isDeleted === true || courseData.deleted === true || 
-            courseData.status === 'deleted' || courseData.deletedAt) {
-          console.log(`filterValidCourses - Course ${courseObj.id} is deleted, removing from list`);
-          continue;
-        }
-        
-        // For unpublished courses, you can choose to keep or remove them
-        
-        
-        // Course is valid, keep it
-        validCourses.push(course);
-        
-      } catch (courseError) {
-        console.error(`filterValidCourses - Error checking course ${courseObj.id}:`, courseError);
-        // If we can't verify the course, assume it's valid to avoid removing legitimate courses
-        validCourses.push(course);
+      // Skip if no id
+      if (!courseObj.id) {
+        console.warn('filterValidCourses - Course missing id:', course);
+        continue;
       }
+      
+      // Check if course is deleted using client-side data
+      if (courseObj.isDeleted === true || courseObj.deleted === true || 
+          courseObj.status === 'deleted' || courseObj.deletedAt) {
+        console.log(`filterValidCourses - Course ${courseObj.id} is deleted, removing from list`);
+        continue;
+      }
+      
+      // Optional: Remove unpublished courses (uncomment if needed)
+      // if (courseObj.publish === false) {
+      //   console.log(`filterValidCourses - Course ${courseObj.id} is unpublished, removing from list`);
+      //   continue;
+      // }
+      
+      // Course appears valid based on client data
+      validCourses.push(course);
     }
     
     if (validCourses.length !== courses.length) {

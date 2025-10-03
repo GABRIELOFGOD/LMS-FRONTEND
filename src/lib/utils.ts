@@ -64,3 +64,15 @@ export const withRetry = async <T>(
   
   throw lastError;
 };
+
+// Check if progress API is available (can be disabled via env var)
+export const isProgressApiAvailable = (): boolean => {
+  // If explicitly disabled via environment variable
+  if (process.env.NEXT_PUBLIC_DISABLE_PROGRESS_API === 'true') {
+    return false;
+  }
+  
+  // If the backend doesn't support progress API, disable it
+  // This prevents unnecessary 404 errors in console
+  return false; // Temporarily disabled until backend implements progress API
+};

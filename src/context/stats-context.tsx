@@ -63,6 +63,12 @@ export const StatsProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    // Prevent multiple simultaneous requests
+    if (isLoading) {
+      console.log('StatsContext - Already loading, skipping duplicate request');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     
@@ -95,12 +101,16 @@ export const StatsProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, isLoading]);
 
-  // Initial load when user context is ready
+  // Initial load when user context is ready (debounced)
   useEffect(() => {
     if (isLoaded) {
-      refreshStats();
+      const timer = setTimeout(() => {
+        refreshStats();
+      }, 100); // Small delay to prevent rapid successive calls
+      
+      return () => clearTimeout(timer);
     }
   }, [isLoaded, refreshStats]);
 

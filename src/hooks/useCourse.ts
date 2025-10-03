@@ -1,7 +1,12 @@
-import { BASEURL } from "@/lib/utils";
+import { BASEURL, isProgressApiAvailable } from "@/lib/utils";
 import { isError } from "@/services/helper";
 import { AddChapterResponse, RestoreCourseResponse } from "@/types/course";
 import { toast } from "sonner";
+
+// Cache for available courses to prevent excessive API calls
+let coursesCache: { data: unknown[]; timestamp: number } | null = null;
+const COURSES_CACHE_DURATION = 60000; // 1 minute
+let isLoadingCourses = false; // Prevent multiple simultaneous requests
 
 export const useCourse = () => {
 
@@ -9,7 +14,29 @@ export const useCourse = () => {
 
   const getAvailableCourses = async () => {
     try {
+      // Check if we have cached data that's still valid
+      const now = Date.now();
+      if (coursesCache && (now - coursesCache.timestamp) < COURSES_CACHE_DURATION) {
+        console.log('getAvailableCourses - Returning cached courses');
+        return coursesCache.data;
+      }
+
+      // Prevent multiple simultaneous requests
+      if (isLoadingCourses) {
+        console.log('getAvailableCourses - Already loading, waiting for existing request');
+        // Wait for the current request to complete
+        while (isLoadingCourses) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        // Check cache again after waiting
+        if (coursesCache && (Date.now() - coursesCache.timestamp) < COURSES_CACHE_DURATION) {
+          return coursesCache.data;
+        }
+      }
+
+      isLoadingCourses = true;
       console.log('getAvailableCourses - Fetching published courses...');
+      
       const response = await fetch(`${BASEURL}/courses/published`);
       
       if (!response.ok) {
@@ -20,7 +47,15 @@ export const useCourse = () => {
       console.log('getAvailableCourses - Courses fetched successfully:', res);
       
       // Handle different response structures
-      return res.value || res.data || res || [];
+      const courses = res.value || res.data || res || [];
+      
+      // Cache the result
+      coursesCache = {
+        data: courses,
+        timestamp: now
+      };
+      
+      return courses;
     } catch (error: unknown) {
       if (isError(error)) {
         console.error("Failed to fetch available courses", error.message);
@@ -29,6 +64,8 @@ export const useCourse = () => {
         console.error("Unknown error fetching courses", error);
       }
       return [];
+    } finally {
+      isLoadingCourses = false;
     }
   }
   
@@ -84,12 +121,32 @@ export const useCourse = () => {
 
   const getACourse = async (id: string) => {
     try {
-      const req = await fetch(`${BASEURL}/courses/${id}`);
+      const token = localStorage.getItem("token");
+      const headers: HeadersInit = {
+        "Content-Type": "application/json"
+      };
+      
+      if (token) {
+        headers["authorization"] = `Bearer ${token}`;
+      }
+      
+      const req = await fetch(`${BASEURL}/courses/${id}`, {
+        headers
+      });
+      
+      if (!req.ok) {
+        const errorData = await req.json().catch(() => ({}));
+        const errorMessage = errorData.message || `Failed to fetch course: ${req.status} ${req.statusText}`;
+        throw new Error(errorMessage);
+      }
+      
       const theCourse = await req.json();
       return theCourse;
     } catch (error) {
-      toast.error("Error occur while getting this course data");
-      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      console.error("Error getting course data:", errorMessage);
+      toast.error("Error occurred while getting course data");
+      throw error; // Re-throw to allow caller to handle
     }
   }
 
@@ -677,6 +734,15 @@ const addChapter = async (
       
       console.log('Enrollment successful:', res);
       toast.success("Successfully enrolled in course!");
+      
+      // Clear stats cache to refresh enrollment data
+      try {
+        const { clearStatsCache } = await import("@/services/common");
+        clearStatsCache();
+      } catch (error) {
+        console.warn('Could not clear stats cache:', error);
+      }
+      
       return res;
     } catch (error: unknown) {
       console.error("Enrollment error:", error);
@@ -758,52 +824,61 @@ const addChapter = async (
   }
 
   // Filter out enrollments for courses that are deleted or unpublished
+  // Optimized to avoid API calls in loops that cause infinite requests
   const filterValidEnrollments = async (enrollments: unknown[]) => {
     if (!Array.isArray(enrollments) || enrollments.length === 0) {
       return enrollments;
     }
 
     try {
-      console.log('filterValidEnrollments - Checking enrollment validity for', enrollments.length, 'courses');
+      console.log('filterValidEnrollments - Filtering', enrollments.length, 'enrollments (client-side)');
       const validEnrollments = [];
       
       for (const enrollment of enrollments) {
-        if (!enrollment || typeof enrollment !== 'object' || !('courseId' in enrollment)) {
+        if (!enrollment || typeof enrollment !== 'object') {
           console.warn('filterValidEnrollments - Invalid enrollment object:', enrollment);
           continue;
         }
 
-        const enrollmentObj = enrollment as { courseId: string };
+        // Check if enrollment has course data embedded
+        const enrollmentObj = enrollment as { 
+          courseId?: string;
+          course?: {
+            id: string;
+            isDeleted?: boolean;
+            deleted?: boolean;
+            status?: string;
+            deletedAt?: string | null;
+            publish?: boolean;
+          };
+        };
         
-        try {
-          // Check if the course still exists and is available
-          const course = await getACourse(enrollmentObj.courseId);
-          
-          if (!course) {
-            console.log(`filterValidEnrollments - Course ${enrollmentObj.courseId} not found, removing enrollment`);
-            continue;
-          }
+        // If course data is embedded, use it for filtering
+        if (enrollmentObj.course) {
+          const course = enrollmentObj.course;
           
           // Check if course is deleted
-          if (course.isDeleted === true || course.deleted === true || course.status === 'deleted' || course.deletedAt) {
-            console.log(`filterValidEnrollments - Course ${enrollmentObj.courseId} is deleted, removing enrollment`);
+          if (course.isDeleted === true || course.deleted === true || 
+              course.status === 'deleted' || course.deletedAt) {
+            console.log(`filterValidEnrollments - Course ${course.id} is deleted, removing enrollment`);
             continue;
           }
           
-          // Check if course is unpublished (optional - you may want to keep these)
-           if (course.publish === false) {
-           console.log(`filterValidEnrollments - Course ${enrollmentObj.courseId} is unpublished, removing enrollment`);
-            continue;
-          }
-          
-          // Course is valid, keep the enrollment
-          validEnrollments.push(enrollment);
-          
-        } catch (courseError) {
-          console.error(`filterValidEnrollments - Error checking course ${enrollmentObj.courseId}:`, courseError);
-          // If we can't verify the course, assume it's valid to avoid removing legitimate enrollments
-          validEnrollments.push(enrollment);
+          // Optional: Check if course is unpublished (uncomment if needed)
+          // if (course.publish === false) {
+          //   console.log(`filterValidEnrollments - Course ${course.id} is unpublished, removing enrollment`);
+          //   continue;
+          // }
         }
+        // If no embedded course data and we have courseId, assume enrollment is valid
+        // to avoid making API calls that cause infinite loops
+        else if (!enrollmentObj.courseId) {
+          console.warn('filterValidEnrollments - Enrollment missing courseId:', enrollment);
+          continue;
+        }
+        
+        // Keep the enrollment (valid or unable to verify without API calls)
+        validEnrollments.push(enrollment);
       }
       
       if (validEnrollments.length !== enrollments.length) {
@@ -823,6 +898,11 @@ const addChapter = async (
       const token = localStorage.getItem("token");
       if (!token) return null;
       
+      // Check if progress API is available to avoid unnecessary 404s
+      if (!isProgressApiAvailable()) {
+        return { completionPercentage: 0, completedChapters: [] };
+      }
+      
       // Use the correct endpoint for user progress
       const response = await fetch(`${BASEURL}/users/progress/${courseId}`, {
         headers: {
@@ -833,6 +913,8 @@ const addChapter = async (
       if (!response.ok) {
         if (response.status === 404) {
           // Progress endpoint might not exist yet, return default progress
+          // Don't log 404 as error since it's expected for new courses
+          console.log(`No progress found for course ${courseId}, returning default progress`);
           return { completionPercentage: 0, completedChapters: [] };
         }
         const res = await response.json();
@@ -842,9 +924,12 @@ const addChapter = async (
       const res = await response.json();
       return res;
     } catch (error: unknown) {
-      if (isError(error)) {
+      // Only log non-404 network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.log(`Course progress endpoint not available for ${courseId}, using default progress`);
+      } else if (isError(error) && !error.message.includes('404')) {
         console.error("Failed to get course progress", error.message);
-      } else {
+      } else if (!isError(error)) {
         console.error("Unknown error", error);
       }
       // Return default progress instead of null to prevent breaking the UI
@@ -859,6 +944,12 @@ const addChapter = async (
       if (!token) throw new Error("No authentication token found");
       
       console.log('markChapterComplete - Marking chapter as complete:', { courseId, chapterId });
+      
+      // Check if progress API is available, use fallback if not
+      if (!isProgressApiAvailable()) {
+        console.log('markChapterComplete - Progress API disabled, using fallback approach');
+        return await markChapterCompleteFallback(courseId, chapterId);
+      }
       
       const response = await fetch(`${BASEURL}/users/progress/${courseId}/chapters/${chapterId}`, {
         method: "POST",
@@ -935,6 +1026,12 @@ const addChapter = async (
       if (!token) throw new Error("No authentication token found");
       
       console.log('markCourseComplete - Marking course as complete:', courseId);
+      
+      // Check if progress API is available, use fallback if not
+      if (!isProgressApiAvailable()) {
+        console.log('markCourseComplete - Progress API disabled, using fallback approach');
+        return await markCourseCompleteFallback(courseId);
+      }
       
       const response = await fetch(`${BASEURL}/users/progress/${courseId}/complete`, {
         method: "POST",
@@ -1177,6 +1274,13 @@ const addChapter = async (
     }
   };
 
+  // Function to clear the courses cache (call this when courses are added/modified)
+  const clearCoursesCache = () => {
+    console.log('clearCoursesCache - Clearing available courses cache');
+    coursesCache = null;
+    isLoadingCourses = false; // Reset loading state
+  };
+
   return {
     getCourses,
     getACourse,
@@ -1210,6 +1314,8 @@ const addChapter = async (
 
     restoreCourse,
     getDeletedCourses,
-    getAllCoursesIncludingDeleted
+    getAllCoursesIncludingDeleted,
+
+    clearCoursesCache
   }
 }

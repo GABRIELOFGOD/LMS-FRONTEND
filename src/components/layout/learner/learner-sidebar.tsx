@@ -11,7 +11,7 @@ import { useUser } from "@/context/user-context";
 
 const LearnerSidebar = () => {
   const currentPath = usePathname();
-  const { user } = useUser();
+  const { user, logout } = useUser();
   
   const learnerNavigation = [
     {
@@ -89,7 +89,7 @@ const LearnerSidebar = () => {
           className="w-full justify-start gap-3 bg-transparent hover:bg-destructive/10 hover:text-destructive border-destructive/20 text-foreground/80"
           variant="outline"
           onClick={() => {
-            localStorage.removeItem("token");
+            logout();
             window.location.href = "/";
           }}
         >
