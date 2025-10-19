@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import BadgeCard from './badge-card';
 import { useUser } from '@/context/user-context';
 import { BASEURL } from '@/lib/utils';
+import Link from 'next/link';
 
 const UserCertification = () => {
   const [userCertifications, setUserCertifications] = useState<Certification[]>([]);
@@ -63,9 +64,17 @@ const UserCertification = () => {
   
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-lg md:text-xl font-bold">
-        {user?.fname ? `${user.fname}'s Certifications` : "Certifications"}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-lg md:text-xl font-bold">
+          {user?.fname ? `${user.fname}'s Certifications` : "Certifications"}
+        </p>
+        <Link 
+          href="/learner/certificates"
+          className="text-sm text-blue-600 hover:underline font-medium"
+        >
+          View All Certificates →
+        </Link>
+      </div>
       
       {userCertifications.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FACK-CHECK LMS",
+  title: "FACT-CHECK LMS",
   description: "Fact-check Africa Learning Management System",
 };
 
