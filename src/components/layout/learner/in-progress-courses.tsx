@@ -23,11 +23,11 @@ const InProgressCourses = () => {
           const validCourses = userStats.coursesEnrolled
             .filter(course => {
               // More robust validation
-              const isValid = course && 
-                typeof course === 'object' && 
-                course.id && 
-                course.title &&
-                typeof course.title === 'string';
+              const isValid = course.course && 
+                typeof course.course === 'object' && 
+                course.course.id && 
+                course.course.title &&
+                typeof course.course.title === 'string';
               
               if (!isValid) {
                 console.warn('InProgressCourses - Invalid course object:', course);
@@ -36,15 +36,15 @@ const InProgressCourses = () => {
             })
             .map(course => ({
               // Map API course structure to Course type
-              id: course.id,
-              title: course.title,
-              description: course.description || '',
-              imageUrl: course.imageUrl || '',
+              id: course.course.id,
+              title: course.course.title,
+              description: course.course.description || '',
+              imageUrl: course.course.imageUrl || '',
               chapters: [], // Not available in API, default to empty array
-              createdAt: course.createdAt || new Date().toISOString(),
-              updatedAt: course.updatedAt || new Date().toISOString(),
-              publish: course.publish !== undefined ? course.publish : true,
-              isFree: course.isFree !== undefined ? course.isFree : false
+              createdAt: course.course.createdAt || new Date().toISOString(),
+              updatedAt: course.course.updatedAt || new Date().toISOString(),
+              publish: course.course.publish !== undefined ? course.course.publish : true,
+              isFree: course.course.isFree !== undefined ? course.course.isFree : false
             }));
           setCourses(validCourses);
           console.log('InProgressCourses - Valid enrolled courses:', validCourses);

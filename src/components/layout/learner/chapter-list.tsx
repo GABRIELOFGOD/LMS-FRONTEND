@@ -22,6 +22,9 @@ const ChapterList = ({
   onChapterSelect, 
   isChapterCompleted 
 }: ChapterListProps) => {
+
+  console.log("From chapter list, is this completed?", isChapterCompleted(chapters[0].id));
+  
   return (
     <Card className="lg:col-span-1 lg:h-fit lg:sticky lg:top-6">
       <CardHeader className="pb-3">

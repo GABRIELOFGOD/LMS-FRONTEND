@@ -120,7 +120,7 @@ const LearnerCourses = () => {
                 .filter(course => course.isCompleted)
                 .map(courseProgressData => {
                   // Find the course data from stats
-                  const courseData = stats?.coursesEnrolled?.find(c => c.id === courseProgressData.courseId);
+                  const courseData = stats?.coursesEnrolled?.find(c => c.course.id === courseProgressData.courseId);
                   if (!courseData) return null;
                   
                   return (
@@ -130,15 +130,15 @@ const LearnerCourses = () => {
                           <Award className="h-4 w-4 text-green-600" />
                           <span className="text-xs font-medium text-green-700 dark:text-green-300">Completed</span>
                         </div>
-                        <h3 className="font-semibold text-sm mb-2 line-clamp-2">{courseData.title}</h3>
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{courseData.description}</p>
+                        <h3 className="font-semibold text-sm mb-2 line-clamp-2">{courseData.course.title}</h3>
+                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{courseData.course.description}</p>
                         <Button 
                           size="sm" 
                           variant="outline" 
                           asChild 
                           className="w-full border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-300"
                         >
-                          <Link href={`/learner/courses/${courseData.id}`}>
+                          <Link href={`/learner/courses/${courseData.course.id}`}>
                             Review Course
                           </Link>
                         </Button>

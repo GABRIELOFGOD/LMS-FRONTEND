@@ -19,18 +19,26 @@ interface UserStats {
   progress: unknown[]; // Progress tracking array
   certificates: unknown[]; // User certificates
   coursesCompleted: unknown[]; // Completed courses array
+  // Make completedChapters optional to accept the imported shape that may omit it
   coursesEnrolled: {
-    id: string;
-    title: string;
-    description: string;
-    price: string;
-    imageUrl: string;
-    isFree: boolean;
-    publish: boolean;
-    isDeleted: boolean;
-    createdAt: string;
-    updatedAt: string;
-  }[]; // Enrolled courses array
+    course: {
+      id: string;
+      title: string;
+      description: string;
+      price: string;
+      imageUrl: string;
+      isFree: boolean;
+      publish: boolean;
+      isDeleted: boolean;
+      createdAt: string;
+      updatedAt: string;
+    },
+    completedChapters?: {
+      chapter: {
+        id: string;
+      }
+    }[]; // optional completed chapters for compatibility
+  }[] // Enrolled courses array
   currentStraek: number; // Current streak (note: API has typo "Straek")
   longestStreak: number; // Longest streak
   trends?: {
@@ -77,6 +85,7 @@ export const StatsProvider = ({ children }: { children: ReactNode }) => {
       
       // Use dynamic import to avoid module loading issues
       const getUserStats = await getUserStatsAsync();
+      
       if (!getUserStats) {
         throw new Error("Failed to load getUserStats function");
       }

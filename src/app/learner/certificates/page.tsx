@@ -23,7 +23,7 @@ const CertificatesPage = () => {
       const completed = Array.from(courseProgress.values())
         .filter(progress => progress.isCompleted)
         .map(progress => {
-          const course = stats.coursesEnrolled.find(c => c.id === progress.courseId);
+          const course = stats.coursesEnrolled.find(c => c.course.id === progress.courseId);
           return course;
         })
         .filter(course => course !== undefined);

@@ -51,18 +51,19 @@ export interface UserStats {
   progress: unknown[]; // Progress tracking array
   certificates: unknown[]; // User certificates
   coursesCompleted: unknown[]; // Completed courses array
-  coursesEnrolled: {
-    id: string;
-    title: string;
-    description: string;
-    price: string;
-    imageUrl: string;
-    isFree: boolean;
-    publish: boolean;
-    isDeleted: boolean;
-    createdAt: string;
-    updatedAt: string;
-  }[]; // Enrolled courses array
+  // coursesEnrolled: {
+  //   id: string;
+  //   title: string;
+  //   description: string;
+  //   price: string;
+  //   imageUrl: string;
+  //   isFree: boolean;
+  //   publish: boolean;
+  //   isDeleted: boolean;
+  //   createdAt: string;
+  //   updatedAt: string;
+  // }[]; // Enrolled courses array
+  coursesEnrolled: EnrolledCourseTypes[]
   currentStraek: number; // Current streak (note: API has typo "Straek")
   longestStreak: number; // Longest streak
   trends?: {
@@ -82,7 +83,7 @@ export interface UserCourseStats {
 }
 
 // Import Course type
-import { Course } from "@/types/course";
+import { Course, EnrolledCourseTypes } from "@/types/course";
 
 // Cache for getUserStats to prevent excessive API calls
 let statsCache: { data: UserStats | null; timestamp: number } | null = null;
@@ -177,7 +178,7 @@ export const clearStatsCache = () => {
 
 // Filter valid courses (remove deleted/unavailable courses)
 // This function now uses client-side filtering based on course properties to avoid API loops
-export const filterValidCourses = async (courses: unknown[]): Promise<unknown[]> => {
+export const filterValidCourses = async (courses: EnrolledCourseTypes[]): Promise<EnrolledCourseTypes[]> => {
   if (!Array.isArray(courses) || courses.length === 0) {
     return courses;
   }
@@ -192,25 +193,25 @@ export const filterValidCourses = async (courses: unknown[]): Promise<unknown[]>
         continue;
       }
       
-      const courseObj = course as { 
-        id?: string;
-        isDeleted?: boolean;
-        deleted?: boolean;
-        status?: string;
-        deletedAt?: string | null;
-        publish?: boolean;
-      };
+      // const courseObj = course as { 
+      //   id?: string;
+      //   isDeleted?: boolean;
+      //   deleted?: boolean;
+      //   status?: string;
+      //   deletedAt?: string | null;
+      //   publish?: boolean;
+      // };
+      const courseObj = course
       
       // Skip if no id
-      if (!courseObj.id) {
+      if (!courseObj.course.id) {
         console.warn('filterValidCourses - Course missing id:', course);
         continue;
       }
       
       // Check if course is deleted using client-side data
-      if (courseObj.isDeleted === true || courseObj.deleted === true || 
-          courseObj.status === 'deleted' || courseObj.deletedAt) {
-        console.log(`filterValidCourses - Course ${courseObj.id} is deleted, removing from list`);
+      if (courseObj.course.isDeleted === true) {
+        console.log(`filterValidCourses - Course ${courseObj.course.id} is deleted, removing from list`);
         continue;
       }
       

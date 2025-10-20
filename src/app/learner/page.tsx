@@ -71,7 +71,7 @@ const LearnerHome = () => {
 
     try {
       // Fetch detailed course data to get actual chapter counts
-      const progressDataPromises = userStats.coursesEnrolled.map(async (course) => {
+      const progressDataPromises = userStats.coursesEnrolled.map(async ({course}) => {
         try {
           // Fetch full course details to get chapters
           const fullCourseData = await getACourse(course.id);
