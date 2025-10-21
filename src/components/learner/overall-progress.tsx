@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CircularProgress } from "./circular-progress";
 import { UserStats } from "@/services/common";
-import { useUser } from "@/context/user-context";
 
 interface OverallProgressProps {
   userStats: UserStats | null;

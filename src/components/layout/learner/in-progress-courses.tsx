@@ -5,11 +5,9 @@ import { useEffect, useState } from "react";
 import { useStats } from "@/context/stats-context";
 import MyCourseCard from "./my-course-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUser } from "@/context/user-context";
 
 const InProgressCourses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
-  const { courseProgress } = useUser();
   const { stats: userStats, isLoading: statsLoading } = useStats();
 
   const processInProgressCourses = () => {

@@ -787,6 +787,8 @@ const addChapter = async (
 
   // Filter out enrollments for courses that are deleted or unpublished
   // Optimized to avoid API calls in loops that cause infinite requests
+  // Note: This function is currently not used but kept for potential future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const filterValidEnrollments = async (enrollments: unknown[]) => {
     if (!Array.isArray(enrollments) || enrollments.length === 0) {
       return enrollments;
