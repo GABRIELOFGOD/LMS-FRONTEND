@@ -5,6 +5,7 @@ import 'keen-slider/keen-slider.min.css';
 import { useKeenSlider } from 'keen-slider/react';
 import { ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 const testimonials = [
   {
@@ -79,10 +80,12 @@ const Testimony = () => {
           </div>
         </div>
         <div className="w-full flex justify-center md:justify-end mt-5 px-3">
-          <Button className="w-full sm:w-auto flex items-center justify-center gap-2">
-            <p>Enroll Now</p>
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          <Link href="/register">
+            <Button className="w-full sm:w-auto flex items-center justify-center gap-2">
+              <p>Enroll Now</p>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
