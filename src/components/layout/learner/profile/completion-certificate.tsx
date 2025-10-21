@@ -109,24 +109,26 @@ const CompletionCertificate = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
       <div 
         ref={certificateRef}
         id="certificate-content"
         style={{
           backgroundColor: '#ffffff',
           background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%)',
-          width: '1100px', // Fixed width for consistent PDF output
+          width: '100%',
+          maxWidth: '1100px', // Fixed width for consistent PDF output
           minHeight: '780px', // A4 landscape aspect ratio
-          padding: '60px 80px',
+          padding: '40px 30px',
           borderRadius: '0.5rem',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          border: '12px solid #dbeafe',
+          border: '8px solid #dbeafe',
           position: 'relative',
           overflow: 'hidden',
           margin: '0 auto',
           boxSizing: 'border-box',
         }}
+        className="certificate-responsive"
       >
         {/* Decorative background elements */}
         <div style={{
@@ -157,9 +159,11 @@ const CompletionCertificate = ({
           alignItems: 'center', 
           marginBottom: '40px', 
           position: 'relative', 
-          zIndex: 10 
+          zIndex: 10,
+          flexWrap: 'wrap',
+          gap: '20px'
         }}>
-          <div style={{ width: '110px', height: '110px' }}>
+          <div style={{ width: 'clamp(70px, 15vw, 110px)', height: 'clamp(70px, 15vw, 110px)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/Factcheck_Elections.png"
@@ -168,7 +172,7 @@ const CompletionCertificate = ({
             />
           </div>
           
-          <div style={{ width: '110px', height: '110px' }}>
+          <div style={{ width: 'clamp(70px, 15vw, 110px)', height: 'clamp(70px, 15vw, 110px)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/bbydi.png"
@@ -181,7 +185,7 @@ const CompletionCertificate = ({
         {/* Certificate Title */}
         <div style={{ textAlign: 'center', marginBottom: '35px', position: 'relative', zIndex: 10 }}>
           <h1 style={{ 
-            fontSize: '3.5rem', 
+            fontSize: 'clamp(2rem, 5vw, 3.5rem)', 
             fontWeight: 'bold', 
             color: '#1f2937', 
             marginBottom: '0',
@@ -195,7 +199,7 @@ const CompletionCertificate = ({
 
         {/* Certificate Body */}
         <div style={{ textAlign: 'center', marginBottom: '35px', position: 'relative', zIndex: 10 }}>
-          <p style={{ fontSize: '1.4rem', color: '#374151', marginBottom: '25px', marginTop: '0' }}>
+          <p style={{ fontSize: 'clamp(1rem, 2.5vw, 1.4rem)', color: '#374151', marginBottom: '25px', marginTop: '0' }}>
             Presented to
           </p>
           
@@ -203,11 +207,11 @@ const CompletionCertificate = ({
             padding: '15px 0', 
             borderBottom: '3px solid #2563eb', 
             display: 'inline-block', 
-            minWidth: '400px',
+            minWidth: 'min(400px, 90%)',
             marginBottom: '25px'
           }}>
             <p style={{ 
-              fontSize: '2.5rem', 
+              fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', 
               fontWeight: 'bold', 
               color: '#2563eb',
               margin: '0',
@@ -217,9 +221,9 @@ const CompletionCertificate = ({
             </p>
           </div>
 
-          <div style={{ maxWidth: '850px', margin: '0 auto', paddingTop: '25px' }}>
+          <div style={{ maxWidth: '850px', margin: '0 auto', paddingTop: '25px', padding: '25px 10px 0' }}>
             <p style={{ 
-              fontSize: '1.15rem', 
+              fontSize: 'clamp(0.9rem, 2vw, 1.15rem)', 
               color: '#374151', 
               lineHeight: '1.8', 
               marginBottom: '15px',
@@ -229,7 +233,7 @@ const CompletionCertificate = ({
               comprehensive training initiative dedicated to enhancing media literacy, critical thinking, critical 
               literacy, and ethical information verification skills.
             </p>
-            <p style={{ fontSize: '1.15rem', color: '#374151', marginTop: '0', marginBottom: '0' }}>
+            <p style={{ fontSize: 'clamp(0.9rem, 2vw, 1.15rem)', color: '#374151', marginTop: '0', marginBottom: '0' }}>
               This program was developed in partnership by
             </p>
           </div>
@@ -240,12 +244,13 @@ const CompletionCertificate = ({
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
-          gap: '60px', 
+          gap: 'clamp(30px, 8vw, 60px)', 
           marginBottom: '40px', 
           position: 'relative', 
-          zIndex: 10 
+          zIndex: 10,
+          flexWrap: 'wrap'
         }}>
-          <div style={{ width: '180px', height: '90px' }}>
+          <div style={{ width: 'clamp(120px, 25vw, 180px)', height: 'clamp(60px, 12vw, 90px)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/Factcheck_Elections.png"
@@ -253,7 +258,7 @@ const CompletionCertificate = ({
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
           </div>
-          <div style={{ width: '180px', height: '90px' }}>
+          <div style={{ width: 'clamp(120px, 25vw, 180px)', height: 'clamp(60px, 12vw, 90px)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/bbydi.png"
@@ -271,19 +276,20 @@ const CompletionCertificate = ({
           gap: '20px', 
           paddingTop: '20px', 
           position: 'relative', 
-          zIndex: 10 
+          zIndex: 10,
+          flexWrap: 'wrap'
         }}>
           <div style={{ textAlign: 'right' }}>
             <div style={{ 
               borderTop: '2px solid #9ca3af', 
               paddingTop: '8px', 
-              minWidth: '220px' 
+              minWidth: '200px' 
             }}>
-              <p style={{ fontSize: '1.05rem', color: '#4b5563', margin: '0 0 6px 0' }}>
+              <p style={{ fontSize: 'clamp(0.85rem, 1.8vw, 1.05rem)', color: '#4b5563', margin: '0 0 6px 0' }}>
                 Date: {formatDate(completionDate)}
               </p>
               <p style={{ 
-                fontSize: '1.05rem', 
+                fontSize: 'clamp(0.85rem, 1.8vw, 1.05rem)', 
                 color: '#374151', 
                 fontWeight: '600', 
                 margin: '0'
@@ -294,8 +300,8 @@ const CompletionCertificate = ({
           </div>
           
           <div style={{
-            width: '70px',
-            height: '70px',
+            width: 'clamp(50px, 10vw, 70px)',
+            height: 'clamp(50px, 10vw, 70px)',
             backgroundColor: '#3b82f6',
             borderRadius: '50%',
             display: 'flex',
@@ -303,7 +309,7 @@ const CompletionCertificate = ({
             justifyContent: 'center',
             color: '#ffffff',
             fontWeight: 'bold',
-            fontSize: '1.8rem',
+            fontSize: 'clamp(1.2rem, 3vw, 1.8rem)',
             border: '5px solid #ffffff',
             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
           }}>

@@ -63,7 +63,7 @@ export interface UserStats {
   //   createdAt: string;
   //   updatedAt: string;
   // }[]; // Enrolled courses array
-  coursesEnrolled: EnrolledCourseTypes[]
+  coursesEnrolled: EnrolledCourse[] // Use our extended type with backend typo
   currentStraek: number; // Current streak (note: API has typo "Straek")
   longestStreak: number; // Longest streak
   trends?: {
@@ -84,6 +84,12 @@ export interface UserCourseStats {
 
 // Import Course type
 import { Course, EnrolledCourseTypes } from "@/types/course";
+
+// Extend EnrolledCourseTypes to include both spellings for compatibility
+export interface EnrolledCourse extends Omit<EnrolledCourseTypes, 'comppletedChapters'> {
+  comppletedChapters: EnrolledCourseTypes['comppletedChapters']; // Backend typo spelling
+  completedChapters?: EnrolledCourseTypes['comppletedChapters']; // Future-proof correct spelling
+}
 
 // Cache for getUserStats to prevent excessive API calls
 let statsCache: { data: UserStats | null; timestamp: number } | null = null;
@@ -138,7 +144,7 @@ export const getUserStats = async (): Promise<UserStats | null> => {
       progress: res.progress || [],
       certificates: res.certificates || [],
       coursesCompleted: res.coursesCompleted || [],
-      coursesEnrolled: filteredEnrolledCourses as UserStats['coursesEnrolled'],
+      coursesEnrolled: filteredEnrolledCourses as EnrolledCourse[],
       currentStraek: res.currentStraek || 0,
       longestStreak: res.longestStreak || 0,
       trends: res.trends || {
@@ -178,7 +184,7 @@ export const clearStatsCache = () => {
 
 // Filter valid courses (remove deleted/unavailable courses)
 // This function now uses client-side filtering based on course properties to avoid API loops
-export const filterValidCourses = async (courses: EnrolledCourseTypes[]): Promise<EnrolledCourseTypes[]> => {
+export const filterValidCourses = async (courses: EnrolledCourse[]): Promise<EnrolledCourse[]> => {
   if (!Array.isArray(courses) || courses.length === 0) {
     return courses;
   }

@@ -153,9 +153,17 @@ const LearnerHome = () => {
     const currentStreak = 0;
     const longestStreak = 0;
     
-    // Calculate real-time completed courses from context
-    const completedFromContext = Array.from(courseProgress.values()).filter(course => course.isCompleted).length;
-    const totalCompleted = completedFromContext || userStats.coursesCompleted?.length || 0;
+    // Calculate completed courses from userStats (using backend's comppletedChapters typo)
+    const completedCourses = userStats.coursesEnrolled?.filter(enrollment => {
+      const completedChapters = enrollment.comppletedChapters?.length || 0;
+      return completedChapters > 0;
+    }) || [];
+    const totalCompleted = completedCourses.length;
+    
+    // Certificate logic: Only 1 certificate when ALL enrolled courses are completed
+    const totalEnrolled = userStats.coursesEnrolled?.length || 0;
+    const hasMasterCertificate = totalCompleted > 0 && totalCompleted === totalEnrolled;
+    const certificateCount = hasMasterCertificate ? 1 : 0;
     
     return [
       { 
@@ -169,7 +177,7 @@ const LearnerHome = () => {
         title: "Courses Completed", 
         value: totalCompleted.toString(), 
         icon: Award, 
-        trend: completedFromContext > 0 ? `+${completedFromContext} this session` : userStats.trends?.completedThisMonth || "+0 this month", 
+        trend: totalCompleted > 0 ? `+${totalCompleted} completed` : userStats.trends?.completedThisMonth || "+0 this month", 
         color: "text-green-600" 
       },
       { 
@@ -181,9 +189,9 @@ const LearnerHome = () => {
       },
       { 
         title: "Certificates", 
-        value: totalCompleted.toString(), // Certificates = completed courses for now
+        value: certificateCount.toString(), // Only 1 certificate when ALL courses completed
         icon: Target, 
-        trend: completedFromContext > 0 ? "Great progress!" : userStats.trends?.progressEncouragement || "Keep learning!", 
+        trend: hasMasterCertificate ? "Master Certificate Earned! 🏆" : totalCompleted > 0 ? `${totalEnrolled - totalCompleted} more to go!` : "Complete all courses to earn", 
         color: "text-orange-600" 
       },
     ];

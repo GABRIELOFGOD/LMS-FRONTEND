@@ -33,9 +33,12 @@ const LearnerProgress = () => {
 
   // Calculate overall progress based on enrolled vs completed courses
   const enrolledCount = userStats.coursesEnrolled?.length || 0;
-  // Use real-time completed count from context
-  const completedFromContext = Array.from(courseProgress.values()).filter(course => course.isCompleted).length;
-  const completedCount = completedFromContext || userStats.coursesCompleted?.length || 0;
+  // Calculate completed courses from userStats (using backend's comppletedChapters typo)
+  const completedCourses = userStats.coursesEnrolled?.filter(enrollment => {
+    const completedChapters = enrollment.comppletedChapters?.length || 0;
+    return completedChapters > 0;
+  }) || [];
+  const completedCount = completedCourses.length;
   const overallProgress = enrolledCount > 0 ? Math.round((completedCount / enrolledCount) * 100) : 0;
 
   // Use static streak values until backend provides real activity tracking API

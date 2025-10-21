@@ -19,7 +19,7 @@ interface UserStats {
   progress: unknown[]; // Progress tracking array
   certificates: unknown[]; // User certificates
   coursesCompleted: unknown[]; // Completed courses array
-  // Make completedChapters optional to accept the imported shape that may omit it
+  // Backend has typo: uses "comppletedChapters" instead of "completedChapters"
   coursesEnrolled: {
     course: {
       id: string;
@@ -33,11 +33,11 @@ interface UserStats {
       createdAt: string;
       updatedAt: string;
     },
-    completedChapters?: {
+    comppletedChapters: {
       chapter: {
         id: string;
       }
-    }[]; // optional completed chapters for compatibility
+    }[]; // Backend typo: comppletedChapters (with double 'p')
   }[] // Enrolled courses array
   currentStraek: number; // Current streak (note: API has typo "Straek")
   longestStreak: number; // Longest streak

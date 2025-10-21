@@ -67,8 +67,8 @@ const Story = () => {
                     <CheckCircle className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Certified Learning</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">Internationally recognized certificates</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Badges & Master Certificate</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Earn badges per course and a Master Certificate for completing all</p>
                   </div>
                 </div>
                 

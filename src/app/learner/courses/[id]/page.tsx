@@ -94,12 +94,24 @@ const LearnerCourseDetails = () => {
       try {
         const gottenStat = await getUserStats();
         setUserStats(gottenStat);
+        
+        // Update progress based on userStats and course data
+        if (gottenStat && courseId && course) {
+          const thisCourse = gottenStat.coursesEnrolled.find(c => c.course.id === courseId);
+          if (thisCourse) {
+            // Use the course state for total chapters count (it has the full data)
+            const totalChapters = course.chapters?.filter(ch => ch.isPublished).length || 0;
+            const completedChapters = thisCourse.comppletedChapters?.length || 0;
+            const calculatedProgress = totalChapters > 0 ? (completedChapters / totalChapters) * 100 : 0;
+            setProgress(calculatedProgress);
+          }
+        }
       } catch (error) {
         console.error("Failed to load user stats:", error);
       }
     };
     loadStats();
-  }, []);
+  }, [courseId, refreshTrigger, course]);
 
   const handleChapterComplete = async () => {
     if (!course || !currentChapterData) return;

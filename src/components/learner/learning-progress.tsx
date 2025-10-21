@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
 import { CircularProgress } from "./circular-progress";
-import { useUser } from "@/context/user-context";
+import { useStats } from "@/context/stats-context";
 
 interface CourseProgress {
   name: string;
@@ -21,13 +21,27 @@ interface LearningProgressProps {
 }
 
 export const LearningProgress = ({ progressData }: LearningProgressProps) => {
-  const { getCourseProgress, courseProgress } = useUser();
+  const { stats: userStats } = useStats();
   
-  // Force re-render when courseProgress changes
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const progressVersion = courseProgress.size;
+  // Calculate real-time progress data from userStats using backend's comppletedChapters
+  const realTimeProgressData = userStats?.coursesEnrolled?.map(enrollment => {
+    const completedChapters = enrollment.comppletedChapters?.length || 0;
+    const totalChapters = progressData.find(p => p.id === enrollment.course.id)?.lessons || 0;
+    const progress = totalChapters > 0 ? (completedChapters / totalChapters) * 100 : 0;
+    
+    return {
+      name: enrollment.course.title,
+      progress,
+      id: enrollment.course.id,
+      lessons: totalChapters,
+      completedLessons: completedChapters
+    };
+  }) || [];
 
-  if (progressData.length === 0) {
+  // Use real-time data if available, otherwise fall back to prop data
+  const displayData = realTimeProgressData.length > 0 ? realTimeProgressData : progressData;
+
+  if (displayData.length === 0) {
     return (
       <Card className="col-span-full lg:col-span-2">
         <CardHeader className="pb-3">
@@ -59,12 +73,11 @@ export const LearningProgress = ({ progressData }: LearningProgressProps) => {
         <CardTitle className="text-base md:text-lg">Learning Progress</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 md:space-y-4">
-        {progressData.map((course, index) => {
-          // Get real-time progress from context (progressVersion ensures re-render)
-          const realProgress = getCourseProgress(course.id);
-          const displayProgress = realProgress?.progress || course.progress;
-          const isCompleted = realProgress?.isCompleted || course.progress === 100;
-          const completedChapters = realProgress?.completedChapters.length || course.completedLessons;
+        {displayData.map((course, index) => {
+          // Use the real-time calculated data
+          const displayProgress = course.progress;
+          const isCompleted = course.progress >= 100;
+          const completedChapters = course.completedLessons;
           
           return (
             <div key={course.id || index} className="p-3 md:p-4 rounded-lg border bg-card/50 space-y-3">
