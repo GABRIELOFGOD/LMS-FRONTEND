@@ -1,11 +1,9 @@
 "use client";
 
 import { Progress } from "@/components/ui/progress";
-import { useUser } from "@/context/user-context";
 import { useStats } from "@/context/stats-context";
 
 const LearnerProgress = () => {
-  const { courseProgress } = useUser();
   const { stats: userStats, isLoading } = useStats();
 
   if (isLoading) {

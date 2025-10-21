@@ -11,7 +11,7 @@ import { BookOpen, Award, Clock, Target } from "lucide-react";
 import Link from "next/link";
 
 const LearnerCourses = () => {
-  const { user, courseProgress } = useUser();
+  const { user } = useUser();
   const { stats, isLoading: loading, refreshStats } = useStats();
 
   // Calculate completed courses from userStats (real-time from backend)

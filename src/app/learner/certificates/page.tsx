@@ -14,7 +14,19 @@ import { BASEURL } from "@/lib/utils";
 const CertificatesPage = () => {
   const { user, isLoggedIn, isLoaded } = useUser();
   const { stats, isLoading: statsLoading } = useStats();
-  const [completedCourses, setCompletedCourses] = useState<any[]>([]);
+  const [completedCourses, setCompletedCourses] = useState<Array<{
+    course: { 
+      id: string; 
+      title: string; 
+      description?: string;
+      [key: string]: unknown; // Allow additional properties
+    };
+    comppletedChapters?: Array<{ 
+      chapter?: { id: string };
+      [key: string]: unknown;
+    }>;
+    [key: string]: unknown; // Allow additional properties
+  }>>([]);
   const [loadingCourseDetails, setLoadingCourseDetails] = useState(false);
 
   useEffect(() => {
@@ -57,7 +69,7 @@ const CertificatesPage = () => {
           const { enrollment, courseData } = item;
           const completedChapters = enrollment.comppletedChapters?.length || 0;
           const totalPublishedChapters = courseData.chapters?.filter(
-            (chapter: any) => chapter.isPublished
+            (chapter: { isPublished: boolean }) => chapter.isPublished
           ).length || 0;
 
           // Must have completed chapters AND must have completed ALL published chapters

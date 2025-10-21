@@ -11,8 +11,7 @@ interface CompletionCertificateProps {
 }
 
 const CompletionCertificate = ({ 
-  user, 
-  courseTitle = "All Courses",
+  user,
   completionDate,
   onDownload 
 }: CompletionCertificateProps) => {
@@ -91,13 +90,8 @@ const CompletionCertificate = ({
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
         
-        // Center the image and maintain aspect ratio
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
-        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-        
-        const imgX = (pdfWidth - imgWidth * ratio) / 2;
-        const imgY = (pdfHeight - imgHeight * ratio) / 2;
+        // Note: imgWidth, imgHeight, ratio could be used for aspect ratio calculations
+        // but for full-page display, we use pdfWidth and pdfHeight directly
         
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         pdf.save(`certificate-${user.fname}-${user.lname}.pdf`);

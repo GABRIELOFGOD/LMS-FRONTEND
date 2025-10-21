@@ -131,7 +131,7 @@ const CourseBadge: React.FC<CourseBadgeProps> = ({
         const y = config.height / 2 + radius * Math.sin(radian);
         return (
           <circle
-            key={index}
+            key={`star-${index}`}
             cx={x}
             cy={y}
             r="3"
@@ -174,7 +174,7 @@ const CourseBadge: React.FC<CourseBadgeProps> = ({
         fontSize={config.titleFontSize}
         fontWeight="700"
       >
-        {displayTitle.split(' ').reduce((acc, word, i, arr) => {
+        {displayTitle.split(' ').reduce<string[]>((acc, word) => {
           const line = acc[acc.length - 1];
           if (line && (line + ' ' + word).length <= (size === "sm" ? 20 : size === "md" ? 28 : 35)) {
             acc[acc.length - 1] = line + ' ' + word;
@@ -182,7 +182,7 @@ const CourseBadge: React.FC<CourseBadgeProps> = ({
             acc.push(word);
           }
           return acc;
-        }, [] as string[]).map((line, i) => (
+        }, []).map((line, i) => (
           <tspan key={i} x={config.width / 2} dy={i === 0 ? 0 : config.titleFontSize + 2}>
             {line}
           </tspan>
