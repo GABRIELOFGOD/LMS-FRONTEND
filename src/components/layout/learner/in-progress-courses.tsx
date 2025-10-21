@@ -21,33 +21,40 @@ const InProgressCourses = () => {
         // Use the same logic as the main learner dashboard - enrolled courses are "in progress"
         if (Array.isArray(userStats.coursesEnrolled)) {
           const validCourses = userStats.coursesEnrolled
-            .filter(course => {
+            .filter(enrollment => {
               // More robust validation
-              const isValid = course && 
-                typeof course === 'object' && 
-                course.id && 
-                course.title &&
-                typeof course.title === 'string';
+              const isValid = enrollment.course && 
+                typeof enrollment.course === 'object' && 
+                enrollment.course.id && 
+                enrollment.course.title &&
+                typeof enrollment.course.title === 'string';
               
               if (!isValid) {
-                console.warn('InProgressCourses - Invalid course object:', course);
+                console.warn('InProgressCourses - Invalid course object:', enrollment);
+                return false;
               }
-              return isValid;
+              
+              // Filter out completed courses (where all chapters are done)
+              // Backend has typo: uses "comppletedChapters" instead of "completedChapters"
+              const completedChapters = enrollment.comppletedChapters?.length || 0;
+              const isCompleted = completedChapters > 0;
+              
+              return !isCompleted; // Only include in-progress courses
             })
-            .map(course => ({
+            .map(enrollment => ({
               // Map API course structure to Course type
-              id: course.id,
-              title: course.title,
-              description: course.description || '',
-              imageUrl: course.imageUrl || '',
+              id: enrollment.course.id,
+              title: enrollment.course.title,
+              description: enrollment.course.description || '',
+              imageUrl: enrollment.course.imageUrl || '',
               chapters: [], // Not available in API, default to empty array
-              createdAt: course.createdAt || new Date().toISOString(),
-              updatedAt: course.updatedAt || new Date().toISOString(),
-              publish: course.publish !== undefined ? course.publish : true,
-              isFree: course.isFree !== undefined ? course.isFree : false
+              createdAt: enrollment.course.createdAt || new Date().toISOString(),
+              updatedAt: enrollment.course.updatedAt || new Date().toISOString(),
+              publish: enrollment.course.publish !== undefined ? enrollment.course.publish : true,
+              isFree: enrollment.course.isFree !== undefined ? enrollment.course.isFree : false
             }));
           setCourses(validCourses);
-          console.log('InProgressCourses - Valid enrolled courses:', validCourses);
+          console.log('InProgressCourses - Valid in-progress courses:', validCourses);
         } else {
           console.warn('InProgressCourses - Enrolled courses is not an array:', userStats.coursesEnrolled);
           setCourses([]);
@@ -81,11 +88,8 @@ const InProgressCourses = () => {
     );
   }
 
-  // Filter out completed courses - they should only show in the dedicated completed section
-  const inProgressCourses = courses.filter(course => {
-    const courseProgressData = courseProgress.get(course.id);
-    return !courseProgressData?.isCompleted; // Only show non-completed courses
-  });
+  // Courses are already filtered in processInProgressCourses
+  const inProgressCourses = courses;
 
   return (
     <div>
@@ -93,28 +97,21 @@ const InProgressCourses = () => {
       <div className="mt-5 flex flex-col gap-5">
         {inProgressCourses.length > 0 ? (
           inProgressCourses.map((course) => {
-            // Check if course is completed from context
-            const courseProgressData = courseProgress.get(course.id);
-            const isCompleted = courseProgressData?.isCompleted || false;
-            
             return (
               <MyCourseCard
                 key={course.id}
                 course={course}
-                isCompleted={isCompleted}
+                isCompleted={false}
               />
             );
           })
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <p className="text-lg font-medium mb-2">
-              {courses.length > 0 ? "All courses completed!" : "No enrolled courses yet"}
+              No in-progress courses
             </p>
             <p className="text-sm">
-              {courses.length > 0 
-                ? "Great job! Check your completed courses above." 
-                : "Enroll in a course to start your learning journey."
-              }
+              Enroll in a course to start your learning journey, or check your completed courses above.
             </p>
           </div>
         )}

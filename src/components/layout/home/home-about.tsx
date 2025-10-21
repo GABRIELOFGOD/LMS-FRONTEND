@@ -51,9 +51,9 @@ const About = () => {
             <div className="inline-flex items-center justify-center p-3 bg-green-100 dark:bg-green-900/50 rounded-full mb-4">
               <Award className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">Certified Learning</h3>
+            <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">Badges & Certificates</h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Earn recognized certificates and badges that validate your skills and achievements.
+              Earn badges for completing courses and a Master Certificate when you complete all courses.
             </p>
           </div>
         </div>

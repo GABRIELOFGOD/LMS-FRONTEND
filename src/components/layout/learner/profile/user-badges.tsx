@@ -4,46 +4,23 @@ import { Badge } from "@/types/attachment";
 import { useEffect, useState } from "react";
 import BadgeCard from "./badge-card";
 import { useUser } from "@/context/user-context";
-import { BASEURL } from "@/lib/utils";
+import { useStats } from "@/context/stats-context";
+import { getUserAchievements } from "@/data/badges";
 
 const UserBadges = () => {
   const [userBadges, setUserBadges] = useState<Badge[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useUser();
-
-  const fetchUserBadges = async () => {
-    if (!user) return;
-    
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const response = await fetch(`${BASEURL}/users/badges`, {
-        method: "GET",
-        headers: {
-          "authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-      });
-
-      if (response.ok) {
-        const badges = await response.json();
-        setUserBadges(Array.isArray(badges) ? badges : []);
-      } else {
-        console.log('Badges endpoint not available, showing empty state');
-        setUserBadges([]);
-      }
-    } catch (error) {
-      console.log('Error fetching badges (endpoint may not exist):', error);
-      setUserBadges([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { stats, isLoading } = useStats();
 
   useEffect(() => {
-    fetchUserBadges();
-  }, [user]);
+    if (stats?.coursesEnrolled) {
+      // Generate badges dynamically based on completed courses
+      const achievements = getUserAchievements(stats);
+      setUserBadges(achievements.badges);
+    } else {
+      setUserBadges([]);
+    }
+  }, [stats]);
 
   if (isLoading) {
     return (

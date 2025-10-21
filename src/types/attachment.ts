@@ -13,13 +13,13 @@ export interface Badge {
   id?: string;
   name: string;
   description: string;
-  image: string;
+  image?: string; // Optional since we now use SVG badges
 }
 
 export interface Certification {
   id?: string;
   name: string;
   description: string;
-  image: string;
+  image?: string; // Optional since we now use SVG badges
 }
 

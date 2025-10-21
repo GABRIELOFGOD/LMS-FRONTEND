@@ -18,6 +18,7 @@ import {
   Clock
 } from "lucide-react";
 import { toast } from "sonner";
+import { getUserStats, UserStats } from "@/services/common";
 
 
 
@@ -31,6 +32,7 @@ const LearnerCourseDetails = () => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0); // Force re-render trigger
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
 
   const { getACourse, getCourseProgress } = useCourse();
   const { isLoggedIn, updateChapterProgress, getCourseProgress: getContextProgress } = useUser();
@@ -86,6 +88,30 @@ const LearnerCourseDetails = () => {
 
     loadData();
   }, [courseId, isLoggedIn]); // Minimal dependencies
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const gottenStat = await getUserStats();
+        setUserStats(gottenStat);
+        
+        // Update progress based on userStats and course data
+        if (gottenStat && courseId && course) {
+          const thisCourse = gottenStat.coursesEnrolled.find(c => c.course.id === courseId);
+          if (thisCourse) {
+            // Use the course state for total chapters count (it has the full data)
+            const totalChapters = course.chapters?.filter(ch => ch.isPublished).length || 0;
+            const completedChapters = thisCourse.comppletedChapters?.length || 0;
+            const calculatedProgress = totalChapters > 0 ? (completedChapters / totalChapters) * 100 : 0;
+            setProgress(calculatedProgress);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user stats:", error);
+      }
+    };
+    loadStats();
+  }, [courseId, refreshTrigger, course]);
 
   const handleChapterComplete = async () => {
     if (!course || !currentChapterData) return;
@@ -158,13 +184,26 @@ const LearnerCourseDetails = () => {
   const currentChapterData = publishedChapters[currentChapter];
   
   // Helper functions for progress tracking
-  const isChapterCompleted = (chapterId: string): boolean => {
-    // Include refreshTrigger to ensure this function re-evaluates when progress changes
-    const courseProgressData = getContextProgress(courseId);
-    const isCompleted = courseProgressData?.completedChapters.includes(chapterId) || false;
-    // The refreshTrigger dependency ensures this updates when chapter completion changes
-    return refreshTrigger >= 0 ? isCompleted : isCompleted;
-  };
+  // const isChapterCompleted = (chapterId: string): boolean => {
+  //   // Include refreshTrigger to ensure this function re-evaluates when progress changes
+  //   const courseProgressData = getContextProgress(courseId);
+  //   const isCompleted = courseProgressData?.completedChapters.includes(chapterId) || false;
+  //   // The refreshTrigger dependency ensures this updates when chapter completion changes
+  //   return refreshTrigger >= 0 ? isCompleted : isCompleted;
+  // };
+
+
+  const isChapterCompleted = (chapterId: string) => {
+  
+    const thisCourse = userStats?.coursesEnrolled.find(c => c.course.id === courseId);
+
+    if (thisCourse?.comppletedChapters.find(chpt => chpt.chapter.id === chapterId)) {
+      return true;
+    } else {
+      return false;
+    }
+
+  }
 
   const isLastChapter = currentChapter === publishedChapters.length - 1;
   const isCourseCompleted = () => {

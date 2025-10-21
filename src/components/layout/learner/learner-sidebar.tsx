@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Instructor from "@/assets/hero-fc.png";
-import { Bell, Home, LogOut, User2, Videotape } from "lucide-react";
+import { Bell, Home, LogOut, User2, Videotape, Award } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
@@ -28,12 +28,18 @@ const LearnerSidebar = () => {
     },
     {
       id: 3,
+      label: "Certificates",
+      path: "/learner/certificates",
+      icon: Award
+    },
+    {
+      id: 4,
       label: "Profile",
       path: "/learner/profile",
       icon: User2
     },
     {
-      id: 4,
+      id: 5,
       label: "Notification",
       path: "/learner/notification",
       icon: Bell

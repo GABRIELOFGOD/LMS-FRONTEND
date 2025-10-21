@@ -10,12 +10,12 @@ interface OverallProgressProps {
 }
 
 export const OverallProgress = ({ userStats }: OverallProgressProps) => {
-  const { courseProgress } = useUser();
-  
-  // Calculate real-time progress from context
+  // Calculate completed courses from userStats (using backend's comppletedChapters typo)
   const enrolledCourses = userStats?.coursesEnrolled?.length || 0;
-  const completedFromContext = Array.from(courseProgress.values()).filter(course => course.isCompleted).length;
-  const completedCourses = completedFromContext || userStats?.coursesCompleted?.length || 0;
+  const completedCourses = userStats?.coursesEnrolled?.filter(enrollment => {
+    const completedChapters = enrollment.comppletedChapters?.length || 0;
+    return completedChapters > 0;
+  }).length || 0;
   
   const progressPercentage = enrolledCourses > 0 
     ? Math.round((completedCourses / enrolledCourses) * 100) 

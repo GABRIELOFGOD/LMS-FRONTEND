@@ -14,12 +14,24 @@ const LearnerCourses = () => {
   const { user, courseProgress } = useUser();
   const { stats, isLoading: loading, refreshStats } = useStats();
 
-  // Calculate real-time completed courses from context
-  const completedFromContext = Array.from(courseProgress.values()).filter(course => course.isCompleted).length;
+  // Calculate completed courses from userStats (real-time from backend)
+  const completedCourses = stats?.coursesEnrolled?.filter(enrollment => {
+    // Backend has typo: uses "comppletedChapters" instead of "completedChapters"
+    const completedChapters = enrollment.comppletedChapters?.length || 0;
+    // A course is completed if it has completed chapters
+    // You can refine this logic based on your completion criteria
+    return completedChapters > 0;
+  }) || [];
+  
+  const completedFromContext = completedCourses.length;
   
   // Calculate in-progress courses (enrolled but not completed)
   const totalEnrolled = stats?.coursesEnrolled?.length || 0;
   const inProgressCount = totalEnrolled - completedFromContext;
+  
+  // Certificate logic: Only 1 certificate when ALL enrolled courses are completed
+  const hasMasterCertificate = completedFromContext > 0 && completedFromContext === totalEnrolled;
+  const certificateCount = hasMasterCertificate ? 1 : 0;
   
   const statsCards = stats ? [
     {
@@ -42,7 +54,7 @@ const LearnerCourses = () => {
     },
     {
       title: "Certificates",
-      value: stats.certificates?.length?.toString() || "0",
+      value: certificateCount.toString(), // Only 1 certificate when ALL courses completed
       icon: Target,
       color: "text-orange-600"
     }
@@ -109,44 +121,37 @@ const LearnerCourses = () => {
         <InProgressCourses />
         
         {/* Completed Courses Section */}
-        {Array.from(courseProgress.values()).filter(course => course.isCompleted).length > 0 && (
+        {completedCourses.length > 0 && (
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Award className="h-5 w-5 text-green-600" />
-              Completed Courses ({Array.from(courseProgress.values()).filter(course => course.isCompleted).length})
+              Completed Courses ({completedCourses.length})
             </h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from(courseProgress.values())
-                .filter(course => course.isCompleted)
-                .map(courseProgressData => {
-                  // Find the course data from stats
-                  const courseData = stats?.coursesEnrolled?.find(c => c.id === courseProgressData.courseId);
-                  if (!courseData) return null;
-                  
-                  return (
-                    <Card key={courseProgressData.courseId} className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Award className="h-4 w-4 text-green-600" />
-                          <span className="text-xs font-medium text-green-700 dark:text-green-300">Completed</span>
-                        </div>
-                        <h3 className="font-semibold text-sm mb-2 line-clamp-2">{courseData.title}</h3>
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{courseData.description}</p>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          asChild 
-                          className="w-full border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-300"
-                        >
-                          <Link href={`/learner/courses/${courseData.id}`}>
-                            Review Course
-                          </Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-                .filter(Boolean)}
+              {completedCourses.map(courseData => {
+                return (
+                  <Card key={courseData.course.id} className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Award className="h-4 w-4 text-green-600" />
+                        <span className="text-xs font-medium text-green-700 dark:text-green-300">Completed</span>
+                      </div>
+                      <h3 className="font-semibold text-sm mb-2 line-clamp-2">{courseData.course.title}</h3>
+                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{courseData.course.description}</p>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        asChild 
+                        className="w-full border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-300"
+                      >
+                        <Link href={`/learner/courses/${courseData.course.id}`}>
+                          Review Course
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}

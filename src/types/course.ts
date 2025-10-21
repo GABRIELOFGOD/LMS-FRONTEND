@@ -73,3 +73,23 @@ export interface Course {
   updatedAt: string;
   chapters: Chapter[];
 }
+
+export interface EnrolledCourseTypes {
+  course: {
+    id: string;
+    title: string;
+    description: string;
+    price: string;
+    imageUrl: string;
+    isFree: boolean;
+    publish: boolean;
+    isDeleted: boolean;
+    createdAt: string;
+    updatedAt: string;
+  },
+  comppletedChapters: {
+    chapter: {
+      id: string;
+    }
+  }[];
+}

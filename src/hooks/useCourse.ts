@@ -771,48 +771,10 @@ const addChapter = async (
         return [];
       }
       
-      console.log('Fetching user enrollments...');
-      let response;
-      let res;
-      
-      try {
-        // Try primary endpoint
-        response = await fetch(`${BASEURL}/enrollments/user`, {
-          headers: {
-            "authorization": `Bearer ${token}`
-          }
-        });
-        res = await response.json();
-        console.log('Enrollments response:', { status: response.status, ok: response.ok, response: res });
-        
-        if (response.ok) {
-          console.log('User enrollments fetched successfully:', res);
-          // Filter out enrollments for deleted or unpublished courses
-          const cleanedEnrollments = await filterValidEnrollments(res);
-          return cleanedEnrollments;
-        }
-      } catch {
-        console.warn('Primary enrollments endpoint failed, trying fallback...');
-      }
-      
-      // Fallback: Try alternative endpoint or return empty for now
-      if (!response || response.status === 404) {
-        console.log('Enrollments endpoint not available, returning empty array');
-        return [];
-      }
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn("Unauthorized - user may need to log in again");
-          return [];
-        }
-        throw new Error(res?.message || `Failed to fetch enrollments (${response.status})`);
-      }
-      
-      console.log('User enrollments fetched successfully:', res);
-      // Filter out enrollments for deleted or unpublished courses
-      const cleanedEnrollments = await filterValidEnrollments(res);
-      return cleanedEnrollments;
+      console.log('getUserEnrollments - Endpoint not available, returning empty array');
+      // The /enrollments/user endpoint is not available in the backend
+      // Return empty array to prevent 404 errors
+      return [];
     } catch (error: unknown) {
       if (isError(error)) {
         console.error("Failed to get enrollments", error.message);

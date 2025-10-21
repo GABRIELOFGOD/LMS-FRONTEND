@@ -8,6 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Course } from "@/types/course";
 import ImagePlaceholder from "@/assets/hero-fc.png";
+import { useStats } from "@/context/stats-context";
 
 interface RecommendedCoursesProps {
   courses: Course[];
@@ -15,6 +16,17 @@ interface RecommendedCoursesProps {
 }
 
 export const RecommendedCourses = ({ courses, loading }: RecommendedCoursesProps) => {
+  const { stats } = useStats();
+  
+  // Get enrolled course IDs to filter them out from recommendations
+  const enrolledCourseIds = new Set(
+    stats?.coursesEnrolled?.map(enrollment => enrollment.course.id) || []
+  );
+  
+  // Filter out courses that user is already enrolled in
+  const recommendedCourses = courses.filter(course => 
+    course && course.id && course.title && !enrolledCourseIds.has(course.id)
+  );
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: 3 }).map((_, index) => (
@@ -43,9 +55,8 @@ export const RecommendedCourses = ({ courses, loading }: RecommendedCoursesProps
 
   const CoursesGrid = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {courses
+      {recommendedCourses
         .slice(0, 3)
-        .filter(course => course && course.id && course.title)
         .map((course) => (
         <Link key={course.id} href={`/learner/courses/${course.id}`}>
           <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
@@ -87,7 +98,7 @@ export const RecommendedCourses = ({ courses, loading }: RecommendedCoursesProps
       <CardContent>
         {loading ? (
           <LoadingSkeleton />
-        ) : courses && courses.length > 0 ? (
+        ) : recommendedCourses && recommendedCourses.length > 0 ? (
           <CoursesGrid />
         ) : (
           <EmptyState />
