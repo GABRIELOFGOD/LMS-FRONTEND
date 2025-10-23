@@ -39,8 +39,6 @@ interface UserStats {
       }
     }[]; // Backend typo: comppletedChapters (with double 'p')
   }[] // Enrolled courses array
-  currentStraek: number; // Current streak (note: API has typo "Straek")
-  longestStreak: number; // Longest streak
   trends?: {
     coursesThisMonth: string;
     completedThisMonth: string;

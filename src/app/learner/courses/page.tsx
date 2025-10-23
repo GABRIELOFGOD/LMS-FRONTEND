@@ -7,7 +7,7 @@ import { useUser } from "@/context/user-context";
 import { useStats } from "@/context/stats-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Award, Clock, Target } from "lucide-react";
+import { BookOpen, Award, Target } from "lucide-react";
 import Link from "next/link";
 
 const LearnerCourses = () => {
@@ -45,12 +45,6 @@ const LearnerCourses = () => {
       value: (completedFromContext || stats.coursesCompleted?.length || 0).toString(),
       icon: Award,
       color: "text-green-600"
-    },
-    {
-      title: "Current Streak",
-      value: "0", // Real streak calculation requires activity tracking API
-      icon: Clock,
-      color: "text-purple-600"
     },
     {
       title: "Certificates",

@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Award, Target, Clock } from "lucide-react";
+import { BookOpen, Award, Target } from "lucide-react";
 import { useUser } from "@/context/user-context";
 import { Course } from "@/types/course";
 import { useCallback, useEffect, useState } from "react";
@@ -148,11 +148,6 @@ const LearnerHome = () => {
 
   // Dynamic learner stats - use API data where available and accurate
   const stats = userStats ? (() => {
-    // Use static streak values until backend provides real activity tracking API
-    // This avoids confusing users with random mock data
-    const currentStreak = 0;
-    const longestStreak = 0;
-    
     // Calculate completed courses from userStats (using backend's comppletedChapters typo)
     const completedCourses = userStats.coursesEnrolled?.filter(enrollment => {
       const completedChapters = enrollment.comppletedChapters?.length || 0;
@@ -181,13 +176,6 @@ const LearnerHome = () => {
         color: "text-green-600" 
       },
       { 
-        title: "Current Streak", 
-        value: currentStreak.toString(),
-        icon: Clock, 
-        trend: `Longest: ${longestStreak} days`, 
-        color: "text-purple-600" 
-      },
-      { 
         title: "Certificates", 
         value: certificateCount.toString(), // Only 1 certificate when ALL courses completed
         icon: Target, 
@@ -199,7 +187,6 @@ const LearnerHome = () => {
     // Show zeros for new users - no dummy data
     { title: "Courses Enrolled", value: "0", icon: BookOpen, trend: "Start your learning journey", color: "text-blue-600" },
     { title: "Courses Completed", value: "0", icon: Award, trend: "Complete your first course", color: "text-green-600" },
-    { title: "Current Streak", value: "0", icon: Clock, trend: "Start learning today", color: "text-purple-600" },
     { title: "Certificates", value: "0", icon: Target, trend: "Earn your first certificate", color: "text-orange-600" },
   ];
 
