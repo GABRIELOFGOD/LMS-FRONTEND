@@ -39,11 +39,6 @@ const LearnerProgress = () => {
   const completedCount = completedCourses.length;
   const overallProgress = enrolledCount > 0 ? Math.round((completedCount / enrolledCount) * 100) : 0;
 
-  // Use static streak values until backend provides real activity tracking API
-  // This matches the approach used in /learner page for new users
-  const currentStreak = 0;
-  const longestStreak = 0;
-
   return (
     <div className="flex flex-col gap-5">
       <p className="text-lg md:text-xl font-bold">Progress</p>
@@ -58,7 +53,7 @@ const LearnerProgress = () => {
       </div>
 
       {/* Progress Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+      <div className="grid grid-cols-2 gap-4 mt-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
           <p className="text-2xl font-bold text-blue-600">{enrolledCount}</p>
           <p className="text-sm text-gray-600 dark:text-gray-300">Enrolled</p>
@@ -66,14 +61,6 @@ const LearnerProgress = () => {
         <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center">
           <p className="text-2xl font-bold text-green-600">{completedCount}</p>
           <p className="text-sm text-gray-600 dark:text-gray-300">Completed</p>
-        </div>
-        <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg text-center">
-          <p className="text-2xl font-bold text-orange-600">{currentStreak}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-300">Current Streak</p>
-        </div>
-        <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-center">
-          <p className="text-2xl font-bold text-purple-600">{longestStreak}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-300">Longest Streak</p>
         </div>
       </div>
 

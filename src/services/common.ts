@@ -64,8 +64,6 @@ export interface UserStats {
   //   updatedAt: string;
   // }[]; // Enrolled courses array
   coursesEnrolled: EnrolledCourse[] // Use our extended type with backend typo
-  currentStraek: number; // Current streak (note: API has typo "Straek")
-  longestStreak: number; // Longest streak
   trends?: {
     coursesThisMonth: string;
     completedThisMonth: string;
@@ -88,7 +86,7 @@ import { Course, EnrolledCourseTypes } from "@/types/course";
 // Extend EnrolledCourseTypes to include both spellings for compatibility
 export interface EnrolledCourse extends Omit<EnrolledCourseTypes, 'comppletedChapters'> {
   comppletedChapters: EnrolledCourseTypes['comppletedChapters']; // Backend typo spelling
-  completedChapters?: EnrolledCourseTypes['comppletedChapters']; // Future-proof correct spelling
+  // completedChapters?: EnrolledCourseTypes['comppletedChapters']; // Future-proof correct spelling
 }
 
 // Cache for getUserStats to prevent excessive API calls
@@ -135,8 +133,6 @@ export const getUserStats = async (): Promise<UserStats | null> => {
     console.log('getUserStats - Response type:', typeof res);
     console.log('getUserStats - coursesEnrolled:', res.coursesEnrolled, typeof res.coursesEnrolled);
     console.log('getUserStats - progress:', res.progress, typeof res.progress);
-    console.log('getUserStats - currentStraek:', res.currentStraek, typeof res.currentStraek);
-    console.log('getUserStats - longestStreak:', res.longestStreak, typeof res.longestStreak);
     
     // Ensure the response matches expected structure
     const filteredEnrolledCourses = await filterValidCourses(res.coursesEnrolled || []);
@@ -145,8 +141,6 @@ export const getUserStats = async (): Promise<UserStats | null> => {
       certificates: res.certificates || [],
       coursesCompleted: res.coursesCompleted || [],
       coursesEnrolled: filteredEnrolledCourses as EnrolledCourse[],
-      currentStraek: res.currentStraek || 0,
-      longestStreak: res.longestStreak || 0,
       trends: res.trends || {
         coursesThisMonth: "+0 this month",
         completedThisMonth: "+0 this month",

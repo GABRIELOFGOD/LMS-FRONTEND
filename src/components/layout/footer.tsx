@@ -24,7 +24,7 @@ const Footer = () => {
     {
       id: 4,
       label: "Privacy Policy",
-      path: "/privacy"
+      path: "/privacy-policy"
     }
   ];
 
@@ -77,11 +77,11 @@ const Footer = () => {
               </div>
               <div className="flex items-center justify-center sm:justify-start gap-2 text-blue-200">
                 <MapPin className="h-3 w-3 flex-shrink-0" />
-                <span className="text-xs">Lagos, Nigeria</span>
+                <span className="text-xs">Abuja, Nigeria</span>
               </div>
               <div className="flex items-center justify-center sm:justify-start gap-2 text-blue-200">
                 <Mail className="h-3 w-3 flex-shrink-0" />
-                <span className="text-xs">info@factcheckafrica.org</span>
+                <span className="text-xs">fcalearn@thebrainbuilders.org</span>
               </div>
             </div>
           </div>
@@ -163,7 +163,7 @@ const Footer = () => {
             <div className="flex flex-col md:flex-row items-center gap-1 md:gap-4 text-blue-200 text-xs text-center">
               <p>&copy; {new Date().getFullYear()} FactCheck Africa. All Rights Reserved</p>
               <div className="flex items-center gap-2 md:gap-3">
-                <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
                 <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
               </div>
             </div>
