@@ -1,4 +1,36 @@
 import { Badge, Certification } from "@/types/attachment";
+import { BASEURL } from "@/lib/utils";
+
+/**
+ * Fetch total number of published courses from admin
+ * This is used to determine if learner has enrolled in all available courses
+ */
+export const getTotalPublishedCourses = async (): Promise<number> => {
+  try {
+    // Use the public /courses/published endpoint (doesn't require auth)
+    const response = await fetch(`${BASEURL}/courses/published`, {
+      method: "GET",
+    });
+
+    if (!response.ok) return 0;
+    
+    const data = await response.json();
+    // Handle different response structures (value, data, or direct array)
+    const courses = data.value || data.data || data || [];
+    
+    // Count only published, non-deleted courses
+    if (Array.isArray(courses)) {
+      return courses.filter((course: { publish?: boolean; isDeleted?: boolean }) => 
+        course.publish && !course.isDeleted
+      ).length;
+    }
+    
+    return 0;
+  } catch (error) {
+    console.error('Error fetching total published courses:', error);
+    return 0;
+  }
+};
 
 /**
  * Generate badges for completed courses
@@ -13,8 +45,8 @@ export const generateCourseBadges = (completedCourses: Array<{ course: { id: str
 };
 
 /**
- * Generate master certification when user completes ALL published courses
- * Only awarded when all enrolled courses are completed
+ * Generate master certification when user completes ALL active courses from a specific admin
+ * Only awarded when all active (non-deleted, published) courses from an admin are completed
  */
 export const generateMasterCertification = (
   hasCompletedAll: boolean,
@@ -33,9 +65,7 @@ export const generateMasterCertification = (
 
 /**
  * Check if a course is fully completed
- * A course is considered completed if it has completed chapters
- * Note: Backend should ideally provide total chapters or completion status
- * For now, we check if there are completed chapters (user has made progress)
+ * A course is considered completed if ALL published chapters are done
  */
 export const isCourseFullyCompleted = (
   enrollment: { 
@@ -51,24 +81,39 @@ export const isCourseFullyCompleted = (
   }
   
   // Fallback: Consider course completed if it has completed chapters
-  // This is not ideal but works when we don't have total chapter count
-  // Backend should provide a isCompleted flag or totalChapters field
   return completedCount > 0;
 };
 
 /**
+ * Filter only active courses (non-deleted, published)
+ */
+export const filterActiveCourses = <T extends { course: { isDeleted?: boolean; publish?: boolean } }>(
+  courses: T[]
+): T[] => {
+  return courses.filter(enrollment => 
+    !enrollment.course.isDeleted && enrollment.course.publish
+  );
+};
+
+/**
  * Get all user badges and certifications
- * Badges: One for each completed course
- * Certification: Only if ALL enrolled courses are completed
+ * Badges: One for each completed course (regardless of course status)
+ * Certification: Only if learner has enrolled in AND completed ALL active (non-deleted, published) courses from admin
  */
 export const getUserAchievements = (
   userStats: {
     coursesEnrolled: Array<{ 
-      course: { id: string; title: string };
+      course: { 
+        id: string; 
+        title: string;
+        isDeleted?: boolean;
+        publish?: boolean;
+      };
       comppletedChapters: Array<{ chapter: { id: string } }>;
     }>;
   },
-  coursesWithChapterCounts?: Map<string, number>
+  coursesWithChapterCounts?: Map<string, number>,
+  totalPublishedCourses?: number  // Total number of published courses from admin
 ) => {
   // Calculate completed courses (using backend's comppletedChapters typo)
   const completedCourses = userStats.coursesEnrolled.filter(enrollment => {
@@ -76,23 +121,40 @@ export const getUserAchievements = (
     return isCourseFullyCompleted(enrollment, totalChapters);
   });
 
-  const totalEnrolled = userStats.coursesEnrolled.length;
-  const totalCompleted = completedCourses.length;
-  const hasCompletedAll = totalEnrolled > 0 && totalCompleted === totalEnrolled;
+  // Filter only active courses
+  const activeCourses = filterActiveCourses(userStats.coursesEnrolled);
+  const activeCompletedCourses = filterActiveCourses(completedCourses);
 
-  // Generate badges for each completed course
+  const totalActiveEnrolled = activeCourses.length;
+  const totalActiveCompleted = activeCompletedCourses.length;
+  
+  // Certificate is awarded ONLY when:
+  // 1. Learner has enrolled in ALL published courses from admin
+  // 2. Learner has completed ALL those courses
+  const hasEnrolledInAllCourses = totalPublishedCourses 
+    ? totalActiveEnrolled >= totalPublishedCourses 
+    : totalActiveEnrolled > 0;
+  
+  const hasCompletedAllPublished = hasEnrolledInAllCourses && 
+    totalActiveCompleted === totalActiveEnrolled &&
+    (totalPublishedCourses ? totalActiveCompleted >= totalPublishedCourses : true);
+
+  // Generate badges for each completed course (including deleted/unpublished ones)
   const badges = generateCourseBadges(completedCourses);
 
-  // Generate master certification only if ALL courses are completed
-  const masterCertification = generateMasterCertification(hasCompletedAll, totalCompleted);
+  // Generate master certification only if ALL published courses are enrolled and completed
+  const masterCertification = generateMasterCertification(hasCompletedAllPublished, totalActiveCompleted);
 
   return {
     badges,
     certification: masterCertification,
     stats: {
-      totalCourses: totalEnrolled,
-      completedCourses: totalCompleted,
-      hasCompletedAll,
+      totalCourses: userStats.coursesEnrolled.length,
+      activeCourses: totalActiveEnrolled,
+      completedCourses: completedCourses.length,
+      activeCompletedCourses: totalActiveCompleted,
+      totalPublishedCourses: totalPublishedCourses || totalActiveEnrolled,
+      hasCompletedAll: hasCompletedAllPublished,
     }
   };
 };

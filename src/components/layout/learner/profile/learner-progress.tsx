@@ -29,13 +29,18 @@ const LearnerProgress = () => {
     );
   }
 
-  // Calculate overall progress based on enrolled vs completed courses
-  const enrolledCount = userStats.coursesEnrolled?.length || 0;
-  // Calculate completed courses from userStats (using backend's comppletedChapters typo)
-  const completedCourses = userStats.coursesEnrolled?.filter(enrollment => {
+  // Filter active courses (non-deleted, published)
+  const activeCourses = userStats.coursesEnrolled?.filter(
+    enrollment => !enrollment.course.isDeleted && enrollment.course.publish
+  ) || [];
+  
+  // Calculate completed courses from active courses (using backend's comppletedChapters typo)
+  const completedCourses = activeCourses.filter(enrollment => {
     const completedChapters = enrollment.comppletedChapters?.length || 0;
     return completedChapters > 0;
-  }) || [];
+  });
+  
+  const enrolledCount = activeCourses.length;
   const completedCount = completedCourses.length;
   const overallProgress = enrolledCount > 0 ? Math.round((completedCount / enrolledCount) * 100) : 0;
 
@@ -56,7 +61,7 @@ const LearnerProgress = () => {
       <div className="grid grid-cols-2 gap-4 mt-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
           <p className="text-2xl font-bold text-blue-600">{enrolledCount}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-300">Enrolled</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Active Enrolled</p>
         </div>
         <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center">
           <p className="text-2xl font-bold text-green-600">{completedCount}</p>

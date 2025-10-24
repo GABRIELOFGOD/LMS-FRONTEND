@@ -14,23 +14,27 @@ const LearnerCourses = () => {
   const { user } = useUser();
   const { stats, isLoading: loading, refreshStats } = useStats();
 
-  // Calculate completed courses from userStats (real-time from backend)
-  const completedCourses = stats?.coursesEnrolled?.filter(enrollment => {
+  // Filter active courses (non-deleted, published)
+  const activeCourses = stats?.coursesEnrolled?.filter(
+    enrollment => !enrollment.course.isDeleted && enrollment.course.publish
+  ) || [];
+  
+  // Calculate completed courses from active enrollments
+  const completedCourses = activeCourses.filter(enrollment => {
     // Backend has typo: uses "comppletedChapters" instead of "completedChapters"
     const completedChapters = enrollment.comppletedChapters?.length || 0;
     // A course is completed if it has completed chapters
-    // You can refine this logic based on your completion criteria
     return completedChapters > 0;
-  }) || [];
+  });
   
   const completedFromContext = completedCourses.length;
   
   // Calculate in-progress courses (enrolled but not completed)
-  const totalEnrolled = stats?.coursesEnrolled?.length || 0;
-  const inProgressCount = totalEnrolled - completedFromContext;
+  const totalActiveEnrolled = activeCourses.length;
+  const inProgressCount = totalActiveEnrolled - completedFromContext;
   
-  // Certificate logic: Only 1 certificate when ALL enrolled courses are completed
-  const hasMasterCertificate = completedFromContext > 0 && completedFromContext === totalEnrolled;
+  // Certificate logic: Only 1 certificate when ALL active enrolled courses are completed
+  const hasMasterCertificate = completedFromContext > 0 && completedFromContext === totalActiveEnrolled;
   const certificateCount = hasMasterCertificate ? 1 : 0;
   
   const statsCards = stats ? [

@@ -270,10 +270,10 @@ const PrivacyPolicy = () => {
                 </p>
                 <div className="space-y-2 text-sm">
                   <p className="text-muted-foreground">
-                    <span className="font-semibold">Email:</span> privacy@yourlms.com
+                    <span className="font-semibold">Email:</span> fcalearn@thebrainbuilders.org
                   </p>
                   <p className="text-muted-foreground">
-                    <span className="font-semibold">Address:</span> [Your Company Address]
+                    <span className="font-semibold">Address:</span> Abuja, Nigeria
                   </p>
                 </div>
               </div>
@@ -284,13 +284,10 @@ const PrivacyPolicy = () => {
           <div className="mt-8 text-center text-sm text-muted-foreground">
             <p className="mb-2">Related Policies</p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="/terms" className="underline hover:text-primary transition-colors">
-                Terms of Service
-              </a>
               <a href="/about" className="underline hover:text-primary transition-colors">
                 About Us
               </a>
-              <a href="/contact" className="underline hover:text-primary transition-colors">
+              <a href="/contacts" className="underline hover:text-primary transition-colors">
                 Contact Support
               </a>
             </div>
