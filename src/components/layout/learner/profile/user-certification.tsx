@@ -65,7 +65,9 @@ const UserCertification = () => {
           <div className="flex-1">
             <h4 className="font-semibold text-sm mb-1">About Achievements</h4>
             <p className="text-xs text-muted-foreground">
-              Earn a badge for each course you complete. Complete all enrolled courses to unlock your Master Certificate!
+              • Earn a badge for each course you complete<br />
+              • Earn your Master Certificate by enrolling in and completing ALL published courses<br />
+              • You must complete every course the admin has published to earn the certificate
             </p>
           </div>
         </div>

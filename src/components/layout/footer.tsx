@@ -164,7 +164,6 @@ const Footer = () => {
               <p>&copy; {new Date().getFullYear()} FactCheck Africa. All Rights Reserved</p>
               <div className="flex items-center gap-2 md:gap-3">
                 <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
               </div>
             </div>
             

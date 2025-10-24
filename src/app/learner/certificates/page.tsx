@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import Crumb from "@/components/Crumb";
 import { BASEURL } from "@/lib/utils";
+import { getTotalPublishedCourses } from "@/data/badges";
 
 const CertificatesPage = () => {
   const { user, isLoggedIn, isLoaded } = useUser();
@@ -28,6 +29,16 @@ const CertificatesPage = () => {
     [key: string]: unknown; // Allow additional properties
   }>>([]);
   const [loadingCourseDetails, setLoadingCourseDetails] = useState(false);
+  const [totalPublishedCourses, setTotalPublishedCourses] = useState<number>(0);
+
+  // Fetch total published courses on mount
+  useEffect(() => {
+    const fetchTotalCourses = async () => {
+      const total = await getTotalPublishedCourses();
+      setTotalPublishedCourses(total);
+    };
+    fetchTotalCourses();
+  }, []);
 
   useEffect(() => {
     if (!stats?.coursesEnrolled) return;
@@ -92,14 +103,30 @@ const CertificatesPage = () => {
     validateCompletedCourses();
   }, [stats]);
 
-  // Check if user has completed ALL enrolled courses
+  // Check if user has completed ALL published courses from admin
   // Master Certificate is ONLY awarded when:
-  // 1. User has enrolled in at least 1 course (completedCourses.length > 0)
-  // 2. Number of completed courses equals total enrolled courses
-  // This means every single course the user enrolled in is completed
-  const hasCompletedAllCourses = completedCourses.length > 0 && 
-    stats?.coursesEnrolled && 
-    completedCourses.length === stats.coursesEnrolled.length;
+  // 1. User has enrolled in ALL published courses (totalPublishedCourses)
+  // 2. User has completed ALL those courses
+  // 3. Only active (non-deleted, published) courses count
+  const activeEnrolledCourses = stats?.coursesEnrolled?.filter(
+    enrollment => !enrollment.course.isDeleted && enrollment.course.publish
+  ) || [];
+  
+  const activeCompletedCourses = completedCourses.filter(
+    enrollment => !enrollment.course.isDeleted && enrollment.course.publish
+  );
+  
+  // Check if learner has enrolled in ALL published courses
+  const hasEnrolledInAllCourses = totalPublishedCourses > 0 && 
+    activeEnrolledCourses.length >= totalPublishedCourses;
+  
+  // Check if learner has completed ALL published courses
+  const hasCompletedAllCourses = hasEnrolledInAllCourses && 
+    activeCompletedCourses.length >= totalPublishedCourses;
+  
+  // Calculate courses remaining to enroll/complete
+  const coursesRemainingToEnroll = totalPublishedCourses - activeEnrolledCourses.length;
+  const coursesRemainingToComplete = totalPublishedCourses - activeCompletedCourses.length;
 
   if (!isLoaded || statsLoading || loadingCourseDetails) {
     return (
@@ -221,10 +248,10 @@ const CertificatesPage = () => {
                     <Award className="h-3 w-3 md:h-4 md:w-4 text-blue-600 dark:text-blue-300" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-sm mb-1">About Course Badges</h4>
+                    <h4 className="font-semibold text-sm mb-1">About Course Badges & Certificate</h4>
                     <p className="text-xs text-muted-foreground">
                       You earn a badge for each course you complete. These badges showcase your learning achievements. 
-                      {!hasCompletedAllCourses && " Complete all enrolled courses to unlock your Master Certificate!"}
+                      {!hasCompletedAllCourses && ` To earn your Master Certificate, you must enroll in and complete ALL ${totalPublishedCourses} published courses!`}
                     </p>
                   </div>
                 </div>
@@ -249,32 +276,39 @@ const CertificatesPage = () => {
       </Card>
 
       {/* Progress Tracker */}
-      {stats?.coursesEnrolled && stats.coursesEnrolled.length > 0 && (
+      {totalPublishedCourses > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Your Progress</CardTitle>
+            <CardTitle className="text-lg">Your Progress Towards Master Certificate</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Completed Courses</span>
+                <span className="text-muted-foreground">Completed Courses (All Published)</span>
                 <span className="font-semibold">
-                  {completedCourses.length} / {stats.coursesEnrolled.length}
+                  {activeCompletedCourses.length} / {totalPublishedCourses}
                 </span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                 <div
                   className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500"
                   style={{
-                    width: `${(completedCourses.length / stats.coursesEnrolled.length) * 100}%`,
+                    width: `${totalPublishedCourses > 0 ? (activeCompletedCourses.length / totalPublishedCourses) * 100 : 0}%`,
                   }}
                 />
               </div>
               {!hasCompletedAllCourses && (
                 <p className="text-sm text-muted-foreground">
-                  Complete {stats.coursesEnrolled.length - completedCourses.length} more course
-                  {stats.coursesEnrolled.length - completedCourses.length !== 1 ? 's' : ''} to unlock 
-                  your Master Certificate! (Only the Master Certificate is downloadable as PDF)
+                  {coursesRemainingToEnroll > 0 ? (
+                    <>
+                      Enroll in {coursesRemainingToEnroll} more course{coursesRemainingToEnroll !== 1 ? 's' : ''} and complete {coursesRemainingToComplete} total to unlock your Master Certificate!
+                    </>
+                  ) : (
+                    <>
+                      Complete {coursesRemainingToComplete} more course{coursesRemainingToComplete !== 1 ? 's' : ''} to unlock your Master Certificate!
+                    </>
+                  )}
+                  {' '}(Only the Master Certificate is downloadable as PDF)
                 </p>
               )}
             </div>

@@ -9,12 +9,17 @@ interface OverallProgressProps {
 }
 
 export const OverallProgress = ({ userStats }: OverallProgressProps) => {
-  // Calculate completed courses from userStats (using backend's comppletedChapters typo)
-  const enrolledCourses = userStats?.coursesEnrolled?.length || 0;
-  const completedCourses = userStats?.coursesEnrolled?.filter(enrollment => {
+  // Filter active courses (non-deleted, published)
+  const activeCourses = userStats?.coursesEnrolled?.filter(
+    enrollment => !enrollment.course.isDeleted && enrollment.course.publish
+  ) || [];
+  
+  // Calculate completed courses from active courses (using backend's comppletedChapters typo)
+  const enrolledCourses = activeCourses.length;
+  const completedCourses = activeCourses.filter(enrollment => {
     const completedChapters = enrollment.comppletedChapters?.length || 0;
     return completedChapters > 0;
-  }).length || 0;
+  }).length;
   
   const progressPercentage = enrolledCourses > 0 
     ? Math.round((completedCourses / enrolledCourses) * 100) 
@@ -36,7 +41,7 @@ export const OverallProgress = ({ userStats }: OverallProgressProps) => {
         />
         <div className="text-center space-y-1">
           <p className="text-xs md:text-sm font-medium">
-            {completedCourses} of {enrolledCourses} courses completed
+            {completedCourses} of {enrolledCourses} active courses completed
           </p>
           <p className="text-xs text-muted-foreground">
             {userStats?.trends?.progressEncouragement || "Keep going!"}

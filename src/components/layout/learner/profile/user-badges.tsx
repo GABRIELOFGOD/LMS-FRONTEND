@@ -5,22 +5,32 @@ import { useEffect, useState } from "react";
 import BadgeCard from "./badge-card";
 import { useUser } from "@/context/user-context";
 import { useStats } from "@/context/stats-context";
-import { getUserAchievements } from "@/data/badges";
+import { getUserAchievements, getTotalPublishedCourses } from "@/data/badges";
 
 const UserBadges = () => {
   const [userBadges, setUserBadges] = useState<Badge[]>([]);
+  const [totalPublished, setTotalPublished] = useState<number>(0);
   const { user } = useUser();
   const { stats, isLoading } = useStats();
+
+  // Fetch total published courses on mount
+  useEffect(() => {
+    const fetchTotalCourses = async () => {
+      const total = await getTotalPublishedCourses();
+      setTotalPublished(total);
+    };
+    fetchTotalCourses();
+  }, []);
 
   useEffect(() => {
     if (stats?.coursesEnrolled) {
       // Generate badges dynamically based on completed courses
-      const achievements = getUserAchievements(stats);
+      const achievements = getUserAchievements(stats, undefined, totalPublished);
       setUserBadges(achievements.badges);
     } else {
       setUserBadges([]);
     }
-  }, [stats]);
+  }, [stats, totalPublished]);
 
   if (isLoading) {
     return (

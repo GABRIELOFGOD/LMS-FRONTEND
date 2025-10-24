@@ -148,22 +148,28 @@ const LearnerHome = () => {
 
   // Dynamic learner stats - use API data where available and accurate
   const stats = userStats ? (() => {
-    // Calculate completed courses from userStats (using backend's comppletedChapters typo)
-    const completedCourses = userStats.coursesEnrolled?.filter(enrollment => {
+    // Filter active courses (non-deleted, published)
+    const activeCourses = userStats.coursesEnrolled?.filter(
+      enrollment => !enrollment.course.isDeleted && enrollment.course.publish
+    ) || [];
+    
+    // Calculate completed courses from active enrollments only
+    const completedCourses = activeCourses.filter(enrollment => {
       const completedChapters = enrollment.comppletedChapters?.length || 0;
       return completedChapters > 0;
-    }) || [];
+    });
+    
     const totalCompleted = completedCourses.length;
     
-    // Certificate logic: Only 1 certificate when ALL enrolled courses are completed
-    const totalEnrolled = userStats.coursesEnrolled?.length || 0;
-    const hasMasterCertificate = totalCompleted > 0 && totalCompleted === totalEnrolled;
+    // Certificate logic: Only 1 certificate when ALL active enrolled courses are completed
+    const totalActiveEnrolled = activeCourses.length;
+    const hasMasterCertificate = totalCompleted > 0 && totalCompleted === totalActiveEnrolled;
     const certificateCount = hasMasterCertificate ? 1 : 0;
     
     return [
       { 
         title: "Courses Enrolled", 
-        value: userStats.coursesEnrolled?.length?.toString() || "0", 
+        value: totalActiveEnrolled.toString(), 
         icon: BookOpen, 
         trend: userStats.trends?.coursesThisMonth || "+0 this month", 
         color: "text-blue-600" 
@@ -177,9 +183,9 @@ const LearnerHome = () => {
       },
       { 
         title: "Certificates", 
-        value: certificateCount.toString(), // Only 1 certificate when ALL courses completed
+        value: certificateCount.toString(), // Only 1 certificate when ALL active courses completed
         icon: Target, 
-        trend: hasMasterCertificate ? "Master Certificate Earned! 🏆" : totalCompleted > 0 ? `${totalEnrolled - totalCompleted} more to go!` : "Complete all courses to earn", 
+        trend: hasMasterCertificate ? "Master Certificate Earned! 🏆" : totalCompleted > 0 ? `${totalActiveEnrolled - totalCompleted} more to go!` : "Complete all courses to earn", 
         color: "text-orange-600" 
       },
     ];

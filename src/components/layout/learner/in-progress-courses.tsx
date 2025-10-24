@@ -16,9 +16,14 @@ const InProgressCourses = () => {
       console.log('InProgressCourses - Raw stats data:', userStats);
       
       if (userStats && userStats.coursesEnrolled) {
+        // Filter active courses first (non-deleted, published)
+        const activeCourses = userStats.coursesEnrolled.filter(
+          enrollment => !enrollment.course.isDeleted && enrollment.course.publish
+        );
+        
         // Use the same logic as the main learner dashboard - enrolled courses are "in progress"
-        if (Array.isArray(userStats.coursesEnrolled)) {
-          const validCourses = userStats.coursesEnrolled
+        if (Array.isArray(activeCourses)) {
+          const validCourses = activeCourses
             .filter(enrollment => {
               // More robust validation
               const isValid = enrollment.course && 
@@ -54,7 +59,7 @@ const InProgressCourses = () => {
           setCourses(validCourses);
           console.log('InProgressCourses - Valid in-progress courses:', validCourses);
         } else {
-          console.warn('InProgressCourses - Enrolled courses is not an array:', userStats.coursesEnrolled);
+          console.warn('InProgressCourses - Active courses is not an array:', activeCourses);
           setCourses([]);
         }
       } else {
